@@ -1,0 +1,29 @@
+# Dependency directories
+node_modules/
+vendor/
+
+# Environment files
+.env
+.env.backup
+.env.production
+
+# Build and distribution directories
+dist/
+build/
+public/build/
+
+# IDE and OS specific files
+.DS_Store
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Log files
+storage/logs/
+npm-debug.log
+yarn-error.log
+yarn-debug.log
