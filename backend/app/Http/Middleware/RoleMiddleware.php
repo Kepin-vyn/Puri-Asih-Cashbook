@@ -10,27 +10,18 @@ class RoleMiddleware
 {
     /**
      * Handle an incoming request.
+     * Usage: middleware('role:manager') or middleware('role:fo')
      *
-     * Penggunaan:
-     *   middleware('role:manager')
-     *   middleware('role:fo')
-     *   middleware('role:manager,fo')  ← multiple role
+     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        $user = $request->user();
+        $user = auth()->user();
 
-        if (!$user) {
+        if (!$user || !in_array($user->role, $roles)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Unauthenticated.',
-            ], 401);
-        }
-
-        if (!in_array($user->role, $roles)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Akses ditolak. Anda tidak memiliki akses ke fitur ini.',
+                'message' => 'Akses ditolak',
             ], 403);
         }
 

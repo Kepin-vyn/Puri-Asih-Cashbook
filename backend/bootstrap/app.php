@@ -3,8 +3,9 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use App\Http\Middleware\RoleMiddleware;
-use App\Http\Middleware\ShiftMiddleware;
+use Illuminate\Auth\AuthenticationException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -14,33 +15,33 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Mendaftarkan alias middleware custom
+        // Alias middleware custom
         $middleware->alias([
-            'role'         => RoleMiddleware::class,
-            'shift.active' => ShiftMiddleware::class,
+            'role'         => \App\Http\Middleware\RoleMiddleware::class,
+            'shift.active' => \App\Http\Middleware\ShiftMiddleware::class,
         ]);
 
-        // Mengaktifkan stateful API untuk Sanctum (komunikasi dengan React dev server)
+        // Aktifkan Sanctum stateful API (untuk SPA)
         $middleware->statefulApi();
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        // Handle 404 Not Found dengan format JSON standar
-        $exceptions->render(function (\Illuminate\Database\Eloquent\ModelNotFoundException $e, $request) {
+        // Global handler: Unauthenticated → JSON 401
+        $exceptions->render(function (AuthenticationException $e, Request $request) {
             if ($request->is('api/*')) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Data tidak ditemukan.',
-                ], 404);
+                    'message' => 'Unauthenticated. Silakan login terlebih dahulu.',
+                ], 401);
             }
         });
 
-        // Handle 401 Unauthenticated dengan format JSON standar
-        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, $request) {
+        // Global handler: Route tidak ditemukan → JSON 404
+        $exceptions->render(function (NotFoundHttpException $e, Request $request) {
             if ($request->is('api/*')) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Anda belum login atau sesi telah berakhir.',
-                ], 401);
+                    'message' => 'Resource tidak ditemukan.',
+                ], 404);
             }
         });
     })->create();
