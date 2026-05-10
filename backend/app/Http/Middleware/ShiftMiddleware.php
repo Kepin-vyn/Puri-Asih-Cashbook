@@ -4,44 +4,34 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpFoundation\Response;
 
 class ShiftMiddleware
 {
     /**
      * Handle an incoming request.
+     * Memastikan staff FO memiliki shift aktif sebelum mencatat transaksi.
      *
-     * Middleware ini memastikan FO hanya bisa mengakses
-     * modul transaksi jika memiliki shift yang sedang aktif.
-     * Manager dibebaskan dari pengecekan ini.
+     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request->user();
+        $user = auth()->user();
 
-        if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthenticated.',
-            ], 401);
-        }
+        // Hanya role 'fo' yang wajib memiliki shift aktif
+        if ($user && $user->role === 'fo') {
+            $activeShift = DB::table('shifts')
+                ->where('user_id', $user->id)
+                ->where('status', 'active')
+                ->first();
 
-        // Manager tidak perlu shift aktif
-        if ($user->role === 'manager') {
-            return $next($request);
-        }
-
-        // Cek shift aktif untuk FO
-        // Relasi activeShift akan dibuat di Issue #4 (Database Migration)
-        $hasActiveShift = $user->shifts()
-            ->where('status', 'active')
-            ->exists();
-
-        if (!$hasActiveShift) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Tidak ada shift aktif. Silakan mulai shift terlebih dahulu.',
-            ], 403);
+            if (!$activeShift) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak ada shift aktif',
+                ], 403);
+            }
         }
 
         return $next($request);

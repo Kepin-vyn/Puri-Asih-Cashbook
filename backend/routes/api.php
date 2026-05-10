@@ -1,83 +1,115 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\KasController;
+use App\Http\Controllers\Api\ExpenseController;
+use App\Http\Controllers\Api\ReservationController;
+use App\Http\Controllers\Api\DepositController;
+use App\Http\Controllers\Api\ShiftController;
+use App\Http\Controllers\Api\AttendanceController;
+use App\Http\Controllers\Api\NotificationController;
+use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\PayrollController;
+use App\Http\Controllers\Api\UserController;
 
-// File ini di-load otomatis oleh Laravel dengan prefix URL /api
-// Semua route di sini dapat diakses melalui: http://localhost:8000/api/v1/...
-
+// Semua route diakses melalui: http://localhost:8000/api/v1/...
 Route::prefix('v1')->group(function () {
 
-    // ==========================================
-    // PUBLIC ROUTES — Tanpa Auth
-    // ==========================================
+    // ============================================
+    // PUBLIC ROUTES — Tanpa Autentikasi
+    // ============================================
+    Route::post('/auth/login', [AuthController::class, 'login']);
 
-    // Route::post('/auth/login', [AuthController::class, 'login']);
 
-
-    // ==========================================
-    // PROTECTED ROUTES — Wajib Auth Sanctum
-    // ==========================================
+    // ============================================
+    // PROTECTED ROUTES — Wajib Login (Sanctum)
+    // ============================================
     Route::middleware('auth:sanctum')->group(function () {
 
         // --- Auth ---
-        // Route::post('/auth/logout', [AuthController::class, 'logout']);
-        // Route::get('/auth/me',      [AuthController::class, 'me']);
+        Route::post('/auth/logout', [AuthController::class, 'logout']);
+        Route::get('/auth/me',      [AuthController::class, 'me']);
 
-        // --- Shift Management ---
-        // Route::post('/shifts/start',               [ShiftController::class, 'start']);
-        // Route::post('/shifts/{id}/handover',       [ShiftController::class, 'handover']);
-        // Route::get('/shifts/{id}/report/pdf',      [ShiftController::class, 'reportPdf']);
+        // --- KAS Harian (FO & Manager) ---
+        Route::apiResource('kas', KasController::class);
+        Route::post('kas/{id}/upload',   [KasController::class, 'upload']);
+        Route::get('kas/export/pdf',     [KasController::class, 'exportPdf']);
+
+        // --- Pengeluaran (FO & Manager) ---
+        Route::apiResource('expenses', ExpenseController::class);
+        Route::post('expenses/{id}/upload',    [ExpenseController::class, 'upload']);
+        Route::get('expenses/pending/count',   [ExpenseController::class, 'pendingCount']);
+        Route::get('expenses/export/pdf',      [ExpenseController::class, 'exportPdf']);
+
+        // --- Reservasi OTT (FO & Manager) ---
+        Route::apiResource('reservations', ReservationController::class);
+        Route::put('reservations/{id}/status',      [ReservationController::class, 'updateStatus']);
+        Route::get('reservations/{id}/invoice',     [ReservationController::class, 'invoice']);
+        Route::get('reservations/availability',     [ReservationController::class, 'availability']);
+        Route::get('reservations/export/pdf',       [ReservationController::class, 'exportPdf']);
+
+        // --- Refundable Deposit (FO & Manager) ---
+        Route::apiResource('deposits', DepositController::class);
+        Route::post('deposits/{id}/refund',   [DepositController::class, 'refund']);
+        Route::post('deposits/{id}/forfeit',  [DepositController::class, 'forfeit']);
+        Route::get('deposits/expiring',       [DepositController::class, 'expiring']);
+        Route::get('deposits/export/pdf',     [DepositController::class, 'exportPdf']);
+
+        // --- Shift & Handover ---
+        Route::get('shifts',                   [ShiftController::class, 'index']);
+        Route::get('shifts/active',            [ShiftController::class, 'active']);
+        Route::post('shifts/start',            [ShiftController::class, 'start']);
+        Route::post('shifts/{id}/handover',    [ShiftController::class, 'handover']);
+        Route::get('shifts/{id}/summary',      [ShiftController::class, 'summary']);
+        Route::get('shifts/{id}/report',       [ShiftController::class, 'report']);
+        Route::get('shifts/{id}/report/pdf',   [ShiftController::class, 'reportPdf']);
+        Route::get('shifts/daily/{date}',      [ShiftController::class, 'daily']);
+        Route::get('shifts/daily/{date}/pdf',  [ShiftController::class, 'dailyPdf']);
 
         // --- Absensi ---
-        // Route::post('/attendance/checkin',  [AttendanceController::class, 'checkIn']);
-        // Route::post('/attendance/checkout', [AttendanceController::class, 'checkOut']);
+        Route::get('attendance',                        [AttendanceController::class, 'index']);
+        Route::post('attendance/checkin',               [AttendanceController::class, 'checkin']);
+        Route::post('attendance/checkout',              [AttendanceController::class, 'checkout']);
+        Route::get('attendance/monthly/{staffId}',      [AttendanceController::class, 'monthly']);
 
         // --- Notifikasi ---
-        // Route::get('/notifications', [NotificationController::class, 'index']);
+        Route::get('notifications',                [NotificationController::class, 'index']);
+        Route::post('notifications/{id}/read',     [NotificationController::class, 'read']);
+        Route::get('notifications/unread/count',   [NotificationController::class, 'unreadCount']);
 
 
-        // ==========================================
-        // SHIFT ACTIVE ROUTES — Wajib Shift Aktif (FO)
-        // ==========================================
-        Route::middleware('shift.active')->group(function () {
-
-            // --- Modul KAS Harian ---
-            // Route::apiResource('kas', KasController::class);
-            // Route::post('kas/{id}/upload', [KasController::class, 'upload']);
-            // Route::get('kas/export/pdf',   [KasController::class, 'exportPdf']);
-
-            // --- Modul Pengeluaran ---
-            // Route::apiResource('expenses', ExpenseController::class)->except(['destroy']);
-
-            // --- Modul Reservasi OTT ---
-            // Route::apiResource('reservations', ReservationController::class);
-            // Route::get('reservations/{id}/invoice', [ReservationController::class, 'invoice']);
-
-            // --- Modul Refundable Deposit ---
-            // Route::apiResource('deposits', DepositController::class);
-            // Route::post('deposits/{id}/refund', [DepositController::class, 'refund']);
-        });
-
-
-        // ==========================================
+        // ============================================
         // MANAGER ONLY ROUTES — role:manager
-        // ==========================================
+        // ============================================
         Route::middleware('role:manager')->group(function () {
 
             // --- Approval Pengeluaran ---
-            // Route::post('expenses/{id}/approve', [ExpenseController::class, 'approve']);
-            // Route::post('expenses/{id}/reject',  [ExpenseController::class, 'reject']);
-
-            // --- User Management (FO Management) ---
-            // Route::apiResource('users', UserController::class);
+            Route::post('expenses/{id}/approve', [ExpenseController::class, 'approve']);
+            Route::post('expenses/{id}/reject',  [ExpenseController::class, 'reject']);
 
             // --- Monthly Report ---
-            // Route::get('/reports/monthly',            [ReportController::class, 'monthly']);
-            // Route::get('/reports/monthly/export/pdf', [ReportController::class, 'monthlyPdf']);
+            Route::get('reports/monthly',             [ReportController::class, 'monthly']);
+            Route::get('reports/monthly/summary',     [ReportController::class, 'summary']);
+            Route::get('reports/monthly/export/pdf',  [ReportController::class, 'exportPdf']);
+            Route::get('reports/monthly/detail',      [ReportController::class, 'detail']);
 
             // --- Payroll ---
-            // Route::get('/payroll/{month}',        [PayrollController::class, 'index']);
-            // Route::get('/payroll/{month}/{id}/slip', [PayrollController::class, 'slipPdf']);
+            Route::get('payroll',                        [PayrollController::class, 'index']);
+            Route::get('payroll/{month}',                [PayrollController::class, 'monthly']);
+            Route::get('payroll/{month}/{staffId}',      [PayrollController::class, 'detail']);
+            Route::post('payroll/calculate/{month}',     [PayrollController::class, 'calculate']);
+            Route::get('payroll/{month}/export/pdf',     [PayrollController::class, 'exportPdf']);
+            Route::get('payroll/{month}/{staffId}/slip', [PayrollController::class, 'slip']);
+            Route::put('payroll/settings/daily-rate',    [PayrollController::class, 'setDailyRate']);
+
+            // --- Absensi: Update Status (Manager Only) ---
+            Route::put('attendance/{id}/status', [AttendanceController::class, 'updateStatus']);
+
+            // --- User Management (FO Management) ---
+            Route::apiResource('users', UserController::class);
+            Route::put('users/{id}/role',  [UserController::class, 'updateRole']);
+            Route::put('users/{id}/shift', [UserController::class, 'updateShift']);
         });
     });
 });
