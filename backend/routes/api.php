@@ -32,9 +32,10 @@ Route::prefix('v1')->group(function () {
         Route::get('/auth/me',      [AuthController::class, 'me']);
 
         // --- KAS Harian (FO & Manager) ---
+        Route::get('kas/export/pdf',         [KasController::class, 'exportPdf']);   // HARUS sebelum apiResource
         Route::apiResource('kas', KasController::class);
-        Route::post('kas/{id}/upload',   [KasController::class, 'upload']);
-        Route::get('kas/export/pdf',     [KasController::class, 'exportPdf']);
+        Route::post('kas/{id}/upload',       [KasController::class, 'upload']);
+
 
         // --- Pengeluaran (FO & Manager) ---
         Route::apiResource('expenses', ExpenseController::class);
