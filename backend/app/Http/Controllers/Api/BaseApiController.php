@@ -13,8 +13,8 @@ class BaseApiController extends Controller
     protected function successResponse(
         mixed $data = null,
         string $message = 'Success',
-        ?array $meta = null,
-        int $statusCode = 200
+        int $statusCode = 200,
+        ?array $meta = null
     ): JsonResponse {
         $response = [
             'success' => true,
@@ -31,6 +31,7 @@ class BaseApiController extends Controller
 
         return response()->json($response, $statusCode);
     }
+
 
     /**
      * Return a standard error response.

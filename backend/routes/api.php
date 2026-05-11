@@ -32,9 +32,10 @@ Route::prefix('v1')->group(function () {
         Route::get('/auth/me',      [AuthController::class, 'me']);
 
         // --- KAS Harian (FO & Manager) ---
+        Route::get('kas/export/pdf',         [KasController::class, 'exportPdf']);   // HARUS sebelum apiResource
         Route::apiResource('kas', KasController::class);
-        Route::post('kas/{id}/upload',   [KasController::class, 'upload']);
-        Route::get('kas/export/pdf',     [KasController::class, 'exportPdf']);
+        Route::post('kas/{id}/upload',       [KasController::class, 'upload']);
+
 
         // --- Pengeluaran (FO & Manager) ---
         Route::apiResource('expenses', ExpenseController::class);
@@ -57,15 +58,16 @@ Route::prefix('v1')->group(function () {
         Route::get('deposits/export/pdf',     [DepositController::class, 'exportPdf']);
 
         // --- Shift & Handover ---
-        Route::get('shifts',                   [ShiftController::class, 'index']);
+        Route::get('shifts/active/summary',    [ShiftController::class, 'activeSummary']); // HARUS sebelum shifts/active dan shifts/{id}
         Route::get('shifts/active',            [ShiftController::class, 'active']);
+        Route::get('shifts/daily/{date}/pdf',  [ShiftController::class, 'dailyPdf']);
+        Route::get('shifts/daily/{date}',      [ShiftController::class, 'daily']);
+        Route::get('shifts',                   [ShiftController::class, 'index']);
         Route::post('shifts/start',            [ShiftController::class, 'start']);
         Route::post('shifts/{id}/handover',    [ShiftController::class, 'handover']);
         Route::get('shifts/{id}/summary',      [ShiftController::class, 'summary']);
-        Route::get('shifts/{id}/report',       [ShiftController::class, 'report']);
         Route::get('shifts/{id}/report/pdf',   [ShiftController::class, 'reportPdf']);
-        Route::get('shifts/daily/{date}',      [ShiftController::class, 'daily']);
-        Route::get('shifts/daily/{date}/pdf',  [ShiftController::class, 'dailyPdf']);
+        Route::get('shifts/{id}/report',       [ShiftController::class, 'report']);
 
         // --- Absensi ---
         Route::get('attendance',                        [AttendanceController::class, 'index']);
