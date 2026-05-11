@@ -21,8 +21,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'shift.active' => \App\Http\Middleware\ShiftMiddleware::class,
         ]);
 
-        // Aktifkan Sanctum stateful API (untuk SPA)
-        $middleware->statefulApi();
+        // CSRF tidak diperlukan untuk API — frontend menggunakan Bearer token (Sanctum token-based)
+        // statefulApi() dihapus karena menyebabkan CSRF token mismatch pada SPA berbeda port
     })
     ->withExceptions(function (Exceptions $exceptions) {
         // Global handler: Unauthenticated → JSON 401
