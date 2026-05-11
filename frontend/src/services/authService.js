@@ -10,6 +10,7 @@ const api = axios.create({
     "Content-Type": "application/json",
     Accept: "application/json",
   },
+  withCredentials: false, // Token-based auth tidak memerlukan credentials/cookie
 });
 
 // Interceptor: sertakan token di setiap request jika tersedia

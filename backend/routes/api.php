@@ -60,6 +60,7 @@ Route::prefix('v1')->group(function () {
         // --- Shift & Handover ---
         Route::get('shifts',                   [ShiftController::class, 'index']);
         Route::get('shifts/active',            [ShiftController::class, 'active']);
+        Route::get('shifts/active/summary',    [ShiftController::class, 'activeSummary']);
         Route::post('shifts/start',            [ShiftController::class, 'start']);
         Route::post('shifts/{id}/handover',    [ShiftController::class, 'handover']);
         Route::get('shifts/{id}/summary',      [ShiftController::class, 'summary']);

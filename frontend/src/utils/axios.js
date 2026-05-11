@@ -6,6 +6,7 @@ const api = axios.create({
     "Content-Type": "application/json",
     Accept: "application/json",
   },
+  withCredentials: true, // Penting untuk Sanctum stateful authentication
 });
 
 // Request interceptor — otomatis tambah Bearer token dari localStorage
