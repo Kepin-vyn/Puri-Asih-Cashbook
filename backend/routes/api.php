@@ -51,11 +51,11 @@ Route::prefix('v1')->group(function () {
         Route::get('reservations/{id}/invoice',      [ReservationController::class, 'invoice']);
 
         // --- Refundable Deposit (FO & Manager) ---
+        Route::get('deposits/expiring',       [DepositController::class, 'expiring']);    // HARUS sebelum apiResource
+        Route::get('deposits/export/pdf',     [DepositController::class, 'exportPdf']);   // HARUS sebelum apiResource
         Route::apiResource('deposits', DepositController::class);
         Route::post('deposits/{id}/refund',   [DepositController::class, 'refund']);
         Route::post('deposits/{id}/forfeit',  [DepositController::class, 'forfeit']);
-        Route::get('deposits/expiring',       [DepositController::class, 'expiring']);
-        Route::get('deposits/export/pdf',     [DepositController::class, 'exportPdf']);
 
         // --- Shift & Handover ---
         Route::get('shifts',                   [ShiftController::class, 'index']);
