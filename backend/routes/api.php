@@ -44,11 +44,11 @@ Route::prefix('v1')->group(function () {
         Route::post('expenses/{id}/upload',    [ExpenseController::class, 'upload']);
 
         // --- Reservasi OTT (FO & Manager) ---
+        Route::get('reservations/availability',      [ReservationController::class, 'availability']);  // HARUS sebelum apiResource
+        Route::get('reservations/export/pdf',        [ReservationController::class, 'exportPdf']);     // HARUS sebelum apiResource
         Route::apiResource('reservations', ReservationController::class);
-        Route::put('reservations/{id}/status',      [ReservationController::class, 'updateStatus']);
-        Route::get('reservations/{id}/invoice',     [ReservationController::class, 'invoice']);
-        Route::get('reservations/availability',     [ReservationController::class, 'availability']);
-        Route::get('reservations/export/pdf',       [ReservationController::class, 'exportPdf']);
+        Route::put('reservations/{id}/status',       [ReservationController::class, 'updateStatus']);
+        Route::get('reservations/{id}/invoice',      [ReservationController::class, 'invoice']);
 
         // --- Refundable Deposit (FO & Manager) ---
         Route::apiResource('deposits', DepositController::class);
