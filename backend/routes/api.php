@@ -38,10 +38,10 @@ Route::prefix('v1')->group(function () {
 
 
         // --- Pengeluaran (FO & Manager) ---
+        Route::get('expenses/pending/count',   [ExpenseController::class, 'pendingCount']); // HARUS sebelum apiResource
+        Route::get('expenses/export/pdf',      [ExpenseController::class, 'exportPdf']);    // HARUS sebelum apiResource
         Route::apiResource('expenses', ExpenseController::class);
         Route::post('expenses/{id}/upload',    [ExpenseController::class, 'upload']);
-        Route::get('expenses/pending/count',   [ExpenseController::class, 'pendingCount']);
-        Route::get('expenses/export/pdf',      [ExpenseController::class, 'exportPdf']);
 
         // --- Reservasi OTT (FO & Manager) ---
         Route::apiResource('reservations', ReservationController::class);
