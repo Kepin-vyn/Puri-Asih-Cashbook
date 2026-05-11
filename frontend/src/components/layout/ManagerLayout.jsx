@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import authStore from "../../store/authStore";
 import { useQuery } from "@tanstack/react-query";
-import api from "../../utils/axios";
+import expenseService from "../../services/expenseService";
 
 const navItems = [
   { to: "/manager/dashboard",     label: "Dashboard",      icon: LayoutDashboard },
@@ -28,18 +28,18 @@ export const ManagerLayout = () => {
   const navigate = useNavigate();
   const user = authStore.getUser();
 
-  // Fetch jumlah pending approval (akan diisi di Issue #8)
+  // Fetch jumlah pending approval
   const { data: pendingCount = 0 } = useQuery({
     queryKey: ["pending-approval-count"],
     queryFn: async () => {
       try {
-        const res = await api.get("/expenses?status=pending&per_page=1");
-        return res.data?.meta?.total ?? 0;
+        const res = await expenseService.getAll({ status: "pending", per_page: 1 });
+        return res?.meta?.total ?? 0;
       } catch {
         return 0;
       }
     },
-    refetchInterval: 30000, // refresh setiap 30 detik
+    refetchInterval: 30000,
   });
 
   const handleLogout = () => {
