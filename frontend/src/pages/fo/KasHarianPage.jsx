@@ -480,6 +480,7 @@ const KasHarianPage = () => {
                   >
                     {PAYMENT_METHODS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
                   </select>
+                </div>
               </div>
 
               {/* Note */}

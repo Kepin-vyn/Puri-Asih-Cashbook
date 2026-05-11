@@ -38,36 +38,36 @@ Route::prefix('v1')->group(function () {
 
 
         // --- Pengeluaran (FO & Manager) ---
+        Route::get('expenses/pending/count',   [ExpenseController::class, 'pendingCount']); // HARUS sebelum apiResource
+        Route::get('expenses/export/pdf',      [ExpenseController::class, 'exportPdf']);    // HARUS sebelum apiResource
         Route::apiResource('expenses', ExpenseController::class);
         Route::post('expenses/{id}/upload',    [ExpenseController::class, 'upload']);
-        Route::get('expenses/pending/count',   [ExpenseController::class, 'pendingCount']);
-        Route::get('expenses/export/pdf',      [ExpenseController::class, 'exportPdf']);
 
         // --- Reservasi OTT (FO & Manager) ---
+        Route::get('reservations/availability',      [ReservationController::class, 'availability']);  // HARUS sebelum apiResource
+        Route::get('reservations/export/pdf',        [ReservationController::class, 'exportPdf']);     // HARUS sebelum apiResource
         Route::apiResource('reservations', ReservationController::class);
-        Route::put('reservations/{id}/status',      [ReservationController::class, 'updateStatus']);
-        Route::get('reservations/{id}/invoice',     [ReservationController::class, 'invoice']);
-        Route::get('reservations/availability',     [ReservationController::class, 'availability']);
-        Route::get('reservations/export/pdf',       [ReservationController::class, 'exportPdf']);
+        Route::put('reservations/{id}/status',       [ReservationController::class, 'updateStatus']);
+        Route::get('reservations/{id}/invoice',      [ReservationController::class, 'invoice']);
 
         // --- Refundable Deposit (FO & Manager) ---
+        Route::get('deposits/expiring',       [DepositController::class, 'expiring']);    // HARUS sebelum apiResource
+        Route::get('deposits/export/pdf',     [DepositController::class, 'exportPdf']);   // HARUS sebelum apiResource
         Route::apiResource('deposits', DepositController::class);
         Route::post('deposits/{id}/refund',   [DepositController::class, 'refund']);
         Route::post('deposits/{id}/forfeit',  [DepositController::class, 'forfeit']);
-        Route::get('deposits/expiring',       [DepositController::class, 'expiring']);
-        Route::get('deposits/export/pdf',     [DepositController::class, 'exportPdf']);
 
         // --- Shift & Handover ---
-        Route::get('shifts/active/summary',    [ShiftController::class, 'activeSummary']); // HARUS sebelum shifts/active dan shifts/{id}
-        Route::get('shifts/active',            [ShiftController::class, 'active']);
-        Route::get('shifts/daily/{date}/pdf',  [ShiftController::class, 'dailyPdf']);
-        Route::get('shifts/daily/{date}',      [ShiftController::class, 'daily']);
         Route::get('shifts',                   [ShiftController::class, 'index']);
+        Route::get('shifts/active',            [ShiftController::class, 'active']);
+        Route::get('shifts/active/summary',    [ShiftController::class, 'activeSummary']);
         Route::post('shifts/start',            [ShiftController::class, 'start']);
         Route::post('shifts/{id}/handover',    [ShiftController::class, 'handover']);
         Route::get('shifts/{id}/summary',      [ShiftController::class, 'summary']);
-        Route::get('shifts/{id}/report/pdf',   [ShiftController::class, 'reportPdf']);
         Route::get('shifts/{id}/report',       [ShiftController::class, 'report']);
+        Route::get('shifts/{id}/report/pdf',   [ShiftController::class, 'reportPdf']);
+        Route::get('shifts/daily/{date}',      [ShiftController::class, 'daily']);
+        Route::get('shifts/daily/{date}/pdf',  [ShiftController::class, 'dailyPdf']);
 
         // --- Absensi ---
         Route::get('attendance',                        [AttendanceController::class, 'index']);
