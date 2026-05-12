@@ -1,3 +1,61 @@
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Plus, Download, Pencil, Trash2, FileText, X, Upload } from "lucide-react";
+import toast from "react-hot-toast";
+import kasService from "../../services/kasService";
+import authStore from "../../store/authStore";
+import api from "../../utils/axios";
+import RupiahInput from "../../components/ui/RupiahInput";
+import ConfirmModal from "../../components/ui/ConfirmModal";
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+const formatRp = (v) =>
+  new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 })
+    .format(v ?? 0).replace("IDR", "Rp");
+
+const today = new Date().toISOString().split("T")[0];
+
+const ROOM_NUMBERS = [
+  ...Array.from({ length: 10 }, (_, i) => `${101 + i}`),
+  ...Array.from({ length: 10 }, (_, i) => `${201 + i}`),
+  ...Array.from({ length: 10 }, (_, i) => `${301 + i}`),
+];
+
+// Nilai sesuai DB enum: reservasi | checkin | pelunasan
+const TRANSACTION_TYPES = [
+  { value: "reservasi",  label: "Reservasi" },
+  { value: "checkin",    label: "Check-In" },
+  { value: "pelunasan",  label: "Pelunasan Reservasi" },
+];
+const PAYMENT_METHODS   = [
+  { value: "tunai",        label: "Cash" },
+  { value: "transfer",     label: "Transfer Bank" },
+  { value: "qris",         label: "QRIS" },
+  { value: "kartu_kredit", label: "Kartu Kredit" },
+];
+// payment_status tidak ada di DB — dihapus
+
+// ── Empty form ────────────────────────────────────────────────────────────────
+const emptyForm = () => ({
+  guest_name:       "",
+  room_number:      "101",
+  transaction_type: "reservasi",
+  amount:           0,
+  payment_method:   "tunai",
+  note:             "",
+});
+
+// ── Skeleton row ─────────────────────────────────────────────────────────────
+const SkeletonRow = () => (
+  <tr>
+    {[1,2,3,4,5,6,7,8].map(i => (
+      <td key={i} className="px-4 py-3">
+        <div className="h-4 bg-gray-200 rounded animate-pulse" />
+      </td>
+    ))}
+  </tr>
+);
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 const KasHarianPage = () => {
   const user        = authStore.getUser();

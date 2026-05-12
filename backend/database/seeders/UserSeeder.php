@@ -27,7 +27,7 @@ class UserSeeder extends Seeder
             ['email' => 'kevin@puriasih.com'],
             [
                 'name'     => 'Kevin',
-                'password' => Hash::make('fo123'),
+                'password' => Hash::make('fo123456'),
                 'role'     => 'fo',
                 'shift'    => 'pagi',
                 'status'   => 'active',
@@ -39,7 +39,7 @@ class UserSeeder extends Seeder
             ['email' => 'awan@puriasih.com'],
             [
                 'name'     => 'Awan',
-                'password' => Hash::make('fo123'),
+                'password' => Hash::make('fo123456'),
                 'role'     => 'fo',
                 'shift'    => 'siang',
                 'status'   => 'active',

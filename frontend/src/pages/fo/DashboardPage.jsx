@@ -8,11 +8,9 @@ import {
   Wallet,
   TrendingUp,
   TrendingDown,
-  Minus,
   RefreshCw,
   Plus,
   FileText,
-  CheckCircle,
   Info,
   AlertTriangle,
   Clock,
@@ -78,13 +76,21 @@ const DashboardPage = () => {
   const user        = authStore.getUser();
   const queryClient = useQueryClient();
 
-  // Fetch shift summary
-  const { data: summaryData, isLoading: summaryLoading, isError: summaryError, refetch: refetchSummary } = useQuery({
+  // Fetch shift summary — penentu apakah ada shift aktif
+  const {
+    data: summaryData,
+    isLoading: summaryLoading,
+    isError: summaryError,
+    refetch: refetchSummary,
+  } = useQuery({
     queryKey: ["fo-shift-summary"],
     queryFn:  dashboardService.getFoSummary,
     refetchInterval: 5 * 60 * 1000,
     retry: 1,
   });
+
+  // Ada shift aktif hanya jika summary berhasil dan data ada
+  const hasActiveShift = !summaryError && summaryData?.data != null;
 
   // Fetch notifications
   const { data: notifData, isLoading: notifLoading, refetch: refetchNotif } = useQuery({
@@ -93,21 +99,24 @@ const DashboardPage = () => {
     refetchInterval: 5 * 60 * 1000,
   });
 
-  // Fetch KAS hari ini (untuk Shift Cash section)
+  // Fetch KAS & Expenses HANYA jika ada shift aktif (hindari 403 Forbidden)
   const today = new Date().toISOString().split("T")[0];
+
   const { data: kasData, isLoading: kasLoading } = useQuery({
     queryKey: ["kas-today", today],
-    queryFn:  () => api.get(`/kas?date=${today}`).then(r => r.data),
+    queryFn:  () => api.get(`/kas?date=${today}`).then((r) => r.data),
     refetchInterval: 5 * 60 * 1000,
+    enabled: hasActiveShift,
   });
 
   const { data: expenseData, isLoading: expenseLoading } = useQuery({
     queryKey: ["expense-today", today],
-    queryFn:  () => api.get(`/expenses?date=${today}`).then(r => r.data),
+    queryFn:  () => api.get(`/expenses?date=${today}`).then((r) => r.data),
     refetchInterval: 5 * 60 * 1000,
+    enabled: hasActiveShift,
   });
 
-  // Mark as read mutation
+  // Mark notification as read
   const markReadMutation = useMutation({
     mutationFn: dashboardService.markNotificationRead,
     onSuccess:  () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
@@ -128,11 +137,19 @@ const DashboardPage = () => {
             Selamat datang, {user?.name?.split(" ")[0]} 👋
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            {new Date().toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
+            {new Date().toLocaleDateString("id-ID", {
+              weekday: "long",
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
           </p>
         </div>
         <button
-          onClick={() => { refetchSummary(); refetchNotif(); }}
+          onClick={() => {
+            refetchSummary();
+            refetchNotif();
+          }}
           className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg transition-colors"
         >
           <RefreshCw size={14} />
@@ -140,17 +157,35 @@ const DashboardPage = () => {
         </button>
       </div>
 
+      {/* ── Banner: Belum Ada Shift Aktif ── */}
+      {!summaryLoading && summaryError && (
+        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-4">
+          <div className="p-2.5 bg-amber-100 rounded-xl flex-shrink-0">
+            <AlertTriangle size={20} className="text-amber-600" />
+          </div>
+          <div className="flex-1">
+            <p className="font-semibold text-amber-800">Belum ada shift aktif</p>
+            <p className="text-sm text-amber-700 mt-0.5">
+              Mulai shift terlebih dahulu untuk mencatat transaksi dan melihat data hari ini.
+            </p>
+          </div>
+          <Link
+            to="/fo/handover"
+            className="flex-shrink-0 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-xl transition-colors"
+          >
+            Mulai Shift
+          </Link>
+        </div>
+      )}
+
       {/* ── Summary Cards ── */}
       {summaryLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[1, 2, 3].map(i => <Skeleton key={i} className="h-36" />)}
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-36" />
+          ))}
         </div>
-      ) : summaryError ? (
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-5 text-center">
-          <p className="text-red-600 text-sm">Gagal memuat data shift. Data ditampilkan dari sumber lain.</p>
-          <button onClick={refetchSummary} className="mt-2 text-xs text-red-500 underline">Coba lagi</button>
-        </div>
-      ) : (
+      ) : !summaryError ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <SummaryCard
             icon={CalendarCheck}
@@ -186,20 +221,19 @@ const DashboardPage = () => {
             }
           />
         </div>
-      )}
+      ) : null}
 
       {/* ── Bottom Grid: Notifications + Shift Cash ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
         {/* ── Notifications ── */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Bell size={18} className="text-blue-600" />
               <h2 className="font-semibold text-gray-800">Notifications</h2>
-              {notifs.filter(n => !n.read_at).length > 0 && (
+              {notifs.filter((n) => !n.read_at).length > 0 && (
                 <span className="bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-                  {notifs.filter(n => !n.read_at).length}
+                  {notifs.filter((n) => !n.read_at).length}
                 </span>
               )}
             </div>
@@ -207,7 +241,9 @@ const DashboardPage = () => {
 
           {notifLoading ? (
             <div className="space-y-3">
-              {[1, 2, 3].map(i => <Skeleton key={i} className="h-14" />)}
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-14" />
+              ))}
             </div>
           ) : notifs.length === 0 ? (
             <div className="text-center py-8 text-gray-400">
@@ -216,7 +252,7 @@ const DashboardPage = () => {
             </div>
           ) : (
             <div className="space-y-2">
-              {notifs.map(notif => (
+              {notifs.map((notif) => (
                 <button
                   key={notif.id}
                   onClick={() => !notif.read_at && markReadMutation.mutate(notif.id)}
@@ -228,7 +264,11 @@ const DashboardPage = () => {
                 >
                   <NotifIcon type={notif.type} />
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm font-medium truncate ${notif.read_at ? "text-gray-600" : "text-gray-800"}`}>
+                    <p
+                      className={`text-sm font-medium truncate ${
+                        notif.read_at ? "text-gray-600" : "text-gray-800"
+                      }`}
+                    >
                       {notif.title}
                     </p>
                     <p className="text-xs text-gray-500 truncate mt-0.5">{notif.message}</p>
@@ -249,9 +289,17 @@ const DashboardPage = () => {
             <h2 className="font-semibold text-gray-800">Shift Cash</h2>
           </div>
 
-          {kasLoading || expenseLoading ? (
+          {/* Tidak ada shift aktif */}
+          {!summaryLoading && !hasActiveShift ? (
+            <div className="text-center py-8 text-gray-400">
+              <Wallet size={32} className="mx-auto mb-2 opacity-30" />
+              <p className="text-sm">Data kas tersedia setelah shift dimulai</p>
+            </div>
+          ) : kasLoading || expenseLoading ? (
             <div className="space-y-3">
-              {[1, 2, 3].map(i => <Skeleton key={i} className="h-10" />)}
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-10" />
+              ))}
             </div>
           ) : (
             <>
@@ -277,7 +325,11 @@ const DashboardPage = () => {
                 {/* Balance */}
                 <div className="flex items-center justify-between p-4 rounded-xl border-2 border-blue-200 bg-blue-50">
                   <span className="text-sm font-semibold text-blue-800">Final Balance</span>
-                  <span className={`text-base font-extrabold ${balance >= 0 ? "text-blue-700" : "text-red-600"}`}>
+                  <span
+                    className={`text-base font-extrabold ${
+                      balance >= 0 ? "text-blue-700" : "text-red-600"
+                    }`}
+                  >
                     {formatRp(balance)}
                   </span>
                 </div>
