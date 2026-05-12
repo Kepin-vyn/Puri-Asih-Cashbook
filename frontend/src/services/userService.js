@@ -48,8 +48,18 @@ const userService = {
 
   /**
    * DELETE /api/v1/users/{id}
+   * Soft delete: set status = inactive + hapus semua token
    */
   remove: async (id) => {
+    const response = await api.delete(`/users/${id}`);
+    return response.data;
+  },
+
+  /**
+   * DELETE /api/v1/users/{id}
+   * Alias eksplisit untuk nonaktifkan staff
+   */
+  deactivate: async (id) => {
     const response = await api.delete(`/users/${id}`);
     return response.data;
   },
