@@ -10,4 +10,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 // Jalankan notifikasi deposit expiring setiap hari jam 07:00 pagi
-Schedule::command('deposits:notify-expiring')->dailyAt('07:00');
+Schedule::command('deposits:notify-expiring')->dailyAt('08:00');

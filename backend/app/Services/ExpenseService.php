@@ -2,9 +2,8 @@
 
 namespace App\Services;
 
+use App\Helpers\NotificationHelper;
 use App\Models\Expense;
-use App\Models\Notification;
-use App\Models\User;
 
 class ExpenseService
 {
@@ -33,21 +32,17 @@ class ExpenseService
      */
     public function sendPendingNotification(Expense $expense): void
     {
-        $managers = User::where('role', 'manager')->get();
         $totalFormatted = number_format($expense->total_price, 0, ',', '.');
         $foName = $expense->user->name ?? 'Staff';
 
-        foreach ($managers as $manager) {
-            Notification::create([
-                'user_id' => $manager->id,
-                'type'    => 'expense_pending',
-                'title'   => 'Pengeluaran Membutuhkan Persetujuan',
-                'message' => "{$foName} mengajukan pengeluaran {$expense->description} sebesar Rp{$totalFormatted}",
-                'data'    => [
-                    'expense_id' => $expense->id,
-                    'total_price' => $expense->total_price
-                ],
-            ]);
-        }
+        NotificationHelper::sendToManagers(
+            'expense_pending',
+            'Pengeluaran Membutuhkan Persetujuan',
+            "{$foName} mengajukan pengeluaran {$expense->description} sebesar Rp{$totalFormatted}",
+            [
+                'expense_id'  => $expense->id,
+                'total_price' => $expense->total_price,
+            ]
+        );
     }
 }
