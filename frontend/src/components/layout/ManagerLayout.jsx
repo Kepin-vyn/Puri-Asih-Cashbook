@@ -3,11 +3,8 @@ import {
   LayoutDashboard,
   Users,
   CheckSquare,
-  BarChart2,
   Layers,
   FileDown,
-  Settings,
-  ScrollText,
   LogOut,
   Hotel,
 } from "lucide-react";
@@ -19,7 +16,6 @@ const navItems = [
   { to: "/manager/dashboard",     label: "Dashboard",      icon: LayoutDashboard },
   { to: "/manager/fo-management", label: "FO Management",  icon: Users },
   { to: "/manager/approval",      label: "Approval",       icon: CheckSquare, showBadge: true },
-  { to: "/manager/laporan",       label: "Report",         icon: BarChart2 },
   { to: "/manager/monthly-report",label: "Monthly Report", icon: Layers },
   { to: "/manager/penggajian",    label: "Payroll",        icon: FileDown },
 ];
