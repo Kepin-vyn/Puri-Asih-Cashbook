@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
@@ -15,7 +16,9 @@ import {
   AlertTriangle,
   Clock,
 } from "lucide-react";
+import toast from "react-hot-toast";
 import dashboardService from "../../services/dashboardService";
+import shiftService from "../../services/shiftService";
 import authStore from "../../store/authStore";
 import api from "../../utils/axios";
 
@@ -75,6 +78,23 @@ const NotifIcon = ({ type }) => {
 const DashboardPage = () => {
   const user        = authStore.getUser();
   const queryClient = useQueryClient();
+
+  const [showStartShiftModal, setShowStartShiftModal] = useState(false);
+
+  // Mutation: mulai shift langsung dari dashboard
+  const startShiftMutation = useMutation({
+    mutationFn: shiftService.startShift,
+    onSuccess: () => {
+      toast.success("Shift berhasil dimulai!");
+      setShowStartShiftModal(false);
+      queryClient.invalidateQueries({ queryKey: ["fo-shift-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["active-shift"] });
+      queryClient.invalidateQueries({ queryKey: ["fo-dashboard"] });
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message ?? "Gagal memulai shift.");
+    },
+  });
 
   // Fetch shift summary — penentu apakah ada shift aktif
   const {
@@ -159,22 +179,94 @@ const DashboardPage = () => {
 
       {/* ── Banner: Belum Ada Shift Aktif ── */}
       {!summaryLoading && summaryError && (
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-4">
-          <div className="p-2.5 bg-amber-100 rounded-xl flex-shrink-0">
-            <AlertTriangle size={20} className="text-amber-600" />
+        <>
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-4">
+            <div className="p-2.5 bg-amber-100 rounded-xl flex-shrink-0">
+              <AlertTriangle size={20} className="text-amber-600" />
+            </div>
+            <div className="flex-1">
+              <p className="font-semibold text-amber-800">Belum ada shift aktif</p>
+              <p className="text-sm text-amber-700 mt-0.5">
+                Mulai shift terlebih dahulu untuk mencatat transaksi dan melihat data hari ini.
+              </p>
+            </div>
+            <button
+              onClick={() => setShowStartShiftModal(true)}
+              disabled={startShiftMutation.isPending}
+              className="flex-shrink-0 px-4 py-2 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 disabled:cursor-not-allowed text-white text-sm font-medium rounded-xl transition-colors flex items-center gap-2"
+            >
+              {startShiftMutation.isPending ? (
+                <>
+                  <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  Memulai...
+                </>
+              ) : (
+                "▶ Mulai Shift"
+              )}
+            </button>
           </div>
-          <div className="flex-1">
-            <p className="font-semibold text-amber-800">Belum ada shift aktif</p>
-            <p className="text-sm text-amber-700 mt-0.5">
-              Mulai shift terlebih dahulu untuk mencatat transaksi dan melihat data hari ini.
+
+          {/* Modal Konfirmasi Mulai Shift */}
+          {showStartShiftModal && (
+            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+              <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full">
+                <h3 className="text-lg font-bold text-gray-800 mb-2">Mulai Shift</h3>
+                <p className="text-gray-600 text-sm mb-6">
+                  Mulai shift sekarang? Kamu akan tercatat masuk pada jam{" "}
+                  <strong>
+                    {new Date().toLocaleTimeString("id-ID", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </strong>.
+                </p>
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => setShowStartShiftModal(false)}
+                    disabled={startShiftMutation.isPending}
+                    className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 text-sm font-medium transition-colors disabled:opacity-50"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    onClick={() => startShiftMutation.mutate()}
+                    disabled={startShiftMutation.isPending}
+                    className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
+                  >
+                    {startShiftMutation.isPending ? (
+                      <>
+                        <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                        Memulai...
+                      </>
+                    ) : (
+                      "Mulai Shift"
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ── Banner: Shift Aktif ── */}
+      {!summaryLoading && hasActiveShift && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center gap-3">
+          <div className="p-2 bg-emerald-100 rounded-xl flex-shrink-0">
+            <Clock size={18} className="text-emerald-600" />
+          </div>
+          <div>
+            <p className="font-semibold text-emerald-800">✅ Shift Aktif</p>
+            <p className="text-sm text-emerald-600">
+              Dimulai:{" "}
+              {summary.shift_started_at
+                ? new Date(summary.shift_started_at).toLocaleTimeString("id-ID", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                : "Hari ini"}
             </p>
           </div>
-          <Link
-            to="/fo/handover"
-            className="flex-shrink-0 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-xl transition-colors"
-          >
-            Mulai Shift
-          </Link>
         </div>
       )}
 
