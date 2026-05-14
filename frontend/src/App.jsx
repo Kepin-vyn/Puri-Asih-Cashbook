@@ -33,8 +33,11 @@ import PenggajianPage from "./pages/manager/PayrollPage";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      staleTime:            5 * 60 * 1000, // data dianggap fresh selama 5 menit
+      gcTime:              10 * 60 * 1000, // cache disimpan 10 menit setelah tidak dipakai
+      retry:                1,
       refetchOnWindowFocus: false,
+      refetchOnMount:       true,
     },
   },
 });
