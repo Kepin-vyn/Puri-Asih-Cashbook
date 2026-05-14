@@ -76,7 +76,7 @@ const KasHarianPage = () => {
     retry: false,
   });
   const activeShift  = shiftData?.data;
-  const hasNoShift   = shiftError; // 404 = no active shift
+  const hasNoShift   = shiftError || !shiftData?.data; // 404 = no active shift
 
   // ── Fetch KAS transactions ──────────────────────────────────────────────────
   const { data, isLoading } = useQuery({
@@ -232,7 +232,9 @@ const KasHarianPage = () => {
           <span className="text-amber-500 text-xl">⚠️</span>
           <div>
             <p className="font-semibold text-amber-800">Tidak ada shift aktif</p>
-            <p className="text-sm text-amber-600 mt-0.5">Mulai shift terlebih dahulu untuk bisa mencatat transaksi KAS.</p>
+            <p className="text-sm text-amber-600 mt-0.5">
+              Kamu belum memulai shift. Kembali ke Dashboard dan klik "Mulai Shift" terlebih dahulu.
+            </p>
           </div>
         </div>
       )}
@@ -246,8 +248,14 @@ const KasHarianPage = () => {
           </p>
         </div>
         <button
-          onClick={openAdd}
-          className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm"
+          onClick={() => !hasNoShift && openAdd()}
+          disabled={hasNoShift}
+          title={hasNoShift ? "Mulai shift terlebih dahulu untuk menambah transaksi" : "Tambah transaksi baru"}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all shadow-sm ${
+            hasNoShift
+              ? "bg-gray-200 text-gray-400 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+          }`}
           id="btn-tambah-kas"
         >
           <Plus size={16} />
