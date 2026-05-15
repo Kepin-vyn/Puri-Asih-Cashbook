@@ -2,36 +2,19 @@ import api from "../utils/axios";
 
 const dashboardService = {
   /**
-   * Ambil summary untuk Dashboard FO (berdasarkan shift aktif)
+   * Ambil agregasi data Dashboard FO (1 request)
    */
-  getFoSummary: async () => {
-    const response = await api.get("/shifts/active/summary");
+  getFoDashboard: async () => {
+    const response = await api.get("/dashboard/fo");
     return response.data;
   },
 
   /**
-   * Ambil summary untuk Dashboard Manager (hari ini)
+   * Ambil agregasi data Dashboard Manager (1 request)
    */
-  getManagerSummary: async () => {
-    const today = new Date().toISOString().split("T")[0];
-    const [kasRes, expenseRes, reservationRes, pendingRes] = await Promise.allSettled([
-      api.get(`/kas?date=${today}`),
-      api.get(`/expenses?date=${today}`),
-      api.get(`/reservations?date_from=${today}&date_to=${today}`),
-      api.get("/expenses/pending/count"),
-    ]);
-
-    const kasData        = kasRes.status === "fulfilled" ? kasRes.value.data : null;
-    const expenseData    = expenseRes.status === "fulfilled" ? expenseRes.value.data : null;
-    const reservationData = reservationRes.status === "fulfilled" ? reservationRes.value.data : null;
-    const pendingData    = pendingRes.status === "fulfilled" ? pendingRes.value.data : null;
-
-    return {
-      total_revenue:      kasData?.meta?.total_amount ?? 0,
-      total_expenses:     expenseData?.meta?.totals?.total_valid ?? 0,
-      total_reservations: reservationData?.meta?.summary?.total_reservations ?? 0,
-      pending_count:      pendingData?.data?.count ?? 0,
-    };
+  getManagerDashboard: async () => {
+    const response = await api.get("/dashboard/manager");
+    return response.data;
   },
 
   /**

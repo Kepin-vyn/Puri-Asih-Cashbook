@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\NotificationController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\PayrollController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\DashboardController;
 
 // Semua route diakses melalui: http://localhost:8000/api/v1/...
 Route::prefix('v1')->group(function () {
@@ -30,6 +31,9 @@ Route::prefix('v1')->group(function () {
         // --- Auth ---
         Route::post('/auth/logout', [AuthController::class, 'logout']);
         Route::get('/auth/me',      [AuthController::class, 'me']);
+
+        // --- Dashboard ---
+        Route::get('dashboard/fo', [DashboardController::class, 'fo']);
 
         // --- KAS Harian (FO & Manager) ---
         Route::get('kas/export/pdf',         [KasController::class, 'exportPdf']);   // HARUS sebelum apiResource
@@ -85,6 +89,9 @@ Route::prefix('v1')->group(function () {
         // MANAGER ONLY ROUTES — role:manager
         // ============================================
         Route::middleware('role:manager')->group(function () {
+
+            // --- Dashboard Manager ---
+            Route::get('dashboard/manager', [DashboardController::class, 'manager']);
 
             // --- Approval Pengeluaran ---
             Route::post('expenses/{id}/approve', [ExpenseController::class, 'approve']);
