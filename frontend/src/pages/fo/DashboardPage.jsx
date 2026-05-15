@@ -96,6 +96,8 @@ const DashboardPage = () => {
     },
   });
 
+  // ── DATA KRITIS: polling 2 menit ──────────────────────────────────────────
+
   // Fetch shift summary — penentu apakah ada shift aktif
   const {
     data: summaryData,
@@ -105,19 +107,24 @@ const DashboardPage = () => {
   } = useQuery({
     queryKey: ["fo-shift-summary"],
     queryFn:  dashboardService.getFoSummary,
-    refetchInterval: 5 * 60 * 1000,
+    staleTime:       1 * 60 * 1000, // kritis: fresh 1 menit
+    refetchInterval: 2 * 60 * 1000, // polling setiap 2 menit
     retry: 1,
   });
 
   // Ada shift aktif hanya jika summary berhasil dan data ada
-  const hasActiveShift = !summaryError && summaryData?.data != null;
+  const hasActiveShift  = !summaryError && summaryData?.data != null;
+  const activeShiftId   = summaryData?.data?.shift_id ?? null;
 
   // Fetch notifications
   const { data: notifData, isLoading: notifLoading, refetch: refetchNotif } = useQuery({
     queryKey: ["notifications"],
     queryFn:  dashboardService.getNotifications,
-    refetchInterval: 5 * 60 * 1000,
+    staleTime:       1 * 60 * 1000, // kritis: fresh 1 menit
+    refetchInterval: 2 * 60 * 1000, // polling setiap 2 menit
   });
+
+  // ── DATA TIDAK KRITIS: polling 10 menit ───────────────────────────────────
 
   // Fetch KAS & Expenses HANYA jika ada shift aktif (hindari 403 Forbidden)
   const today = new Date().toISOString().split("T")[0];
@@ -125,14 +132,16 @@ const DashboardPage = () => {
   const { data: kasData, isLoading: kasLoading } = useQuery({
     queryKey: ["kas-today", today],
     queryFn:  () => api.get(`/kas?date=${today}`).then((r) => r.data),
-    refetchInterval: 5 * 60 * 1000,
+    staleTime:       5 * 60 * 1000,  // tidak kritis: fresh 5 menit
+    refetchInterval: 10 * 60 * 1000, // polling setiap 10 menit
     enabled: hasActiveShift,
   });
 
   const { data: expenseData, isLoading: expenseLoading } = useQuery({
     queryKey: ["expense-today", today],
     queryFn:  () => api.get(`/expenses?date=${today}`).then((r) => r.data),
-    refetchInterval: 5 * 60 * 1000,
+    staleTime:       5 * 60 * 1000,
+    refetchInterval: 10 * 60 * 1000,
     enabled: hasActiveShift,
   });
 
