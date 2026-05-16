@@ -227,12 +227,16 @@ const KasHarianPage = () => {
     <div className="space-y-6">
       {/* ── No Shift Warning ── */}
       {hasNoShift && (
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-3">
-          <span className="text-amber-500 text-xl">⚠️</span>
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4 flex items-start gap-3">
+          <span className="text-amber-500 text-xl mt-0.5">⚠️</span>
           <div>
             <p className="font-semibold text-amber-800">Tidak ada shift aktif</p>
-            <p className="text-sm text-amber-600 mt-0.5">
-              Kamu belum memulai shift. Kembali ke Dashboard dan klik "Mulai Shift" terlebih dahulu.
+            <p className="text-amber-700 text-sm">
+              Kamu belum memulai shift hari ini. Kembali ke{' '}
+              <a href="/fo/dashboard" className="underline font-medium">
+                Dashboard
+              </a>{' '}
+              dan klik "Mulai Shift Sekarang".
             </p>
           </div>
         </div>
@@ -249,15 +253,17 @@ const KasHarianPage = () => {
         <button
           onClick={() => !hasNoShift && openAdd()}
           disabled={hasNoShift}
-          title={hasNoShift ? "Mulai shift terlebih dahulu untuk menambah transaksi" : "Tambah transaksi baru"}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all shadow-sm ${
+          title={hasNoShift
+            ? 'Mulai shift terlebih dahulu untuk menambah transaksi'
+            : 'Tambah transaksi baru'}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
             hasNoShift
-              ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-              : "bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              : 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
           }`}
           id="btn-tambah-kas"
         >
-          <Plus size={16} />
+          <span className="text-lg">+</span>
           Tambah Transaksi
         </button>
       </div>
