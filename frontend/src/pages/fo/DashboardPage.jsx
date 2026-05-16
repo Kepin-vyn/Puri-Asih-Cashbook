@@ -23,6 +23,7 @@ import authStore from "../../store/authStore";
 import api from "../../utils/axios";
 import { formatTime } from "../../utils/dateFormatter";
 import { QUERY_KEYS } from "../../utils/queryKeys";
+import { useShiftContext } from "../../context/ShiftContext";
 
 // ─── Helper: Format Rupiah ──────────────────────────────────────────────────
 const formatRp = (val) =>
@@ -80,6 +81,7 @@ const NotifIcon = ({ type }) => {
 const DashboardPage = () => {
   const user        = authStore.getUser();
   const queryClient = useQueryClient();
+  const { markShiftStarted } = useShiftContext();
 
   const [showStartShiftModal, setShowStartShiftModal] = useState(false);
 
@@ -87,10 +89,18 @@ const DashboardPage = () => {
   const startShiftMutation = useMutation({
     mutationFn: shiftService.startShift,
     onSuccess: () => {
+      // 1. Update context global agar semua halaman tahu
+      markShiftStarted();
+      // 2. Invalidate SEMUA query active-shift di seluruh aplikasi
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.activeShift,
+        exact: false,
+        refetchType: "all",
+      });
+      // 3. Invalidate dashboard
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
       toast.success("Shift berhasil dimulai!");
       setShowStartShiftModal(false);
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.activeShift });
     },
     onError: (error) => {
       toast.error(error.response?.data?.message ?? "Gagal memulai shift.");

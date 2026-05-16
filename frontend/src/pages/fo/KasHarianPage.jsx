@@ -9,6 +9,7 @@ import RupiahInput from "../../components/ui/RupiahInput";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import { formatDateShort } from "../../utils/dateFormatter";
 import { QUERY_KEYS } from "../../utils/queryKeys";
+import { useActiveShift } from "../../hooks/useActiveShift";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const formatRp = (v) =>
@@ -71,14 +72,8 @@ const KasHarianPage = () => {
   const [uploading,    setUploading]    = useState(false);
   const [exporting,    setExporting]    = useState(false);
 
-  // ── Fetch active shift ──────────────────────────────────────────────────────
-  const { data: shiftData, isError: shiftError } = useQuery({
-    queryKey: ["active-shift"],
-    queryFn:  () => api.get("/shifts/active").then(r => r.data),
-    retry: false,
-  });
-  const activeShift  = shiftData?.data;
-  const hasNoShift   = shiftError || !shiftData?.data; // 404 = no active shift
+  // ── Active shift via centralized hook ─────────────────────────────────────
+  const { activeShift, hasNoShift } = useActiveShift();
 
   // ── Fetch KAS transactions ──────────────────────────────────────────────────
   const { data, isLoading } = useQuery({

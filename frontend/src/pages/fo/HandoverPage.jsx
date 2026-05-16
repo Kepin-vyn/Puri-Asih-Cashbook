@@ -7,6 +7,8 @@ import shiftService from "../../services/shiftService";
 import userService from "../../services/userService";
 import authStore from "../../store/authStore";
 import { formatTime, formatDateLong, formatDuration } from "../../utils/dateFormatter";
+import { QUERY_KEYS } from "../../utils/queryKeys";
+import { useShiftContext } from "../../context/ShiftContext";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const formatRp = (v) =>
@@ -131,6 +133,7 @@ const HandoverPage = () => {
   const user = authStore.getUser();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { markShiftEnded } = useShiftContext();
 
   const [activeTab, setActiveTab] = useState("kas");
   const [handoverTo, setHandoverTo] = useState("");
@@ -145,7 +148,7 @@ const HandoverPage = () => {
     isLoading: shiftLoading,
     isError: shiftError,
   } = useQuery({
-    queryKey: ["active-shift"],
+    queryKey: QUERY_KEYS.activeShift,
     queryFn: shiftService.getActive,
     retry: false,
   });
@@ -186,7 +189,14 @@ const HandoverPage = () => {
       const closedShiftId = res?.data?.shift?.id ?? activeShift?.id;
       setCompletedShiftId(closedShiftId);
       setShowSuccess(true);
-      queryClient.invalidateQueries({ queryKey: ["active-shift"] });
+      // Update context global agar semua halaman tahu shift sudah berakhir
+      markShiftEnded();
+      // Invalidate semua query active-shift di seluruh aplikasi
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.activeShift,
+        exact: false,
+        refetchType: "all",
+      });
     },
     onError: (e) =>
       toast.error(e.response?.data?.message ?? "Handover gagal. Coba lagi."),

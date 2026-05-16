@@ -12,6 +12,7 @@ import ConfirmModal from "../../components/ui/ConfirmModal";
 import StatusBadge from "../../components/ui/StatusBadge";
 import { formatDateShort } from "../../utils/dateFormatter";
 import { QUERY_KEYS } from "../../utils/queryKeys";
+import { useActiveShift } from "../../hooks/useActiveShift";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const formatRp = (v) =>
@@ -113,14 +114,8 @@ const ReservationPage = () => {
   // ── Derived: remaining balance ────────────────────────────────────────────
   const remainingBalance = Math.max(0, (form.room_price ?? 0) - (form.down_payment ?? 0));
 
-  // ── Fetch active shift ────────────────────────────────────────────────────
-  const { data: shiftData, isError: shiftError } = useQuery({
-    queryKey: ["active-shift"],
-    queryFn:  () => api.get("/shifts/active").then(r => r.data),
-    retry: false,
-  });
-  const activeShift = shiftData?.data;
-  const hasNoShift  = shiftError || !shiftData?.data;
+  // ── Active shift via centralized hook ────────────────────────────────────
+  const { activeShift, hasNoShift } = useActiveShift();
 
   // ── Fetch available rooms ─────────────────────────────────────────────────
   const { data: availData } = useQuery({
