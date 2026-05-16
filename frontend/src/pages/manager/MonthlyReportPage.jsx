@@ -191,7 +191,7 @@ const MonthlyReportPage = () => {
   const queryParams = {
     month:   monthStr,
     year:    yearStr,
-    ...(appliedStaff && { user_id: appliedStaff }),
+    ...(appliedStaff && { staff_id: appliedStaff }),
   };
 
   // ── Fetch FO users for filter ─────────────────────────────────────────────
@@ -243,7 +243,10 @@ const MonthlyReportPage = () => {
   };
 
   // ── Derived values ────────────────────────────────────────────────────────
-  const balance      = Number(summary.balance ?? summary.net_balance ?? 0);
+  const totalKas       = Number(summary.total_pemasukan_kas ?? 0);
+  const totalReservasi = Number(summary.total_reservasi ?? 0);
+  const totalPengeluaran = Number(summary.total_pengeluaran ?? 0);
+  const balance      = Number(summary.saldo_bersih ?? 0);
   const isPositive   = balance >= 0;
   const periodLabel  = `${MONTHS_LABEL[Number(monthStr) - 1]} ${yearStr}`;
 
@@ -488,24 +491,24 @@ const MonthlyReportPage = () => {
               <SummaryCard
                 icon={TrendingUp}
                 label="Total Pemasukan KAS"
-                value={summary.total_kas ?? 0}
-                count={summary.kas_count}
+                value={totalKas}
+                count={summary.kas_count ?? 0}
                 countLabel="transaksi"
                 color="green"
               />
               <SummaryCard
                 icon={Receipt}
                 label="Total Pemasukan Reservasi"
-                value={summary.total_reservations ?? 0}
-                count={summary.reservation_count}
+                value={totalReservasi}
+                count={summary.reservasi_count ?? 0}
                 countLabel="reservasi"
                 color="blue"
               />
               <SummaryCard
                 icon={TrendingDown}
                 label="Total Pengeluaran"
-                value={summary.total_expenses ?? 0}
-                count={summary.expense_count}
+                value={totalPengeluaran}
+                count={summary.pengeluaran_count ?? 0}
                 countLabel="transaksi"
                 color="red"
               />

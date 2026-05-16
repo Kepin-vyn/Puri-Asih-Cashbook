@@ -95,8 +95,8 @@ class MonthlyReportService
             'summary'   => [
                 'total_pemasukan_kas'            => (int) $totalKas,
                 'total_pemasukan_kas_formatted'  => 'Rp ' . number_format($totalKas, 0, ',', '.'),
-                'total_pemasukan_reservasi'           => (int) $totalReservasi,
-                'total_pemasukan_reservasi_formatted' => 'Rp ' . number_format($totalReservasi, 0, ',', '.'),
+                'total_reservasi'                => (int) $totalReservasi,
+                'total_reservasi_formatted'      => 'Rp ' . number_format($totalReservasi, 0, ',', '.'),
                 'total_pemasukan'                => (int) $totalPemasukan,
                 'total_pemasukan_formatted'      => 'Rp ' . number_format($totalPemasukan, 0, ',', '.'),
                 'total_pengeluaran'              => (int) $totalExpenses,
@@ -116,9 +116,9 @@ class MonthlyReportService
     /**
      * Ambil ringkasan summary bulanan saja (tanpa detail transaksi)
      */
-    public function getMonthlySummary(int $month, int $year): array
+    public function getMonthlySummary(int $month, int $year, array $filters = []): array
     {
-        $data = $this->getMonthlyData($month, $year);
+        $data = $this->getMonthlyData($month, $year, $filters);
 
         return [
             'period'  => $data['period'],
