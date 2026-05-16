@@ -52,6 +52,15 @@ const payrollService = {
   },
 
   /**
+   * GET /api/v1/payroll/settings
+   * Ambil setting gaji harian terkini (Manager only)
+   */
+  getSettings: async () => {
+    const response = await api.get("/payroll/settings");
+    return response.data;
+  },
+
+  /**
    * PUT /api/v1/payroll/settings/daily-rate
    * Set gaji harian (Manager only)
    * @param {number} rate

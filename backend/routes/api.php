@@ -106,6 +106,7 @@ Route::prefix('v1')->group(function () {
 
             // --- Payroll ---
             Route::get('payroll',                        [PayrollController::class, 'index']);
+            Route::get('payroll/settings',               [PayrollController::class, 'getSettings']);
             Route::get('payroll/{month}',                [PayrollController::class, 'monthly']);
             Route::get('payroll/{month}/{staffId}',      [PayrollController::class, 'detail']);
             Route::post('payroll/calculate/{month}',     [PayrollController::class, 'calculate']);
