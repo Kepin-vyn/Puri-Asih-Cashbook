@@ -6,6 +6,7 @@ use App\Http\Requests\Deposit\StoreDepositRequest;
 use App\Http\Requests\Deposit\ForfeitDepositRequest;
 use App\Http\Resources\DepositResource;
 use App\Models\Deposit;
+use App\Models\KasTransaction;
 use App\Models\Shift;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -212,6 +213,7 @@ class DepositController extends BaseApiController
             );
         }
 
+        // Update status deposit ke forfeited
         $deposit->update([
             'status' => 'forfeited',
             'note'   => $request->note,
@@ -219,9 +221,35 @@ class DepositController extends BaseApiController
 
         $deposit->load('user');
 
+        // Otomatis buat record KAS — deposit hangus = pemasukan hotel
+        $kasNote = 'Deposit hangus - ' . $deposit->guest_name
+                 . ' kamar ' . $deposit->room_number
+                 . ' - ' . $request->note;
+
+        $kasRecord = KasTransaction::create([
+            'shift_id'         => $deposit->shift_id,
+            'user_id'          => $deposit->user_id,
+            'guest_name'       => $deposit->guest_name,
+            'room_number'      => $deposit->room_number,
+            'transaction_type' => 'pelunasan',
+            'payment_method'   => $deposit->payment_method,
+            'amount'           => $deposit->amount,
+            'note'             => $kasNote,
+            'auto_generated'   => true,
+            'source_reference' => 'deposit:' . $deposit->id,
+        ]);
+
         return $this->successResponse(
-            new DepositResource($deposit),
-            'Deposit berhasil dihanguskan.'
+            [
+                'deposit'     => new DepositResource($deposit),
+                'kas_created' => [
+                    'id'               => $kasRecord->id,
+                    'amount'           => (float) $kasRecord->amount,
+                    'transaction_type' => $kasRecord->transaction_type,
+                    'note'             => $kasRecord->note,
+                ],
+            ],
+            'Deposit berhasil dihanguskan dan tercatat sebagai pemasukan.'
         );
     }
 
