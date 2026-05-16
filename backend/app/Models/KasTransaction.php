@@ -20,12 +20,15 @@ class KasTransaction extends Model
         'amount',
         'note',
         'receipt_photo',
+        'auto_generated',
+        'source_reference',
     ];
 
     protected function casts(): array
     {
         return [
-            'amount' => 'decimal:2',
+            'amount'         => 'decimal:2',
+            'auto_generated' => 'boolean',
         ];
     }
 

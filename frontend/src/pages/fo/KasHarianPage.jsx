@@ -301,6 +301,7 @@ const KasHarianPage = () => {
                 <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Jenis</th>
                 <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Metode</th>
                 <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">Jumlah</th>
+                <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Sumber</th>
                 <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Aksi</th>
               </tr>
             </thead>
@@ -335,6 +336,17 @@ const KasHarianPage = () => {
                         {formatRp(trx.amount)}
                       </td>
                       <td className="px-4 py-3">
+                        {trx.auto_generated ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
+                            🔄 Otomatis
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full">
+                            ✏️ Manual
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3">
                         <div className="flex items-center gap-1">
                           {/* Upload struk */}
                           <label
@@ -363,17 +375,27 @@ const KasHarianPage = () => {
                           )}
                           {/* Edit */}
                           <button
-                            onClick={() => openEdit(trx)}
-                            className="p-1.5 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
-                            title="Edit"
+                            onClick={() => !trx.auto_generated && openEdit(trx)}
+                            disabled={trx.auto_generated}
+                            className={`p-1.5 rounded-lg transition-colors ${
+                              trx.auto_generated
+                                ? 'text-gray-300 cursor-not-allowed'
+                                : 'text-gray-500 hover:text-amber-600 hover:bg-amber-50'
+                            }`}
+                            title={trx.auto_generated ? 'Transaksi otomatis tidak bisa diedit' : 'Edit'}
                           >
                             <Pencil size={14} />
                           </button>
                           {/* Hapus */}
                           <button
-                            onClick={() => setDeleteTarget(trx)}
-                            className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Hapus"
+                            onClick={() => !trx.auto_generated && setDeleteTarget(trx)}
+                            disabled={trx.auto_generated}
+                            className={`p-1.5 rounded-lg transition-colors ${
+                              trx.auto_generated
+                                ? 'text-gray-300 cursor-not-allowed'
+                                : 'text-gray-500 hover:text-red-600 hover:bg-red-50'
+                            }`}
+                            title={trx.auto_generated ? 'Transaksi otomatis tidak bisa dihapus' : 'Hapus'}
                           >
                             <Trash2 size={14} />
                           </button>

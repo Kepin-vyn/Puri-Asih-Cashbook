@@ -164,6 +164,11 @@ class KasController extends BaseApiController
             }
         }
 
+        // Blokir edit transaksi otomatis
+        if ($kasTransaction->auto_generated) {
+            return $this->errorResponse('Transaksi otomatis tidak dapat diubah.', null, 403);
+        }
+
         $kasTransaction->update($request->validated());
         $kasTransaction->load('user');
 
@@ -194,6 +199,11 @@ class KasController extends BaseApiController
             if (! $activeShift || $kasTransaction->shift_id !== $activeShift->id) {
                 return $this->forbiddenResponse('Anda tidak dapat menghapus transaksi ini.');
             }
+        }
+
+        // Blokir hapus transaksi otomatis
+        if ($kasTransaction->auto_generated) {
+            return $this->errorResponse('Transaksi otomatis tidak dapat dihapus.', null, 403);
         }
 
         $kasTransaction->delete(); // Soft delete
