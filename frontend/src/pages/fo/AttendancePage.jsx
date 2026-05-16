@@ -83,6 +83,17 @@ const AttendancePage = () => {
 
   const [yearStr, monthStr] = period.split("-");
 
+  // ── Fetch today's shift ───────────────────────────────────────────────────
+  const { data: todayShiftData } = useQuery({
+    queryKey: ["today-shift"],
+    queryFn: attendanceService.getTodayShift,
+  });
+
+  const todayShift = todayShiftData?.data?.shift_type;
+  const shiftLabel = todayShiftData?.data?.shift_label;
+  const shiftHours = todayShiftData?.data?.shift_hours;
+  const isOff = todayShiftData?.data?.is_off;
+
   // ── Fetch today's attendance ──────────────────────────────────────────────
   const today = new Date().toISOString().split("T")[0];
   const { data: todayData, isLoading: todayLoading } = useQuery({
@@ -132,12 +143,24 @@ const AttendancePage = () => {
     onError: (e) => toast.error(e.response?.data?.message ?? "Gagal absen pulang."),
   });
 
-  const handleCheckin = () => {
+  const handleCheckin = async () => {
+    // Validasi: tanda tangan wajib ada
     if (!signature) {
-      toast.error("Tanda tangan wajib diisi sebelum absen masuk.");
+      toast.error('Tanda tangan wajib diisi sebelum absen masuk');
       return;
     }
-    checkinMutation.mutate({ digital_signature: signature });
+
+    // Validasi: shift harus terdeteksi
+    if (!todayShift || todayShift === 'off') {
+      toast.error('Shift hari ini tidak terdeteksi. Hubungi Manager.');
+      return;
+    }
+
+    // Kirim payload yang LENGKAP
+    await checkinMutation.mutateAsync({
+      shift_type:        todayShift,      // field yang wajib ada
+      digital_signature: signature,       // base64 dari canvas
+    });
   };
 
   const handleCheckout = () => {
@@ -174,7 +197,37 @@ const AttendancePage = () => {
           <div className="h-48 bg-gray-100 rounded-2xl animate-pulse" />
         ) : !hasCheckin ? (
           /* ── KONDISI A: Belum absen ── */
-          <div className="bg-white rounded-2xl border-2 border-amber-300 shadow-sm p-6 space-y-4">
+          <div className="space-y-4">
+            {/* Info Shift Hari Ini */}
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="text-3xl">
+                  {todayShift === 'pagi' ? '🌅'
+                   : todayShift === 'siang' ? '🌤'
+                   : todayShift === 'malam' ? '🌙'
+                   : '📅'}
+                </div>
+                <div>
+                  <p className="font-semibold text-blue-800">
+                    Shift Hari Ini: {shiftLabel || 'Tidak Diketahui'}
+                  </p>
+                  <p className="text-sm text-blue-600">
+                    Jam: {shiftHours || '-'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {isOff ? (
+              <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
+                <p className="text-4xl mb-2">🎉</p>
+                <p className="font-semibold text-green-800">Hari Ini Libur!</p>
+                <p className="text-sm text-green-600">
+                  Kamu tidak perlu absen hari ini.
+                </p>
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl border-2 border-amber-300 shadow-sm p-6 space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="font-bold text-gray-800">Absen Masuk</h2>
@@ -229,6 +282,8 @@ const AttendancePage = () => {
               )}
             </button>
           </div>
+          )}
+        </div>
 
         ) : !hasCheckout ? (
           /* ── KONDISI B: Sudah masuk, belum checkout ── */

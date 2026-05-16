@@ -19,6 +19,39 @@ class AttendanceController extends BaseApiController
     ) {}
 
     /**
+     * GET /api/v1/attendance/today-shift
+     * Ambil informasi shift untuk hari ini
+     */
+    public function todayShift(): JsonResponse
+    {
+        $user = auth()->user();
+
+        // Cek jadwal mingguan dulu
+        $weekStart = Carbon::now()->startOfWeek(Carbon::MONDAY)->toDateString();
+        $schedule = \App\Models\ShiftSchedule::where('user_id', $user->id)
+                      ->where('week_start_date', $weekStart)
+                      ->first();
+
+        $dayName = strtolower(Carbon::now()->englishDayOfWeek); // monday, tuesday, dst
+        $shiftType = $schedule?->$dayName ?? $user->shift;
+
+        // Jam shift berdasarkan tipe
+        $shiftHours = match($shiftType) {
+            'pagi'  => '08:00 - 15:00',
+            'siang' => '15:00 - 22:00',
+            'malam' => '22:00 - 08:00',
+            default => '-',
+        };
+
+        return $this->successResponse([
+            'shift_type'  => $shiftType,
+            'shift_label' => ucfirst($shiftType ?? '-'),
+            'shift_hours' => $shiftHours,
+            'is_off'      => $shiftType === 'off' || !$shiftType,
+        ], 'Shift hari ini');
+    }
+
+    /**
      * GET /api/v1/attendance
      * FO     : hanya absensi miliknya sendiri
      * Manager: semua absensi, support filter
