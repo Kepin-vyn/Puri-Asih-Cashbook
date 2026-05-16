@@ -10,6 +10,7 @@ import api from "../../utils/axios";
 import RupiahInput from "../../components/ui/RupiahInput";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import StatusBadge from "../../components/ui/StatusBadge";
+import { formatDateShort } from "../../utils/dateFormatter";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const formatRp = (v) =>
@@ -448,14 +449,10 @@ const ReservationPage = () => {
                     </td>
                     <td className="px-4 py-3 text-gray-600">{res.room_number}</td>
                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
-                      {res.check_in_date
-                        ? new Date(res.check_in_date).toLocaleDateString("id-ID")
-                        : "-"}
+                      {formatDateShort(res.check_in_date)}
                     </td>
                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
-                      {res.check_out_date
-                        ? new Date(res.check_out_date).toLocaleDateString("id-ID")
-                        : "-"}
+                      {formatDateShort(res.check_out_date)}
                     </td>
                     <td className="px-4 py-3 font-semibold text-gray-800 whitespace-nowrap">
                       {formatRp(res.room_price)}

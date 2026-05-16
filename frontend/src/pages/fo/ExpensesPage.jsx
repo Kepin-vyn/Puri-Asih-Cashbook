@@ -10,6 +10,7 @@ import api from "../../utils/axios";
 import RupiahInput from "../../components/ui/RupiahInput";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import StatusBadge from "../../components/ui/StatusBadge";
+import { formatDateShort } from "../../utils/dateFormatter";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const formatRp = (v) =>
@@ -17,10 +18,7 @@ const formatRp = (v) =>
     style: "currency", currency: "IDR", maximumFractionDigits: 0,
   }).format(v ?? 0).replace("IDR", "Rp");
 
-const formatDate = (d) =>
-  d ? new Date(d).toLocaleDateString("id-ID", {
-    day: "2-digit", month: "short", year: "numeric",
-  }) : "-";
+const formatDate = (d) => formatDateShort(d);
 
 const today = new Date().toISOString().split("T")[0];
 const AUTO_APPROVE_LIMIT = 500000;
