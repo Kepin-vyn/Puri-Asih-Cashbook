@@ -7,6 +7,7 @@ import toast from "react-hot-toast";
 import userService from "../../services/userService";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import InlineDropdown from "../../components/ui/InlineDropdown";
+import { formatDate } from "../../utils/dateFormatter";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const SHIFT_OPTIONS = [
@@ -21,10 +22,6 @@ const STATUS_OPTIONS = [
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-const formatDate = (d) =>
-  d ? new Date(d).toLocaleDateString("id-ID", {
-    day: "2-digit", month: "long", year: "numeric",
-  }) : "-";
 
 // ── Status badge ──────────────────────────────────────────────────────────────
 const StatusBadge = ({ status }) => (

@@ -4,6 +4,7 @@ import { Download, FileText, Calendar } from "lucide-react";
 import toast from "react-hot-toast";
 import shiftService from "../../services/shiftService";
 import authStore from "../../store/authStore";
+import { formatDateShort, formatTime, formatDuration } from "../../utils/dateFormatter";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const formatRp = (v) =>
@@ -15,22 +16,7 @@ const formatRp = (v) =>
     .format(v ?? 0)
     .replace("IDR", "Rp");
 
-const formatDate = (iso) =>
-  iso
-    ? new Date(iso).toLocaleDateString("id-ID", {
-        day: "2-digit",
-        month: "short",
-        year: "numeric",
-      })
-    : "-";
-
-const formatTime = (iso) =>
-  iso
-    ? new Date(iso).toLocaleTimeString("id-ID", {
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : "-";
+const formatDate = (iso) => formatDateShort(iso);
 
 const SHIFT_LABEL = { pagi: "Pagi", siang: "Siang", malam: "Malam" };
 

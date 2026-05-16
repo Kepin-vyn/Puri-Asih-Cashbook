@@ -89,34 +89,40 @@ const DashboardPage = () => {
   const queryClient = useQueryClient();
   const today       = new Date().toISOString().split("T")[0];
 
+  // ── DATA KRITIS: polling 2 menit ──────────────────────────────────────────
+
+  // Pending expenses — badge di sidebar, harus selalu fresh
+  const { data: pendingData, isLoading: pendingLoading, refetch: refetchPending } = useQuery({
+    queryKey: ["pending-expenses"],
+    queryFn:  () => api.get("/expenses?status=pending").then(r => r.data),
+    staleTime:       1 * 60 * 1000, // kritis: fresh 1 menit
+    refetchInterval: 2 * 60 * 1000, // polling setiap 2 menit
+  });
+
+  // ── DATA TIDAK KRITIS: polling 10-15 menit ────────────────────────────────
+
   // KAS today
   const { data: kasData, isLoading: kasLoading, refetch: refetchKas } = useQuery({
     queryKey: ["kas-today-manager", today],
     queryFn:  () => api.get(`/kas?date=${today}`).then(r => r.data),
-    refetchInterval: 5 * 60 * 1000,
+    staleTime:       10 * 60 * 1000, // tidak kritis: fresh 10 menit
+    refetchInterval: 15 * 60 * 1000, // polling setiap 15 menit
   });
 
   // Expenses today
   const { data: expenseData, isLoading: expLoading, refetch: refetchExp } = useQuery({
     queryKey: ["expense-today-manager", today],
     queryFn:  () => api.get(`/expenses?date=${today}`).then(r => r.data),
-    refetchInterval: 5 * 60 * 1000,
-  });
-
-  // Pending expenses
-  const { data: pendingData, isLoading: pendingLoading, refetch: refetchPending } = useQuery({
-    queryKey: ["pending-expenses"],
-    queryFn:  () => api.get("/expenses?status=pending").then(r => r.data),
-    staleTime:       60 * 1000,
-    refetchInterval: 2 * 60 * 1000,
-  });
-
-  // Aggregated Manager Stats
-  const { data: managerStats, isLoading: statsLoading, refetch: refetchStats } = useQuery({
-    queryKey: ["manager-dashboard"],
-    queryFn: dashboardService.getManagerDashboard,
-    staleTime: 10 * 60 * 1000,
+    staleTime:       10 * 60 * 1000,
     refetchInterval: 15 * 60 * 1000,
+  });
+
+  // Reservations today — occupancy rate, tidak perlu real-time
+  const { data: resvData, isLoading: resvLoading, refetch: refetchResv } = useQuery({
+    queryKey: ["reservations-today-manager", today],
+    queryFn:  () => api.get(`/reservations?date_from=${today}&date_to=${today}`).then(r => r.data),
+    staleTime:       5 * 60 * 1000,  // fresh 5 menit
+    refetchInterval: 10 * 60 * 1000, // polling setiap 10 menit
   });
 
   // Approve mutation

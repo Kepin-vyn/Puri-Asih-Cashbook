@@ -7,23 +7,10 @@ import attendanceService from "../../services/attendanceService";
 import authStore from "../../store/authStore";
 import SignatureCanvas from "../../components/ui/SignatureCanvas";
 import MonthYearPicker from "../../components/ui/MonthYearPicker";
+import { formatTime, formatDateShort, formatDuration } from "../../utils/dateFormatter";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-const formatTime = (iso) =>
-  iso ? new Date(iso).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }) : "-";
-
-const formatDate = (iso) =>
-  iso
-    ? new Date(iso).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })
-    : "-";
-
-const getDuration = (start, end) => {
-  if (!start || !end) return "-";
-  const diff = Math.floor((new Date(end) - new Date(start)) / 1000);
-  const h = Math.floor(diff / 3600);
-  const m = Math.floor((diff % 3600) / 60);
-  return `${h} jam ${m} menit`;
-};
+const formatDate = (iso) => formatDateShort(iso);
 
 const now = new Date();
 const defaultPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
@@ -357,7 +344,7 @@ const AttendancePage = () => {
               <div className="bg-gray-50 rounded-xl p-3">
                 <p className="text-xs text-gray-500 font-medium">Durasi Kerja</p>
                 <p className="text-base font-bold text-gray-800 mt-0.5">
-                  {getDuration(todayRecord.actual_start, todayRecord.actual_end)}
+                  {formatDuration(todayRecord.actual_start, todayRecord.actual_end)}
                 </p>
               </div>
             </div>

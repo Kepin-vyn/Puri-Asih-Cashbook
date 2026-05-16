@@ -21,6 +21,10 @@ import dashboardService from "../../services/dashboardService";
 import shiftService from "../../services/shiftService";
 import authStore from "../../store/authStore";
 import api from "../../utils/axios";
+import { formatTime } from "../../utils/dateFormatter";
+import { QUERY_KEYS } from "../../utils/queryKeys";
+import { useShiftContext } from "../../context/ShiftContext";
+import { useActiveShift } from "../../hooks/useActiveShift";
 
 // ─── Helper: Format Rupiah ──────────────────────────────────────────────────
 const formatRp = (val) =>
@@ -78,48 +82,56 @@ const NotifIcon = ({ type }) => {
 const DashboardPage = () => {
   const user        = authStore.getUser();
   const queryClient = useQueryClient();
+  const { markShiftStarted } = useShiftContext();
+  const { hasActiveShift, activeShift } = useActiveShift();
 
-  const [showStartShiftModal, setShowStartShiftModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   // Mutation: mulai shift langsung dari dashboard
   const startShiftMutation = useMutation({
     mutationFn: shiftService.startShift,
     onSuccess: () => {
-      toast.success("Shift berhasil dimulai!");
-      setShowStartShiftModal(false);
-      queryClient.invalidateQueries({ queryKey: ["fo-shift-summary"] });
-      queryClient.invalidateQueries({ queryKey: ["active-shift"] });
-      queryClient.invalidateQueries({ queryKey: ["fo-dashboard"] });
+      markShiftStarted();
+      queryClient.invalidateQueries({
+        queryKey: QUERY_KEYS.activeShift,
+        exact: false,
+        refetchType: "all",
+      });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
+      toast.success("✅ Shift berhasil dimulai!");
+      setShowConfirmModal(false);
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message ?? "Gagal memulai shift.");
+      toast.error(error.response?.data?.message || "Gagal memulai shift");
+      setShowConfirmModal(false);
     },
   });
 
-  // Fetch shift summary — penentu apakah ada shift aktif
+  // ── DATA KRITIS: polling 2 menit ──────────────────────────────────────────
+
+  // Fetch shift summary
   const {
     data: summaryData,
     isLoading: summaryLoading,
     isError: summaryError,
     refetch: refetchSummary,
   } = useQuery({
-    queryKey: ["fo-shift-summary"],
+    queryKey: QUERY_KEYS.foDashboard,
     queryFn:  dashboardService.getFoSummary,
-    staleTime:       5 * 60 * 1000,
-    refetchInterval: 10 * 60 * 1000,
+    staleTime:       1 * 60 * 1000, // kritis: fresh 1 menit
+    refetchInterval: 2 * 60 * 1000, // polling setiap 2 menit
     retry: 1,
   });
-
-  // Ada shift aktif hanya jika summary berhasil dan data ada
-  const hasActiveShift = !summaryError && summaryData?.data != null;
 
   // Fetch notifications
   const { data: notifData, isLoading: notifLoading, refetch: refetchNotif } = useQuery({
     queryKey: ["notifications"],
     queryFn:  dashboardService.getNotifications,
-    staleTime:       60 * 1000,
-    refetchInterval: 2 * 60 * 1000,
+    staleTime:       1 * 60 * 1000, // kritis: fresh 1 menit
+    refetchInterval: 2 * 60 * 1000, // polling setiap 2 menit
   });
+
+  // ── DATA TIDAK KRITIS: polling 10 menit ───────────────────────────────────
 
   // Fetch KAS & Expenses HANYA jika ada shift aktif (hindari 403 Forbidden)
   const today = new Date().toISOString().split("T")[0];
@@ -127,14 +139,16 @@ const DashboardPage = () => {
   const { data: kasData, isLoading: kasLoading } = useQuery({
     queryKey: ["kas-today", today],
     queryFn:  () => api.get(`/kas?date=${today}`).then((r) => r.data),
-    refetchInterval: 5 * 60 * 1000,
+    staleTime:       5 * 60 * 1000,  // tidak kritis: fresh 5 menit
+    refetchInterval: 10 * 60 * 1000, // polling setiap 10 menit
     enabled: hasActiveShift,
   });
 
   const { data: expenseData, isLoading: expenseLoading } = useQuery({
     queryKey: ["expense-today", today],
     queryFn:  () => api.get(`/expenses?date=${today}`).then((r) => r.data),
-    refetchInterval: 5 * 60 * 1000,
+    staleTime:       5 * 60 * 1000,
+    refetchInterval: 10 * 60 * 1000,
     enabled: hasActiveShift,
   });
 
@@ -179,95 +193,82 @@ const DashboardPage = () => {
         </button>
       </div>
 
-      {/* ── Banner: Belum Ada Shift Aktif ── */}
-      {!summaryLoading && summaryError && (
-        <>
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-4">
-            <div className="p-2.5 bg-amber-100 rounded-xl flex-shrink-0">
-              <AlertTriangle size={20} className="text-amber-600" />
-            </div>
-            <div className="flex-1">
-              <p className="font-semibold text-amber-800">Belum ada shift aktif</p>
-              <p className="text-sm text-amber-700 mt-0.5">
-                Mulai shift terlebih dahulu untuk mencatat transaksi dan melihat data hari ini.
-              </p>
-            </div>
-            <button
-              onClick={() => setShowStartShiftModal(true)}
-              disabled={startShiftMutation.isPending}
-              className="flex-shrink-0 px-4 py-2 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 disabled:cursor-not-allowed text-white text-sm font-medium rounded-xl transition-colors flex items-center gap-2"
-            >
-              {startShiftMutation.isPending ? (
-                <>
-                  <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                  Memulai...
-                </>
-              ) : (
-                "▶ Mulai Shift"
-              )}
-            </button>
-          </div>
-
-          {/* Modal Konfirmasi Mulai Shift */}
-          {showStartShiftModal && (
-            <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full">
-                <h3 className="text-lg font-bold text-gray-800 mb-2">Mulai Shift</h3>
-                <p className="text-gray-600 text-sm mb-6">
-                  Mulai shift sekarang? Kamu akan tercatat masuk pada jam{" "}
-                  <strong>
-                    {new Date().toLocaleTimeString("id-ID", {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </strong>.
-                </p>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => setShowStartShiftModal(false)}
-                    disabled={startShiftMutation.isPending}
-                    className="flex-1 px-4 py-2.5 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 text-sm font-medium transition-colors disabled:opacity-50"
-                  >
-                    Batal
-                  </button>
-                  <button
-                    onClick={() => startShiftMutation.mutate()}
-                    disabled={startShiftMutation.isPending}
-                    className="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-xl text-sm font-medium transition-colors flex items-center justify-center gap-2"
-                  >
-                    {startShiftMutation.isPending ? (
-                      <>
-                        <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
-                        Memulai...
-                      </>
-                    ) : (
-                      "Mulai Shift"
-                    )}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-        </>
+      {/* Tampilkan tombol hanya jika belum ada shift aktif */}
+      {!summaryLoading && !hasActiveShift && (
+        <div className="bg-yellow-50 border border-yellow-300 rounded-xl p-5">
+          <p className="font-semibold text-yellow-800 mb-1">
+            Belum Ada Shift Aktif
+          </p>
+          <p className="text-sm text-yellow-700 mb-4">
+            Klik tombol di bawah untuk memulai shift kamu sekarang.
+          </p>
+          <button
+            onClick={() => setShowConfirmModal(true)}
+            className="w-full py-3 bg-blue-600 hover:bg-blue-700
+                       text-white font-semibold rounded-lg transition-all"
+          >
+            ▶ Mulai Shift Sekarang
+          </button>
+        </div>
       )}
 
-      {/* ── Banner: Shift Aktif ── */}
-      {!summaryLoading && hasActiveShift && (
-        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center gap-3">
-          <div className="p-2 bg-emerald-100 rounded-xl flex-shrink-0">
-            <Clock size={18} className="text-emerald-600" />
+      {/* Tampilkan info shift jika sudah aktif */}
+      {!summaryLoading && hasActiveShift && activeShift && (
+        <div className="bg-green-50 border border-green-300 rounded-xl p-5">
+          <div className="flex items-center gap-3">
+            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+            <p className="font-semibold text-green-800">Shift Aktif</p>
           </div>
-          <div>
-            <p className="font-semibold text-emerald-800">✅ Shift Aktif</p>
-            <p className="text-sm text-emerald-600">
-              Dimulai:{" "}
-              {summary.shift_started_at
-                ? new Date(summary.shift_started_at).toLocaleTimeString("id-ID", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })
-                : "Hari ini"}
+          <p className="text-sm text-green-700 mt-1">
+            Dimulai: {formatTime(activeShift.started_at)} |
+            Tipe: <span className="capitalize">{activeShift.type}</span>
+          </p>
+        </div>
+      )}
+
+      {/* Modal Konfirmasi */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center
+                        justify-center z-50 px-4">
+          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
+            <h3 className="text-lg font-bold text-gray-800 mb-2">
+              Mulai Shift Sekarang?
+            </h3>
+            <p className="text-gray-600 text-sm mb-2">
+              Jam masuk akan tercatat pada:
             </p>
+            <p className="text-2xl font-bold text-blue-600 mb-6">
+              {new Date().toLocaleTimeString('id-ID', {
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowConfirmModal(false)}
+                disabled={startShiftMutation.isPending}
+                className="flex-1 py-2 border border-gray-300 rounded-lg
+                           text-gray-700 hover:bg-gray-50"
+              >
+                Batal
+              </button>
+              <button
+                onClick={() => startShiftMutation.mutate()}
+                disabled={startShiftMutation.isPending}
+                className="flex-1 py-2 bg-blue-600 text-white rounded-lg
+                           hover:bg-blue-700 disabled:bg-gray-300
+                           disabled:cursor-not-allowed font-semibold flex items-center justify-center gap-2"
+              >
+                {startShiftMutation.isPending ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white
+                                    border-t-transparent rounded-full
+                                    animate-spin" />
+                    Memulai...
+                  </>
+                ) : 'Mulai Shift'}
+              </button>
+            </div>
           </div>
         </div>
       )}

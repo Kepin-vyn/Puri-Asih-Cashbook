@@ -11,6 +11,9 @@ import api from "../../utils/axios";
 import RupiahInput from "../../components/ui/RupiahInput";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import StatusBadge from "../../components/ui/StatusBadge";
+import { formatDateShort } from "../../utils/dateFormatter";
+import { QUERY_KEYS } from "../../utils/queryKeys";
+import { useActiveShift } from "../../hooks/useActiveShift";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const formatRp = (v) =>
@@ -18,10 +21,7 @@ const formatRp = (v) =>
     style: "currency", currency: "IDR", maximumFractionDigits: 0,
   }).format(v ?? 0).replace("IDR", "Rp");
 
-const formatDate = (d) =>
-  d ? new Date(d).toLocaleDateString("id-ID", {
-    day: "2-digit", month: "short", year: "numeric",
-  }) : "-";
+const formatDate = (d) => formatDateShort(d);
 
 const today = new Date().toISOString().split("T")[0];
 
@@ -93,14 +93,8 @@ const DepositPage = () => {
   const [filterStatus,    setFilterStatus]    = useState("");
   const [page,            setPage]            = useState(1);
 
-  // ── Fetch active shift ────────────────────────────────────────────────────
-  const { data: shiftData, isError: shiftError } = useQuery({
-    queryKey: ["active-shift"],
-    queryFn:  () => api.get("/shifts/active").then(r => r.data),
-    retry: false,
-  });
-  const activeShift = shiftData?.data;
-  const hasNoShift  = shiftError || !shiftData?.data;
+  // ── Active shift via centralized hook ────────────────────────────────────
+  const { activeShift, hasNoShift } = useActiveShift();
 
   // ── Fetch expiring deposits ───────────────────────────────────────────────
   const { data: expiringData } = useQuery({
@@ -129,8 +123,9 @@ const DepositPage = () => {
     mutationFn: depositService.create,
     onSuccess: () => {
       toast.success("Deposit berhasil dicatat!");
-      queryClient.invalidateQueries({ queryKey: ["deposits"] });
-      queryClient.invalidateQueries({ queryKey: ["deposits-expiring"] });
+      queryClient.invalidateQueries({ queryKey: ["deposits"], exact: false });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.expiringDeposits });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
       closeModal();
     },
     onError: (e) => toast.error(e.response?.data?.message ?? "Gagal menyimpan deposit."),
@@ -140,7 +135,7 @@ const DepositPage = () => {
     mutationFn: ({ id, data }) => depositService.update(id, data),
     onSuccess: () => {
       toast.success("Deposit berhasil diperbarui!");
-      queryClient.invalidateQueries({ queryKey: ["deposits"] });
+      queryClient.invalidateQueries({ queryKey: ["deposits"], exact: false });
       closeModal();
     },
     onError: (e) => toast.error(e.response?.data?.message ?? "Gagal memperbarui deposit."),
@@ -150,8 +145,9 @@ const DepositPage = () => {
     mutationFn: (id) => depositService.refund(id),
     onSuccess: () => {
       toast.success("Deposit berhasil dikembalikan!");
-      queryClient.invalidateQueries({ queryKey: ["deposits"] });
-      queryClient.invalidateQueries({ queryKey: ["deposits-expiring"] });
+      queryClient.invalidateQueries({ queryKey: ["deposits"], exact: false });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.expiringDeposits });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
       setRefundTarget(null);
     },
     onError: (e) => toast.error(e.response?.data?.message ?? "Gagal memproses refund."),
@@ -161,8 +157,9 @@ const DepositPage = () => {
     mutationFn: ({ id, note }) => depositService.forfeit(id, note),
     onSuccess: () => {
       toast.success("Deposit berhasil dihanguskan.");
-      queryClient.invalidateQueries({ queryKey: ["deposits"] });
-      queryClient.invalidateQueries({ queryKey: ["deposits-expiring"] });
+      queryClient.invalidateQueries({ queryKey: ["deposits"], exact: false });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.expiringDeposits });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
       setForfeitTarget(null);
       setForfeitNote("");
     },
@@ -279,12 +276,16 @@ const DepositPage = () => {
 
       {/* ── No Shift Warning ── */}
       {hasNoShift && (
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-3">
-          <span className="text-amber-500 text-xl">⚠️</span>
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4 flex items-start gap-3">
+          <span className="text-amber-500 text-xl mt-0.5">⚠️</span>
           <div>
             <p className="font-semibold text-amber-800">Tidak ada shift aktif</p>
-            <p className="text-sm text-amber-600 mt-0.5">
-              Kamu belum memulai shift. Kembali ke Dashboard dan klik "Mulai Shift" terlebih dahulu.
+            <p className="text-amber-700 text-sm">
+              Kamu belum memulai shift hari ini. Kembali ke{' '}
+              <a href="/fo/dashboard" className="underline font-medium">
+                Dashboard
+              </a>{' '}
+              dan klik "Mulai Shift Sekarang".
             </p>
           </div>
         </div>
@@ -336,16 +337,18 @@ const DepositPage = () => {
           <button
             onClick={() => !hasNoShift && openAdd()}
             disabled={hasNoShift}
-            title={hasNoShift ? "Mulai shift terlebih dahulu untuk menambah deposit" : "Tambah deposit baru"}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all shadow-sm ${
+            title={hasNoShift
+              ? 'Mulai shift terlebih dahulu untuk menambah transaksi'
+              : 'Tambah transaksi baru'}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
               hasNoShift
-                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                : 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
             }`}
             id="btn-tambah-deposit"
           >
-            <Plus size={16} />
-            Tambah Deposit
+            <span className="text-lg">+</span>
+            Tambah Transaksi
           </button>
         </div>
       </div>

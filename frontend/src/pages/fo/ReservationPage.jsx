@@ -10,6 +10,9 @@ import api from "../../utils/axios";
 import RupiahInput from "../../components/ui/RupiahInput";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import StatusBadge from "../../components/ui/StatusBadge";
+import { formatDateShort } from "../../utils/dateFormatter";
+import { QUERY_KEYS } from "../../utils/queryKeys";
+import { useActiveShift } from "../../hooks/useActiveShift";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const formatRp = (v) =>
@@ -111,14 +114,8 @@ const ReservationPage = () => {
   // ── Derived: remaining balance ────────────────────────────────────────────
   const remainingBalance = Math.max(0, (form.room_price ?? 0) - (form.down_payment ?? 0));
 
-  // ── Fetch active shift ────────────────────────────────────────────────────
-  const { data: shiftData, isError: shiftError } = useQuery({
-    queryKey: ["active-shift"],
-    queryFn:  () => api.get("/shifts/active").then(r => r.data),
-    retry: false,
-  });
-  const activeShift = shiftData?.data;
-  const hasNoShift  = shiftError || !shiftData?.data;
+  // ── Active shift via centralized hook ────────────────────────────────────
+  const { activeShift, hasNoShift } = useActiveShift();
 
   // ── Fetch available rooms ─────────────────────────────────────────────────
   const { data: availData } = useQuery({
@@ -152,7 +149,8 @@ const ReservationPage = () => {
     mutationFn: reservationService.create,
     onSuccess: () => {
       toast.success("Reservasi berhasil dicatat!");
-      queryClient.invalidateQueries({ queryKey: ["reservations"] });
+      queryClient.invalidateQueries({ queryKey: ["reservations"], exact: false });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
       closeModal();
     },
     onError: (e) => toast.error(e.response?.data?.message ?? "Gagal menyimpan reservasi."),
@@ -162,7 +160,8 @@ const ReservationPage = () => {
     mutationFn: ({ id, data }) => reservationService.update(id, data),
     onSuccess: () => {
       toast.success("Reservasi berhasil diperbarui!");
-      queryClient.invalidateQueries({ queryKey: ["reservations"] });
+      queryClient.invalidateQueries({ queryKey: ["reservations"], exact: false });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
       closeModal();
     },
     onError: (e) => toast.error(e.response?.data?.message ?? "Gagal memperbarui reservasi."),
@@ -172,7 +171,7 @@ const ReservationPage = () => {
     mutationFn: ({ id, status }) => reservationService.updateStatus(id, status),
     onSuccess: () => {
       toast.success("Status reservasi berhasil diperbarui!");
-      queryClient.invalidateQueries({ queryKey: ["reservations"] });
+      queryClient.invalidateQueries({ queryKey: ["reservations"], exact: false });
       setStatusModalOpen(false);
       setStatusTarget(null);
     },
@@ -183,7 +182,7 @@ const ReservationPage = () => {
     mutationFn: reservationService.remove,
     onSuccess: () => {
       toast.success("Reservasi berhasil dihapus.");
-      queryClient.invalidateQueries({ queryKey: ["reservations"] });
+      queryClient.invalidateQueries({ queryKey: ["reservations"], exact: false });
       setDeleteTarget(null);
     },
     onError: () => toast.error("Gagal menghapus reservasi."),
@@ -323,12 +322,16 @@ const ReservationPage = () => {
 
       {/* ── No Shift Warning ── */}
       {hasNoShift && (
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-3">
-          <span className="text-amber-500 text-xl">⚠️</span>
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-4 flex items-start gap-3">
+          <span className="text-amber-500 text-xl mt-0.5">⚠️</span>
           <div>
             <p className="font-semibold text-amber-800">Tidak ada shift aktif</p>
-            <p className="text-sm text-amber-600 mt-0.5">
-              Kamu belum memulai shift. Kembali ke Dashboard dan klik "Mulai Shift" terlebih dahulu.
+            <p className="text-amber-700 text-sm">
+              Kamu belum memulai shift hari ini. Kembali ke{' '}
+              <a href="/fo/dashboard" className="underline font-medium">
+                Dashboard
+              </a>{' '}
+              dan klik "Mulai Shift Sekarang".
             </p>
           </div>
         </div>
@@ -358,16 +361,18 @@ const ReservationPage = () => {
           <button
             onClick={() => !hasNoShift && openAdd()}
             disabled={hasNoShift}
-            title={hasNoShift ? "Mulai shift terlebih dahulu untuk menambah reservasi" : "Tambah reservasi baru"}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium transition-all shadow-sm ${
+            title={hasNoShift
+              ? 'Mulai shift terlebih dahulu untuk menambah transaksi'
+              : 'Tambah transaksi baru'}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
               hasNoShift
-                ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                : "bg-blue-600 hover:bg-blue-700 text-white cursor-pointer"
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                : 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
             }`}
             id="btn-tambah-reservasi"
           >
-            <Plus size={16} />
-            Tambah Reservasi
+            <span className="text-lg">+</span>
+            Tambah Transaksi
           </button>
         </div>
       </div>
@@ -448,14 +453,10 @@ const ReservationPage = () => {
                     </td>
                     <td className="px-4 py-3 text-gray-600">{res.room_number}</td>
                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
-                      {res.check_in_date
-                        ? new Date(res.check_in_date).toLocaleDateString("id-ID")
-                        : "-"}
+                      {formatDateShort(res.check_in_date)}
                     </td>
                     <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
-                      {res.check_out_date
-                        ? new Date(res.check_out_date).toLocaleDateString("id-ID")
-                        : "-"}
+                      {formatDateShort(res.check_out_date)}
                     </td>
                     <td className="px-4 py-3 font-semibold text-gray-800 whitespace-nowrap">
                       {formatRp(res.room_price)}
