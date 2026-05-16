@@ -115,12 +115,22 @@ class DashboardController extends BaseApiController
                 ];
             });
 
+        // 6. Pending expenses (5 terbaru untuk ditampilkan di dashboard)
+        $pendingExpenses = Expense::where('status', 'pending')
+            ->with('user:id,name')
+            ->latest()
+            ->limit(5)
+            ->get();
+
         return $this->successResponse([
             'pending_approval_count' => $pending_approval_count,
             'today_revenue' => (int) $today_revenue,
             'today_expenses' => (int) $today_expenses,
             'occupancy_rate' => $occupancy_rate,
+            'occupancy_count' => $bookedRooms,
+            'total_rooms' => $totalRooms,
             'active_fo' => $active_fo,
+            'pending_expenses' => $pendingExpenses,
         ], 'Dashboard manager berhasil diambil.');
     }
 }
