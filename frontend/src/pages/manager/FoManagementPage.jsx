@@ -1,10 +1,11 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  Plus, Pencil, Eye, UserX, X, Users, UserCheck, UserMinus,
+  Plus, Pencil, Eye, UserX, X, Users, UserCheck, UserMinus, ChevronLeft, ChevronRight, Save,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import userService from "../../services/userService";
+import shiftScheduleService from "../../services/shiftScheduleService";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import InlineDropdown from "../../components/ui/InlineDropdown";
 import { formatDate } from "../../utils/dateFormatter";
@@ -54,9 +55,230 @@ const emptyForm = () => ({
   shift:                 "pagi",
 });
 
+// ── Week helpers ──────────────────────────────────────────────────────────────
+const DAYS_ID = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
+const DAY_KEYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+
+const SCHEDULE_OPTIONS = [
+  { value: "pagi",  label: "🌅 Pagi" },
+  { value: "siang", label: "🌤 Siang" },
+  { value: "malam", label: "🌙 Malam" },
+  { value: "off",   label: "🔴 Off" },
+];
+
+/** Hitung Senin dari tanggal manapun */
+const getMondayOf = (date) => {
+  const d = new Date(date);
+  const day = d.getDay(); // 0=Sun, 1=Mon, ...
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+const addDays = (date, n) => {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  return d;
+};
+
+const toDateStr = (date) => date.toISOString().split("T")[0];
+
+const formatDayHeader = (date) => {
+  const d = new Date(date);
+  return `${d.getDate()}/${d.getMonth() + 1}`;
+};
+
+// ── WeeklyScheduleTab ─────────────────────────────────────────────────────────
+const WeeklyScheduleTab = () => {
+  const queryClient = useQueryClient();
+  const [weekStart, setWeekStart] = useState(() => getMondayOf(new Date()));
+  const [localSchedule, setLocalSchedule] = useState({});
+  const [saving, setSaving] = useState(false);
+
+  const weekStartStr = toDateStr(weekStart);
+  const weekEndStr   = toDateStr(addDays(weekStart, 6));
+
+  // Fetch jadwal minggu ini
+  const { data, isLoading } = useQuery({
+    queryKey: ["shift-schedule-week", weekStartStr],
+    queryFn:  () => shiftScheduleService.getWeek(weekStartStr),
+    onSuccess: () => setLocalSchedule({}), // reset local changes on new week
+  });
+  const schedules = data?.data ?? [];
+
+  const prevWeek = () => setWeekStart((d) => addDays(d, -7));
+  const nextWeek = () => setWeekStart((d) => addDays(d, 7));
+
+  const handleChange = (userId, dayKey, value) => {
+    setLocalSchedule((prev) => ({
+      ...prev,
+      [userId]: { ...(prev[userId] ?? {}), [dayKey]: value },
+    }));
+  };
+
+  const getVal = (row, dayKey) =>
+    localSchedule[row.user_id]?.[dayKey] ?? row[dayKey] ?? "off";
+
+  const hasChanges = Object.keys(localSchedule).length > 0;
+
+  const handleSave = async () => {
+    if (!hasChanges) return;
+    setSaving(true);
+    let successCount = 0;
+    let errorCount   = 0;
+
+    for (const [userId, changes] of Object.entries(localSchedule)) {
+      const row = schedules.find((s) => String(s.user_id) === String(userId));
+      if (!row) continue;
+
+      const payload = {
+        user_id:         Number(userId),
+        week_start_date: weekStartStr,
+        monday:    localSchedule[userId]?.monday    ?? row.monday    ?? "off",
+        tuesday:   localSchedule[userId]?.tuesday   ?? row.tuesday   ?? "off",
+        wednesday: localSchedule[userId]?.wednesday ?? row.wednesday ?? "off",
+        thursday:  localSchedule[userId]?.thursday  ?? row.thursday  ?? "off",
+        friday:    localSchedule[userId]?.friday    ?? row.friday    ?? "off",
+        saturday:  localSchedule[userId]?.saturday  ?? row.saturday  ?? "off",
+        sunday:    localSchedule[userId]?.sunday    ?? row.sunday    ?? "off",
+      };
+
+      try {
+        await shiftScheduleService.store(payload);
+        successCount++;
+      } catch {
+        errorCount++;
+      }
+    }
+
+    setSaving(false);
+    setLocalSchedule({});
+    queryClient.invalidateQueries({ queryKey: ["shift-schedule-week"] });
+
+    if (errorCount === 0) {
+      toast.success(`✅ Jadwal ${successCount} staff berhasil disimpan!`);
+    } else {
+      toast.error(`${errorCount} jadwal gagal disimpan. ${successCount} berhasil.`);
+    }
+  };
+
+  const weekLabel = `${new Date(weekStart).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })} (Sen) — ${new Date(weekEndStr).toLocaleDateString("id-ID", { day: "numeric", month: "long" })} (Min)`;
+
+  return (
+    <div className="space-y-4">
+      {/* Week picker */}
+      <div className="flex items-center justify-between bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+        <button
+          onClick={prevWeek}
+          className="flex items-center gap-1 px-3 py-2 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+        >
+          <ChevronLeft size={16} /> Minggu Lalu
+        </button>
+        <div className="text-center">
+          <p className="text-sm font-bold text-gray-800">{weekLabel}</p>
+          <p className="text-xs text-gray-400 mt-0.5">Klik dropdown untuk ubah jadwal</p>
+        </div>
+        <button
+          onClick={nextWeek}
+          className="flex items-center gap-1 px-3 py-2 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+        >
+          Minggu Depan <ChevronRight size={16} />
+        </button>
+      </div>
+
+      {/* Tabel jadwal */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-gray-50 text-left">
+              <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap sticky left-0 bg-gray-50">
+                Nama FO
+              </th>
+              {DAY_KEYS.map((_, i) => (
+                <th key={i} className="px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap text-center">
+                  {DAYS_ID[i]}<br />
+                  <span className="font-normal normal-case text-gray-400">
+                    {formatDayHeader(addDays(weekStart, i))}
+                  </span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50">
+            {isLoading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <tr key={i}>
+                  {Array.from({ length: 8 }).map((_, j) => (
+                    <td key={j} className="px-4 py-3">
+                      <div className="h-8 bg-gray-200 rounded animate-pulse" />
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : schedules.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="text-center py-12 text-gray-400 text-sm">
+                  Tidak ada staff FO aktif
+                </td>
+              </tr>
+            ) : (
+              schedules.map((row) => {
+                const hasLocalChange = !!localSchedule[row.user_id];
+                return (
+                  <tr key={row.user_id} className={`transition-colors ${hasLocalChange ? "bg-blue-50/40" : "hover:bg-gray-50"}`}>
+                    <td className="px-4 py-3 font-medium text-gray-800 whitespace-nowrap sticky left-0 bg-inherit">
+                      {row.user_name}
+                      {hasLocalChange && (
+                        <span className="ml-2 text-xs text-blue-500 font-normal">• diubah</span>
+                      )}
+                    </td>
+                    {DAY_KEYS.map((dayKey) => (
+                      <td key={dayKey} className="px-2 py-2 text-center">
+                        <InlineDropdown
+                          value={getVal(row, dayKey)}
+                          options={SCHEDULE_OPTIONS}
+                          onChange={(val) => handleChange(row.user_id, dayKey, val)}
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Tombol Simpan */}
+      <div className="flex items-center justify-between">
+        {hasChanges ? (
+          <p className="text-sm text-blue-600 font-medium">
+            {Object.keys(localSchedule).length} staff memiliki perubahan yang belum disimpan
+          </p>
+        ) : (
+          <p className="text-sm text-gray-400">Belum ada perubahan</p>
+        )}
+        <button
+          onClick={handleSave}
+          disabled={!hasChanges || saving}
+          className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+        >
+          {saving ? (
+            <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Menyimpan...</>
+          ) : (
+            <><Save size={15} />Simpan Jadwal</>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+};
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 const FoManagementPage = () => {
   const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState("staff"); // "staff" | "schedule"
 
   // ── UI state ─────────────────────────────────────────────────────────────
   const [modalOpen,       setModalOpen]       = useState(false);
@@ -290,6 +512,36 @@ const FoManagementPage = () => {
           </div>
         ))}
       </div>
+
+      {/* ── Tab Navigation ── */}
+      <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+        <button
+          onClick={() => setActiveTab("staff")}
+          className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
+            activeTab === "staff"
+              ? "bg-white text-indigo-700 shadow-sm"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          👥 Daftar Staff
+        </button>
+        <button
+          onClick={() => setActiveTab("schedule")}
+          className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
+            activeTab === "schedule"
+              ? "bg-white text-indigo-700 shadow-sm"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          📅 Jadwal Mingguan
+        </button>
+      </div>
+
+      {/* ── Tab: Jadwal Mingguan ── */}
+      {activeTab === "schedule" && <WeeklyScheduleTab />}
+
+      {/* ── Tab: Daftar Staff ── */}
+      {activeTab === "staff" && (<>
 
       {/* ── Filter & Search ── */}
       <div className="flex flex-wrap items-center gap-3">
@@ -698,6 +950,8 @@ const FoManagementPage = () => {
         onConfirm={() => deactivateMutation.mutate(deactivateTarget.id)}
         onCancel={() => setDeactivateTarget(null)}
       />
+
+      </>)}
 
     </div>
   );

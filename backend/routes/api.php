@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\PayrollController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\ShiftScheduleController;
 
 // Semua route diakses melalui: http://localhost:8000/api/v1/...
 Route::prefix('v1')->group(function () {
@@ -85,6 +86,10 @@ Route::prefix('v1')->group(function () {
         Route::post('notifications/{id}/read',     [NotificationController::class, 'read']);
         Route::get('notifications/unread/count',   [NotificationController::class, 'unreadCount']);
 
+        // --- Shift Schedules (read: semua role, write: manager only) ---
+        Route::get('shift-schedules/week',  [ShiftScheduleController::class, 'getWeek']);
+        Route::get('shift-schedules/today', [ShiftScheduleController::class, 'getTodayShift']);
+
 
         // ============================================
         // MANAGER ONLY ROUTES — role:manager
@@ -121,6 +126,10 @@ Route::prefix('v1')->group(function () {
             Route::apiResource('users', UserController::class);
             Route::put('users/{id}/role',  [UserController::class, 'updateRole']);
             Route::put('users/{id}/shift', [UserController::class, 'updateShift']);
+
+            // --- Shift Schedules (write: manager only) ---
+            Route::apiResource('shift-schedules', ShiftScheduleController::class)
+                ->except(['show']);
         });
     });
 });
