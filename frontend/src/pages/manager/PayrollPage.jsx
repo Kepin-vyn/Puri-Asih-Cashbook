@@ -185,32 +185,31 @@ const StaffDetailModal = ({ staff, month, onClose }) => {
 const PayrollPage = () => {
   const queryClient = useQueryClient();
 
-  const [period,       setPeriod]       = useState(defaultPeriod);
-  const [dailyRate,    setDailyRate]    = useState(0);
-  const [savedRate,    setSavedRate]    = useState(0);
-  const [rateChanged,  setRateChanged]  = useState(false);
+  const [period,        setPeriod]        = useState(defaultPeriod);
+  const [dailyRate,     setDailyRate]     = useState(0);
+  const [rateChanged,   setRateChanged]   = useState(false);
   const [selectedStaff, setSelectedStaff] = useState(null);
-  const [exporting,    setExporting]    = useState(false);
+  const [exporting,     setExporting]     = useState(false);
   const [downloadingId, setDownloadingId] = useState(null);
 
   const [yearStr, monthStr] = period.split("-");
+
+  // ── Fetch settings (gaji harian terkini) ─────────────────────────────────
+  const { data: settingsData } = useQuery({
+    queryKey: ["payroll-settings"],
+    queryFn:  payrollService.getSettings,
+    retry: false,
+  });
+  const currentDailyRate = Number(settingsData?.data?.daily_rate ?? 0);
 
   // ── Fetch payroll data ────────────────────────────────────────────────────
   const { data: payrollData, isLoading } = useQuery({
     queryKey: ["payroll-monthly", period],
     queryFn:  () => payrollService.getMonthly(period),
-    onSuccess: (res) => {
-      const rate = res?.data?.daily_rate ?? res?.meta?.daily_rate ?? 0;
-      setDailyRate(Number(rate));
-      setSavedRate(Number(rate));
-      setRateChanged(false);
-    },
     retry: false,
   });
 
-  const payrolls   = payrollData?.data?.payrolls ?? payrollData?.data ?? [];
-  const currentRate = payrollData?.data?.daily_rate ?? payrollData?.meta?.daily_rate ?? savedRate;
-
+  const payrolls  = payrollData?.data?.payrolls ?? payrollData?.data ?? [];
   const totalGaji = payrolls.reduce((s, p) => s + Number(p.total_salary ?? 0), 0);
 
   // ── Calculate mutation ────────────────────────────────────────────────────
@@ -228,9 +227,10 @@ const PayrollPage = () => {
     mutationFn: (rate) => payrollService.setDailyRate(rate),
     onSuccess: () => {
       toast.success("Gaji harian berhasil disimpan!");
-      setSavedRate(dailyRate);
-      setRateChanged(false);
+      // Invalidate settings agar "Saat ini: Rp X" langsung berubah
+      queryClient.invalidateQueries({ queryKey: ["payroll-settings"] });
       queryClient.invalidateQueries({ queryKey: ["payroll-monthly"] });
+      setRateChanged(false);
     },
     onError: (e) => toast.error(e.response?.data?.message ?? "Gagal menyimpan gaji harian."),
   });
@@ -338,7 +338,7 @@ const PayrollPage = () => {
             <div>
               <p className="text-sm font-bold text-gray-700">Setting Gaji Harian</p>
               <p className="text-xs text-gray-400 mt-0.5">
-                Saat ini: <span className="font-semibold text-gray-700">{formatRp(currentRate)}</span>
+                Saat ini: <span className="font-semibold text-gray-700">{formatRp(currentDailyRate)}</span>
               </p>
             </div>
           </div>

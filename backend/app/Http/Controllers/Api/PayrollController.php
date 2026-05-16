@@ -299,4 +299,18 @@ class PayrollController extends BaseApiController
             201
         );
     }
+
+    /**
+     * GET /api/v1/payroll/settings
+     * Manager only — ambil setting gaji harian terkini.
+     */
+    public function getSettings(): JsonResponse
+    {
+        $setting = PayrollSetting::latest('effective_date')->first();
+
+        return $this->successResponse(
+            $setting,
+            'Setting penggajian berhasil diambil.'
+        );
+    }
 }
