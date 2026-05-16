@@ -105,7 +105,8 @@ const DashboardPage = () => {
   } = useQuery({
     queryKey: ["fo-shift-summary"],
     queryFn:  dashboardService.getFoSummary,
-    refetchInterval: 5 * 60 * 1000,
+    staleTime:       5 * 60 * 1000,
+    refetchInterval: 10 * 60 * 1000,
     retry: 1,
   });
 
@@ -116,7 +117,8 @@ const DashboardPage = () => {
   const { data: notifData, isLoading: notifLoading, refetch: refetchNotif } = useQuery({
     queryKey: ["notifications"],
     queryFn:  dashboardService.getNotifications,
-    refetchInterval: 5 * 60 * 1000,
+    staleTime:       60 * 1000,
+    refetchInterval: 2 * 60 * 1000,
   });
 
   // Fetch KAS & Expenses HANYA jika ada shift aktif (hindari 403 Forbidden)
