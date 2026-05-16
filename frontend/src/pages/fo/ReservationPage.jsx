@@ -148,12 +148,13 @@ const ReservationPage = () => {
   const createMutation = useMutation({
     mutationFn: reservationService.create,
     onSuccess: () => {
-      toast.success("Reservasi berhasil dicatat!");
-      queryClient.invalidateQueries({ queryKey: ["reservations"], exact: false });
+      toast.success('\u2705 Reservasi tersimpan! Transaksi KAS otomatis tercatat.');
+      queryClient.invalidateQueries({ queryKey: ['reservations'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['kas-list'], exact: false });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
       closeModal();
     },
-    onError: (e) => toast.error(e.response?.data?.message ?? "Gagal menyimpan reservasi."),
+    onError: (e) => toast.error(e.response?.data?.message ?? 'Gagal menyimpan reservasi.'),
   });
 
   const updateMutation = useMutation({
@@ -169,13 +170,18 @@ const ReservationPage = () => {
 
   const statusMutation = useMutation({
     mutationFn: ({ id, status }) => reservationService.updateStatus(id, status),
-    onSuccess: () => {
-      toast.success("Status reservasi berhasil diperbarui!");
-      queryClient.invalidateQueries({ queryKey: ["reservations"], exact: false });
+    onSuccess: (_, variables) => {
+      const msg = variables.status === 'checkin'
+        ? '\u2705 Check-in berhasil! Transaksi KAS otomatis tercatat.'
+        : 'Status reservasi berhasil diperbarui!';
+      toast.success(msg);
+      queryClient.invalidateQueries({ queryKey: ['reservations'], exact: false });
+      queryClient.invalidateQueries({ queryKey: ['kas-list'], exact: false });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
       setStatusModalOpen(false);
       setStatusTarget(null);
     },
-    onError: (e) => toast.error(e.response?.data?.message ?? "Gagal memperbarui status."),
+    onError: (e) => toast.error(e.response?.data?.message ?? 'Gagal memperbarui status.'),
   });
 
   const deleteMutation = useMutation({

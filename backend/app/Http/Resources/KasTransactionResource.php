@@ -39,6 +39,9 @@ class KasTransactionResource extends JsonResource
             'amount'                => (int) $this->amount,
             'amount_formatted'      => 'Rp ' . number_format($this->amount, 0, ',', '.'),
             'note'                  => $this->note,
+            'auto_generated'        => (bool) $this->auto_generated,
+            'source_label'          => $this->auto_generated ? 'Otomatis dari Reservasi' : 'Input Manual',
+            'source_reference'      => $this->source_reference,
             'receipt_photo_url'     => $this->receipt_photo
                                         ? Storage::disk('public')->url($this->receipt_photo)
                                         : null,

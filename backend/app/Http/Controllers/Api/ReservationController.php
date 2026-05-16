@@ -8,6 +8,7 @@ use App\Http\Resources\ReservationResource;
 use App\Models\Reservation;
 use App\Models\Shift;
 use App\Services\ReservationService;
+use App\Services\KasAutomationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -115,6 +116,15 @@ class ReservationController extends BaseApiController
 
         $reservation->load('user');
 
+        // Auto-create KAS jika ada down_payment
+        if ($reservation->down_payment > 0) {
+            app(KasAutomationService::class)->createFromReservation(
+                $reservation,
+                'reservasi',
+                $reservation->down_payment
+            );
+        }
+
         return $this->successResponse(
             new ReservationResource($reservation),
             'Reservasi berhasil dicatat. Invoice: ' . $invoiceNumber,
@@ -198,6 +208,15 @@ class ReservationController extends BaseApiController
 
         $reservation->update(['status' => $request->status]);
         $reservation->load('user');
+
+        // Auto-create KAS saat check-in jika ada remaining_balance
+        if ($request->status === 'checkin' && $reservation->remaining_balance > 0) {
+            app(KasAutomationService::class)->createFromReservation(
+                $reservation,
+                'checkin',
+                $reservation->remaining_balance
+            );
+        }
 
         $statusLabels = [
             'checkin'  => 'Check-In',
