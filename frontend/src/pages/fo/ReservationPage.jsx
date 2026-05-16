@@ -11,6 +11,7 @@ import RupiahInput from "../../components/ui/RupiahInput";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import StatusBadge from "../../components/ui/StatusBadge";
 import { formatDateShort } from "../../utils/dateFormatter";
+import { QUERY_KEYS } from "../../utils/queryKeys";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const formatRp = (v) =>
@@ -153,7 +154,8 @@ const ReservationPage = () => {
     mutationFn: reservationService.create,
     onSuccess: () => {
       toast.success("Reservasi berhasil dicatat!");
-      queryClient.invalidateQueries({ queryKey: ["reservations"] });
+      queryClient.invalidateQueries({ queryKey: ["reservations"], exact: false });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
       closeModal();
     },
     onError: (e) => toast.error(e.response?.data?.message ?? "Gagal menyimpan reservasi."),
@@ -163,7 +165,8 @@ const ReservationPage = () => {
     mutationFn: ({ id, data }) => reservationService.update(id, data),
     onSuccess: () => {
       toast.success("Reservasi berhasil diperbarui!");
-      queryClient.invalidateQueries({ queryKey: ["reservations"] });
+      queryClient.invalidateQueries({ queryKey: ["reservations"], exact: false });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
       closeModal();
     },
     onError: (e) => toast.error(e.response?.data?.message ?? "Gagal memperbarui reservasi."),
@@ -173,7 +176,7 @@ const ReservationPage = () => {
     mutationFn: ({ id, status }) => reservationService.updateStatus(id, status),
     onSuccess: () => {
       toast.success("Status reservasi berhasil diperbarui!");
-      queryClient.invalidateQueries({ queryKey: ["reservations"] });
+      queryClient.invalidateQueries({ queryKey: ["reservations"], exact: false });
       setStatusModalOpen(false);
       setStatusTarget(null);
     },
@@ -184,7 +187,7 @@ const ReservationPage = () => {
     mutationFn: reservationService.remove,
     onSuccess: () => {
       toast.success("Reservasi berhasil dihapus.");
-      queryClient.invalidateQueries({ queryKey: ["reservations"] });
+      queryClient.invalidateQueries({ queryKey: ["reservations"], exact: false });
       setDeleteTarget(null);
     },
     onError: () => toast.error("Gagal menghapus reservasi."),

@@ -11,6 +11,7 @@ import RupiahInput from "../../components/ui/RupiahInput";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import StatusBadge from "../../components/ui/StatusBadge";
 import { formatDateShort } from "../../utils/dateFormatter";
+import { QUERY_KEYS } from "../../utils/queryKeys";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const formatRp = (v) =>
@@ -141,8 +142,9 @@ const ExpensesPage = () => {
         }
       }
       toast.success("Pengeluaran berhasil dicatat!");
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
-      queryClient.invalidateQueries({ queryKey: ["pending-approval-count"] });
+      queryClient.invalidateQueries({ queryKey: ["expenses"], exact: false });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pendingCount });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
       closeModal();
     },
     onError: (e) => toast.error(e.response?.data?.message ?? "Gagal menyimpan pengeluaran."),
@@ -162,7 +164,8 @@ const ExpensesPage = () => {
         }
       }
       toast.success("Pengeluaran berhasil diperbarui!");
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
+      queryClient.invalidateQueries({ queryKey: ["expenses"], exact: false });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
       closeModal();
     },
     onError: (e) => toast.error(e.response?.data?.message ?? "Gagal memperbarui pengeluaran."),
@@ -172,8 +175,9 @@ const ExpensesPage = () => {
     mutationFn: expenseService.remove,
     onSuccess: () => {
       toast.success("Pengeluaran berhasil dihapus.");
-      queryClient.invalidateQueries({ queryKey: ["expenses"] });
-      queryClient.invalidateQueries({ queryKey: ["pending-approval-count"] });
+      queryClient.invalidateQueries({ queryKey: ["expenses"], exact: false });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.pendingCount });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
       setDeleteTarget(null);
     },
     onError: () => toast.error("Gagal menghapus pengeluaran."),

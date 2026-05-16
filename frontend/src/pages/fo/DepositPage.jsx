@@ -12,6 +12,7 @@ import RupiahInput from "../../components/ui/RupiahInput";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import StatusBadge from "../../components/ui/StatusBadge";
 import { formatDateShort } from "../../utils/dateFormatter";
+import { QUERY_KEYS } from "../../utils/queryKeys";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const formatRp = (v) =>
@@ -127,8 +128,9 @@ const DepositPage = () => {
     mutationFn: depositService.create,
     onSuccess: () => {
       toast.success("Deposit berhasil dicatat!");
-      queryClient.invalidateQueries({ queryKey: ["deposits"] });
-      queryClient.invalidateQueries({ queryKey: ["deposits-expiring"] });
+      queryClient.invalidateQueries({ queryKey: ["deposits"], exact: false });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.expiringDeposits });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
       closeModal();
     },
     onError: (e) => toast.error(e.response?.data?.message ?? "Gagal menyimpan deposit."),
@@ -138,7 +140,7 @@ const DepositPage = () => {
     mutationFn: ({ id, data }) => depositService.update(id, data),
     onSuccess: () => {
       toast.success("Deposit berhasil diperbarui!");
-      queryClient.invalidateQueries({ queryKey: ["deposits"] });
+      queryClient.invalidateQueries({ queryKey: ["deposits"], exact: false });
       closeModal();
     },
     onError: (e) => toast.error(e.response?.data?.message ?? "Gagal memperbarui deposit."),
@@ -148,8 +150,9 @@ const DepositPage = () => {
     mutationFn: (id) => depositService.refund(id),
     onSuccess: () => {
       toast.success("Deposit berhasil dikembalikan!");
-      queryClient.invalidateQueries({ queryKey: ["deposits"] });
-      queryClient.invalidateQueries({ queryKey: ["deposits-expiring"] });
+      queryClient.invalidateQueries({ queryKey: ["deposits"], exact: false });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.expiringDeposits });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
       setRefundTarget(null);
     },
     onError: (e) => toast.error(e.response?.data?.message ?? "Gagal memproses refund."),
@@ -159,8 +162,9 @@ const DepositPage = () => {
     mutationFn: ({ id, note }) => depositService.forfeit(id, note),
     onSuccess: () => {
       toast.success("Deposit berhasil dihanguskan.");
-      queryClient.invalidateQueries({ queryKey: ["deposits"] });
-      queryClient.invalidateQueries({ queryKey: ["deposits-expiring"] });
+      queryClient.invalidateQueries({ queryKey: ["deposits"], exact: false });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.expiringDeposits });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
       setForfeitTarget(null);
       setForfeitNote("");
     },
