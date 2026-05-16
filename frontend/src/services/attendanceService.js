@@ -11,6 +11,14 @@ const attendanceService = {
   },
 
   /**
+   * GET /api/v1/attendance/today-shift
+   */
+  getTodayShift: async () => {
+    const response = await api.get("/attendance/today-shift");
+    return response.data;
+  },
+
+  /**
    * POST /api/v1/attendance/checkin
    * data: { digital_signature (base64), shift_type? }
    */

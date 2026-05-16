@@ -74,6 +74,7 @@ Route::prefix('v1')->group(function () {
         Route::get('shifts/daily/{date}/pdf',  [ShiftController::class, 'dailyPdf']);
 
         // --- Absensi ---
+        Route::get('attendance/today-shift',            [AttendanceController::class, 'todayShift']);
         Route::get('attendance',                        [AttendanceController::class, 'index']);
         Route::post('attendance/checkin',               [AttendanceController::class, 'checkin']);
         Route::post('attendance/checkout',              [AttendanceController::class, 'checkout']);

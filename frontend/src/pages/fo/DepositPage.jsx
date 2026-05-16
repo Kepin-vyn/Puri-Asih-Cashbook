@@ -100,8 +100,8 @@ const DepositPage = () => {
   const { data: expiringData } = useQuery({
     queryKey: ["deposits-expiring"],
     queryFn:  depositService.getExpiring,
-    retry: false,
-    refetchInterval: 5 * 60 * 1000,
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 10 * 60 * 1000,
   });
   const expiringDeposits = expiringData?.data ?? [];
 

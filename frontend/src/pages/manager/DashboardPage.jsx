@@ -136,21 +136,21 @@ const DashboardPage = () => {
     onError: () => toast.error("Gagal menyetujui pengeluaran."),
   });
 
-  const totalRevenue  = kasData?.meta?.total_amount ?? 0;
-  const totalExpenses = expenseData?.meta?.totals?.total_valid ?? 0;
+  const totalRevenue  = managerStats?.data?.today_revenue ?? 0;
+  const totalExpenses = managerStats?.data?.today_expenses ?? 0;
   const finalBalance  = totalRevenue - totalExpenses;
   const pendingItems  = pendingData?.data ?? [];
   const pendingCount  = pendingItems.length;
 
   const totalRooms    = 30; // 101-110, 201-210, 301-310
-  const occupiedRooms = resvData?.meta?.summary?.total_reservations ?? 0;
-  const occupancyRate = Math.min(Math.round((occupiedRooms / totalRooms) * 100), 100);
+  const occupancyRate = managerStats?.data?.occupancy_rate ?? 0;
+  const occupiedRooms = Math.round((occupancyRate / 100) * totalRooms);
 
   const maxDailyRevenue = 10_000_000; // Target pendapatan harian (bisa disesuaikan)
   const revenueRate     = Math.min(Math.round((totalRevenue / maxDailyRevenue) * 100), 100);
 
   const handleRefreshAll = () => {
-    refetchKas(); refetchExp(); refetchPending(); refetchResv();
+    refetchStats(); refetchExp(); refetchPending();
   };
 
   return (
@@ -174,7 +174,7 @@ const DashboardPage = () => {
       </div>
 
       {/* ── Summary Cards ── */}
-      {kasLoading || expLoading || resvLoading ? (
+      {statsLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {[1, 2, 3].map(i => <Skeleton key={i} className="h-28" />)}
         </div>
