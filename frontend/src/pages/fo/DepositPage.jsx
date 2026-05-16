@@ -155,10 +155,19 @@ const DepositPage = () => {
 
   const forfeitMutation = useMutation({
     mutationFn: ({ id, note }) => depositService.forfeit(id, note),
-    onSuccess: () => {
-      toast.success("Deposit berhasil dihanguskan.");
+    onSuccess: (response) => {
+      const kasAmount = response?.data?.kas_created?.amount;
+      const kasFormatted = kasAmount
+        ? new Intl.NumberFormat("id-ID", { maximumFractionDigits: 0 }).format(kasAmount)
+        : null;
+      toast.success(
+        kasFormatted
+          ? `✅ Deposit dihanguskan. Rp ${kasFormatted} otomatis tercatat di Kas Harian.`
+          : "✅ Deposit berhasil dihanguskan."
+      );
       queryClient.invalidateQueries({ queryKey: ["deposits"], exact: false });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.expiringDeposits });
+      queryClient.invalidateQueries({ queryKey: ["kas-list"], exact: false });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
       setForfeitTarget(null);
       setForfeitNote("");
