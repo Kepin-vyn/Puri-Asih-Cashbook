@@ -65,7 +65,12 @@ class ReportController extends BaseApiController
         $month = (int) $request->input('month', now()->month);
         $year  = (int) $request->input('year', now()->year);
 
-        $summary = $this->reportService->getMonthlySummary($month, $year);
+        $filters = [];
+        if ($request->filled('staff_id')) {
+            $filters['staff_id'] = $request->staff_id;
+        }
+
+        $summary = $this->reportService->getMonthlySummary($month, $year, $filters);
 
         return $this->successResponse($summary, 'Ringkasan laporan bulanan berhasil diambil.');
     }
