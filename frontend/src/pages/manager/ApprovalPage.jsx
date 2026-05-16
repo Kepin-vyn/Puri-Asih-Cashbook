@@ -6,6 +6,7 @@ import {
 import toast from "react-hot-toast";
 import expenseService from "../../services/expenseService";
 import ConfirmModal from "../../components/ui/ConfirmModal";
+import { formatDateTime } from "../../utils/dateFormatter";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const formatRp = (v) =>
@@ -13,10 +14,7 @@ const formatRp = (v) =>
     style: "currency", currency: "IDR", maximumFractionDigits: 0,
   }).format(v ?? 0).replace("IDR", "Rp");
 
-const formatDate = (d) =>
-  d ? new Date(d).toLocaleDateString("id-ID", {
-    day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit",
-  }) : "-";
+const formatDate = (d) => formatDateTime(d);
 
 // ── Status badge ──────────────────────────────────────────────────────────────
 const StatusBadge = ({ status }) => {

@@ -7,6 +7,7 @@ import authStore from "../../store/authStore";
 import api from "../../utils/axios";
 import RupiahInput from "../../components/ui/RupiahInput";
 import ConfirmModal from "../../components/ui/ConfirmModal";
+import { formatDateShort } from "../../utils/dateFormatter";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const formatRp = (v) =>
@@ -320,7 +321,7 @@ const KasHarianPage = () => {
                     <tr key={trx.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3 text-gray-500">{idx + 1}</td>
                       <td className="px-4 py-3 text-gray-600">
-                        {new Date(trx.created_at).toLocaleDateString("id-ID")}
+                        {formatDateShort(trx.created_at)}
                       </td>
                       <td className="px-4 py-3 font-medium text-gray-800">{trx.guest_name}</td>
                       <td className="px-4 py-3 text-gray-600">{trx.room_number}</td>

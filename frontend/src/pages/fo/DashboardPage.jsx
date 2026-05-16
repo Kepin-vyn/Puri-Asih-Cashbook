@@ -21,6 +21,7 @@ import dashboardService from "../../services/dashboardService";
 import shiftService from "../../services/shiftService";
 import authStore from "../../store/authStore";
 import api from "../../utils/axios";
+import { formatTime } from "../../utils/dateFormatter";
 
 // ─── Helper: Format Rupiah ──────────────────────────────────────────────────
 const formatRp = (val) =>
@@ -269,10 +270,7 @@ const DashboardPage = () => {
             <p className="text-sm text-emerald-600">
               Dimulai:{" "}
               {summary.shift_started_at
-                ? new Date(summary.shift_started_at).toLocaleTimeString("id-ID", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })
+                ? formatTime(summary.shift_started_at)
                 : "Hari ini"}
             </p>
           </div>

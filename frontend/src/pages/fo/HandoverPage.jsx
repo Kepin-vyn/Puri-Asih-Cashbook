@@ -6,6 +6,7 @@ import toast from "react-hot-toast";
 import shiftService from "../../services/shiftService";
 import userService from "../../services/userService";
 import authStore from "../../store/authStore";
+import { formatTime, formatDateLong, formatDuration } from "../../utils/dateFormatter";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const formatRp = (v) =>
@@ -16,29 +17,6 @@ const formatRp = (v) =>
   })
     .format(v ?? 0)
     .replace("IDR", "Rp");
-
-const formatTime = (iso) =>
-  iso
-    ? new Date(iso).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
-    : "-";
-
-const formatDate = (iso) =>
-  iso
-    ? new Date(iso).toLocaleDateString("id-ID", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-      })
-    : "-";
-
-const getDuration = (startedAt) => {
-  if (!startedAt) return "-";
-  const diff = Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000);
-  const h = Math.floor(diff / 3600);
-  const m = Math.floor((diff % 3600) / 60);
-  return `${h} jam ${m} menit`;
-};
 
 const SHIFT_LABEL = { pagi: "Pagi", siang: "Siang", malam: "Malam" };
 
@@ -385,7 +363,7 @@ const HandoverPage = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-800">Shift Handover</h1>
-              <p className="text-sm text-gray-500 mt-0.5">{formatDate(activeShift?.started_at)}</p>
+              <p className="text-sm text-gray-500 mt-0.5">{formatDateLong(activeShift?.started_at)}</p>
             </div>
           </div>
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-full text-sm font-semibold">
@@ -418,7 +396,7 @@ const HandoverPage = () => {
             </div>
             <div className="bg-gray-50 rounded-xl p-3">
               <p className="text-xs text-gray-500 font-medium">Durasi</p>
-              <p className="text-sm font-bold text-gray-800 mt-0.5">{getDuration(activeShift?.started_at)}</p>
+              <p className="text-sm font-bold text-gray-800 mt-0.5">{formatDuration(activeShift?.started_at)}</p>
             </div>
           </div>
         )}

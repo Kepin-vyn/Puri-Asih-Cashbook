@@ -8,6 +8,7 @@ import attendanceService from "../../services/attendanceService";
 import MonthYearPicker from "../../components/ui/MonthYearPicker";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import RupiahInput from "../../components/ui/RupiahInput";
+import { formatDateShort, formatTime } from "../../utils/dateFormatter";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const formatRp = (v) =>
@@ -19,15 +20,7 @@ const formatRp = (v) =>
     .format(v ?? 0)
     .replace("IDR", "Rp");
 
-const formatDate = (iso) =>
-  iso
-    ? new Date(iso).toLocaleDateString("id-ID", { day: "2-digit", month: "short", year: "numeric" })
-    : "-";
-
-const formatTime = (iso) =>
-  iso
-    ? new Date(iso).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })
-    : "-";
+const formatDate = (iso) => formatDateShort(iso);
 
 const now = new Date();
 const defaultPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
