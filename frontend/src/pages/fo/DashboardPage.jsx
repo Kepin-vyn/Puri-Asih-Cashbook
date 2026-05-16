@@ -22,6 +22,7 @@ import shiftService from "../../services/shiftService";
 import authStore from "../../store/authStore";
 import api from "../../utils/axios";
 import { formatTime } from "../../utils/dateFormatter";
+import { QUERY_KEYS } from "../../utils/queryKeys";
 
 // ─── Helper: Format Rupiah ──────────────────────────────────────────────────
 const formatRp = (val) =>
@@ -88,9 +89,8 @@ const DashboardPage = () => {
     onSuccess: () => {
       toast.success("Shift berhasil dimulai!");
       setShowStartShiftModal(false);
-      queryClient.invalidateQueries({ queryKey: ["fo-shift-summary"] });
-      queryClient.invalidateQueries({ queryKey: ["active-shift"] });
-      queryClient.invalidateQueries({ queryKey: ["fo-dashboard"] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.activeShift });
     },
     onError: (error) => {
       toast.error(error.response?.data?.message ?? "Gagal memulai shift.");
@@ -106,7 +106,7 @@ const DashboardPage = () => {
     isError: summaryError,
     refetch: refetchSummary,
   } = useQuery({
-    queryKey: ["fo-shift-summary"],
+    queryKey: QUERY_KEYS.foDashboard,
     queryFn:  dashboardService.getFoSummary,
     staleTime:       1 * 60 * 1000, // kritis: fresh 1 menit
     refetchInterval: 2 * 60 * 1000, // polling setiap 2 menit

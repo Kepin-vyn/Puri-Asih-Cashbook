@@ -8,6 +8,7 @@ import api from "../../utils/axios";
 import RupiahInput from "../../components/ui/RupiahInput";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import { formatDateShort } from "../../utils/dateFormatter";
+import { QUERY_KEYS } from "../../utils/queryKeys";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 const formatRp = (v) =>
@@ -96,8 +97,8 @@ const KasHarianPage = () => {
     mutationFn: kasService.create,
     onSuccess: () => {
       toast.success("Transaksi berhasil dicatat!");
-      queryClient.invalidateQueries({ queryKey: ["kas-list"] });
-      queryClient.invalidateQueries({ queryKey: ["fo-shift-summary"] });
+      queryClient.invalidateQueries({ queryKey: ["kas-list"], exact: false });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
       closeModal();
     },
     onError: (e) => toast.error(e.response?.data?.message ?? "Gagal menyimpan transaksi."),
@@ -107,7 +108,8 @@ const KasHarianPage = () => {
     mutationFn: ({ id, data }) => kasService.update(id, data),
     onSuccess: () => {
       toast.success("Transaksi berhasil diperbarui!");
-      queryClient.invalidateQueries({ queryKey: ["kas-list"] });
+      queryClient.invalidateQueries({ queryKey: ["kas-list"], exact: false });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
       closeModal();
     },
     onError: (e) => toast.error(e.response?.data?.message ?? "Gagal memperbarui transaksi."),
@@ -117,7 +119,8 @@ const KasHarianPage = () => {
     mutationFn: kasService.remove,
     onSuccess: () => {
       toast.success("Transaksi berhasil dihapus.");
-      queryClient.invalidateQueries({ queryKey: ["kas-list"] });
+      queryClient.invalidateQueries({ queryKey: ["kas-list"], exact: false });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
       setDeleteTarget(null);
     },
     onError: () => toast.error("Gagal menghapus transaksi."),
