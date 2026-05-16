@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Attendance;
+use App\Models\ShiftSchedule;
+use App\Models\User;
 use Carbon\Carbon;
 
 class AttendanceService
@@ -22,15 +24,31 @@ class AttendanceService
     private const LATE_TOLERANCE_MINUTES = 15;
 
     /**
-     * Cek apakah staff terlambat berdasarkan shift_type dan actual_start.
+     * Cek apakah staff terlambat.
+     * Prioritas: jadwal mingguan → fallback ke shift statis user.
      *
-     * @param  string  $shiftType   pagi|siang|malam
-     * @param  Carbon  $actualStart Waktu check-in aktual
+     * @param  int    $userId      ID user yang check-in
+     * @param  string $shiftType   pagi|siang|malam (dari user.shift sebagai default)
+     * @param  Carbon $actualStart Waktu check-in aktual
      * @return bool
      */
-    public function checkIsLate(string $shiftType, Carbon $actualStart): bool
+    public function checkIsLate(int $userId, string $shiftType, Carbon $actualStart): bool
     {
-        $shiftHour = self::SHIFT_HOURS[$shiftType] ?? null;
+        // Cek jadwal mingguan terlebih dahulu
+        $weekStart     = Carbon::now()->startOfWeek(Carbon::MONDAY)->toDateString();
+        $todaySchedule = ShiftSchedule::where('user_id', $userId)
+            ->where('week_start_date', $weekStart)
+            ->first();
+
+        // Gunakan shift dari jadwal mingguan jika ada, fallback ke shift statis
+        $resolvedShift = $todaySchedule?->today_shift ?? $shiftType;
+
+        // Jika hari off, tidak bisa terlambat
+        if ($resolvedShift === 'off') {
+            return false;
+        }
+
+        $shiftHour = self::SHIFT_HOURS[$resolvedShift] ?? null;
 
         if ($shiftHour === null) {
             return false;
