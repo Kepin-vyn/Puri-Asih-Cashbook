@@ -12,6 +12,9 @@ dist/
 build/
 public/build/
 
+# Qoder
+.qoder/
+
 # IDE and OS specific files
 .DS_Store
 .idea/

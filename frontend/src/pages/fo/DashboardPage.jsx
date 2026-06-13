@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   CalendarCheck,
   CalendarX,
@@ -200,15 +200,14 @@ const DashboardPage = () => {
             Belum Ada Shift Aktif
           </p>
           <p className="text-sm text-yellow-700 mb-4">
-            Klik tombol di bawah untuk memulai shift kamu sekarang.
+            Lakukan absen terlebih dahulu untuk memulai shift kamu.
           </p>
-          <button
-            onClick={() => setShowConfirmModal(true)}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700
-                       text-white font-semibold rounded-lg transition-all"
+          <Link
+            to="/fo/absensi?action=start_shift"
+            className="flex items-center justify-center w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all"
           >
-            ▶ Mulai Shift Sekarang
-          </button>
+            ▶ Absen & Mulai Shift Sekarang
+          </Link>
         </div>
       )}
 
@@ -226,52 +225,7 @@ const DashboardPage = () => {
         </div>
       )}
 
-      {/* Modal Konfirmasi */}
-      {showConfirmModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center
-                        justify-center z-50 px-4">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
-            <h3 className="text-lg font-bold text-gray-800 mb-2">
-              Mulai Shift Sekarang?
-            </h3>
-            <p className="text-gray-600 text-sm mb-2">
-              Jam masuk akan tercatat pada:
-            </p>
-            <p className="text-2xl font-bold text-blue-600 mb-6">
-              {new Date().toLocaleTimeString('id-ID', {
-                hour: '2-digit',
-                minute: '2-digit'
-              })}
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowConfirmModal(false)}
-                disabled={startShiftMutation.isPending}
-                className="flex-1 py-2 border border-gray-300 rounded-lg
-                           text-gray-700 hover:bg-gray-50"
-              >
-                Batal
-              </button>
-              <button
-                onClick={() => startShiftMutation.mutate()}
-                disabled={startShiftMutation.isPending}
-                className="flex-1 py-2 bg-blue-600 text-white rounded-lg
-                           hover:bg-blue-700 disabled:bg-gray-300
-                           disabled:cursor-not-allowed font-semibold flex items-center justify-center gap-2"
-              >
-                {startShiftMutation.isPending ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white
-                                    border-t-transparent rounded-full
-                                    animate-spin" />
-                    Memulai...
-                  </>
-                ) : 'Mulai Shift'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modal Konfirmasi dihapus — alur sekarang via halaman Attendance */}
 
       {/* ── Summary Cards ── */}
       {summaryLoading ? (
