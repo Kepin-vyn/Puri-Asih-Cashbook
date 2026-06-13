@@ -18,7 +18,7 @@ class StoreUserRequest extends FormRequest
             'email'    => ['required', 'email', 'unique:users,email'],
             'password' => ['required', 'string', 'min:6', 'confirmed'],
             'role'     => ['required', 'in:fo,manager'],
-            'shift'    => ['required_if:role,fo', 'nullable', 'in:pagi,siang,malam'],
+            'shift'    => ['nullable', 'in:pagi,siang,malam'],
         ];
     }
 
