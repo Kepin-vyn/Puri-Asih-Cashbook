@@ -55,10 +55,25 @@ class DashboardController extends BaseApiController
             ->whereIn('check_out_date', [$today, $tomorrow])
             ->count();
 
+        // 6. Reservation counts hari ini
+        $check_in_count = Reservation::whereDate('check_in_date', $today)
+            ->whereNotIn('status', ['cancel', 'noshow'])
+            ->count();
+
+        $check_out_count = Reservation::whereDate('check_out_date', $today)
+            ->whereNotIn('status', ['cancel', 'noshow'])
+            ->count();
+
+        $reservation_count = Reservation::whereDate('created_at', $today)
+            ->count();
+
         return $this->successResponse([
             'has_active_shift' => $has_active_shift,
             'active_shift' => $active_shift,
             'shift_summary' => $shift_summary,
+            'check_in_count' => $check_in_count,
+            'check_out_count' => $check_out_count,
+            'reservation_count' => $reservation_count,
             'notifications' => NotificationResource::collection($notifications),
             'unread_count' => $unread_count,
             'expiring_deposits' => $expiring_deposits,
