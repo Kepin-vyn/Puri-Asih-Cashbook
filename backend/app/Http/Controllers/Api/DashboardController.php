@@ -15,6 +15,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends BaseApiController
@@ -26,43 +27,62 @@ class DashboardController extends BaseApiController
     {
         $user = Auth::user();
 
-        // 1. Shift Aktif
-        $active_shift = $shiftService->getActiveShift($user->id);
-        $has_active_shift = $active_shift !== null;
+        $data = Cache::remember("dashboard:fo:{$user->id}", 30, function () use ($user, $shiftService) {
+            // 1. Shift Aktif
+            $active_shift = $shiftService->getActiveShift($user->id);
+            $has_active_shift = $active_shift !== null;
 
-        // 2. Shift Summary
-        $shift_summary = null;
-        if ($has_active_shift) {
-            $shift_summary = $shiftService->getShiftSummary($active_shift->id);
-        }
+            // 2. Shift Summary
+            $shift_summary = null;
+            if ($has_active_shift) {
+                $shift_summary = $shiftService->getShiftSummary($active_shift->id);
+            }
 
-        // 3. Notifikasi 5 terbaru
-        $notifications = Notification::where('user_id', $user->id)
-            ->orderByRaw('CASE WHEN read_at IS NULL THEN 0 ELSE 1 END ASC')
-            ->orderBy('created_at', 'desc')
-            ->limit(5)
-            ->get();
+            // 3. Notifikasi 5 terbaru
+            $notifications = Notification::where('user_id', $user->id)
+                ->orderByRaw('CASE WHEN read_at IS NULL THEN 0 ELSE 1 END ASC')
+                ->orderBy('created_at', 'desc')
+                ->limit(5)
+                ->get();
 
-        // 4. Unread count
-        $unread_count = Notification::where('user_id', $user->id)
-            ->unread()
-            ->count();
+            // 4. Unread count
+            $unread_count = Notification::where('user_id', $user->id)
+                ->unread()
+                ->count();
 
-        // 5. Expiring deposits (jatuh tempo hari ini & besok)
-        $today = Carbon::today()->toDateString();
-        $tomorrow = Carbon::tomorrow()->toDateString();
-        $expiring_deposits = Deposit::where('status', 'active')
-            ->whereIn('check_out_date', [$today, $tomorrow])
-            ->count();
+            // 5. Expiring deposits (jatuh tempo hari ini & besok)
+            $today = Carbon::today()->toDateString();
+            $tomorrow = Carbon::tomorrow()->toDateString();
+            $expiring_deposits = Deposit::where('status', 'active')
+                ->whereIn('check_out_date', [$today, $tomorrow])
+                ->count();
 
-        return $this->successResponse([
-            'has_active_shift' => $has_active_shift,
-            'active_shift' => $active_shift,
-            'shift_summary' => $shift_summary,
-            'notifications' => NotificationResource::collection($notifications),
-            'unread_count' => $unread_count,
-            'expiring_deposits' => $expiring_deposits,
-        ], 'Dashboard FO berhasil diambil.');
+            // 6. Reservation counts hari ini
+            $check_in_count = Reservation::whereDate('check_in_date', $today)
+                ->whereNotIn('status', ['cancel', 'noshow'])
+                ->count();
+
+            $check_out_count = Reservation::whereDate('check_out_date', $today)
+                ->whereNotIn('status', ['cancel', 'noshow'])
+                ->count();
+
+            $reservation_count = Reservation::whereDate('created_at', $today)
+                ->count();
+
+            return [
+                'has_active_shift' => $has_active_shift,
+                'active_shift' => $active_shift,
+                'shift_summary' => $shift_summary,
+                'check_in_count' => $check_in_count,
+                'check_out_count' => $check_out_count,
+                'reservation_count' => $reservation_count,
+                'notifications' => NotificationResource::collection($notifications),
+                'unread_count' => $unread_count,
+                'expiring_deposits' => $expiring_deposits,
+            ];
+        });
+
+        return $this->successResponse($data, 'Dashboard FO berhasil diambil.');
     }
 
     /**

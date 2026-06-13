@@ -8,7 +8,6 @@ import userService from "../../services/userService";
 import shiftScheduleService from "../../services/shiftScheduleService";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import InlineDropdown from "../../components/ui/InlineDropdown";
-import { formatDate } from "../../utils/dateFormatter";
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 const SHIFT_OPTIONS = [
@@ -103,7 +102,6 @@ const WeeklyScheduleTab = () => {
   const { data, isLoading } = useQuery({
     queryKey: ["shift-schedule-week", weekStartStr],
     queryFn:  () => shiftScheduleService.getWeek(weekStartStr),
-    onSuccess: () => setLocalSchedule({}), // reset local changes on new week
   });
   const schedules = data?.data ?? [];
 
