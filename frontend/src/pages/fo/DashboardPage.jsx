@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import {
@@ -15,15 +14,16 @@ import {
   Info,
   AlertTriangle,
   Clock,
+  Users,
+  ArrowRight,
+  ShieldCheck,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import dashboardService from "../../services/dashboardService";
-import shiftService from "../../services/shiftService";
 import authStore from "../../store/authStore";
 import api from "../../utils/axios";
 import { formatTime } from "../../utils/dateFormatter";
 import { QUERY_KEYS } from "../../utils/queryKeys";
-import { useShiftContext } from "../../context/ShiftContext";
 import { useActiveShift } from "../../hooks/useActiveShift";
 
 // ─── Helper: Format Rupiah ──────────────────────────────────────────────────
@@ -82,30 +82,7 @@ const NotifIcon = ({ type }) => {
 const DashboardPage = () => {
   const user        = authStore.getUser();
   const queryClient = useQueryClient();
-  const { markShiftStarted } = useShiftContext();
   const { hasActiveShift, activeShift } = useActiveShift();
-
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-
-  // Mutation: mulai shift langsung dari dashboard
-  const startShiftMutation = useMutation({
-    mutationFn: shiftService.startShift,
-    onSuccess: () => {
-      markShiftStarted();
-      queryClient.invalidateQueries({
-        queryKey: QUERY_KEYS.activeShift,
-        exact: false,
-        refetchType: "all",
-      });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
-      toast.success("✅ Shift berhasil dimulai!");
-      setShowConfirmModal(false);
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || "Gagal memulai shift");
-      setShowConfirmModal(false);
-    },
-  });
 
   // ── DATA KRITIS: polling 2 menit ──────────────────────────────────────────
 
@@ -117,7 +94,7 @@ const DashboardPage = () => {
     refetch: refetchSummary,
   } = useQuery({
     queryKey: QUERY_KEYS.foDashboard,
-    queryFn:  dashboardService.getFoSummary,
+    queryFn:  dashboardService.getFoDashboard,
     staleTime:       1 * 60 * 1000, // kritis: fresh 1 menit
     refetchInterval: 2 * 60 * 1000, // polling setiap 2 menit
     retry: 1,
@@ -200,15 +177,15 @@ const DashboardPage = () => {
             Belum Ada Shift Aktif
           </p>
           <p className="text-sm text-yellow-700 mb-4">
-            Klik tombol di bawah untuk memulai shift kamu sekarang.
+            Lakukan absen masuk dengan tanda tangan digital terlebih dahulu untuk memulai shift.
           </p>
-          <button
-            onClick={() => setShowConfirmModal(true)}
-            className="w-full py-3 bg-blue-600 hover:bg-blue-700
-                       text-white font-semibold rounded-lg transition-all"
+          <Link
+            to="/fo/absensi"
+            className="block w-full py-3 bg-blue-600 hover:bg-blue-700
+                       text-white font-semibold rounded-lg transition-all text-center"
           >
-            ▶ Mulai Shift Sekarang
-          </button>
+            ✍️ Absen Masuk & Mulai Shift
+          </Link>
         </div>
       )}
 
@@ -226,62 +203,15 @@ const DashboardPage = () => {
         </div>
       )}
 
-      {/* Modal Konfirmasi */}
-      {showConfirmModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center
-                        justify-center z-50 px-4">
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-xl">
-            <h3 className="text-lg font-bold text-gray-800 mb-2">
-              Mulai Shift Sekarang?
-            </h3>
-            <p className="text-gray-600 text-sm mb-2">
-              Jam masuk akan tercatat pada:
-            </p>
-            <p className="text-2xl font-bold text-blue-600 mb-6">
-              {new Date().toLocaleTimeString('id-ID', {
-                hour: '2-digit',
-                minute: '2-digit'
-              })}
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowConfirmModal(false)}
-                disabled={startShiftMutation.isPending}
-                className="flex-1 py-2 border border-gray-300 rounded-lg
-                           text-gray-700 hover:bg-gray-50"
-              >
-                Batal
-              </button>
-              <button
-                onClick={() => startShiftMutation.mutate()}
-                disabled={startShiftMutation.isPending}
-                className="flex-1 py-2 bg-blue-600 text-white rounded-lg
-                           hover:bg-blue-700 disabled:bg-gray-300
-                           disabled:cursor-not-allowed font-semibold flex items-center justify-center gap-2"
-              >
-                {startShiftMutation.isPending ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white
-                                    border-t-transparent rounded-full
-                                    animate-spin" />
-                    Memulai...
-                  </>
-                ) : 'Mulai Shift'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* ── Summary Cards ── */}
       {summaryLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[1, 2, 3].map((i) => (
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map((i) => (
             <Skeleton key={i} className="h-36" />
           ))}
         </div>
       ) : !summaryError ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <SummaryCard
             icon={CalendarCheck}
             label="Check-In Hari Ini"
@@ -297,6 +227,14 @@ const DashboardPage = () => {
             sublabel={`${summary.check_out_count ?? 0} tamu selesai`}
             iconBg="bg-purple-50"
             iconColor="text-purple-600"
+          />
+          <SummaryCard
+            icon={Users}
+            label="In-House"
+            value={summary.in_house_count ?? 0}
+            sublabel="Tamu sedang menginap"
+            iconBg="bg-orange-50"
+            iconColor="text-orange-600"
           />
           <SummaryCard
             icon={BookOpen}
@@ -317,6 +255,117 @@ const DashboardPage = () => {
           />
         </div>
       ) : null}
+
+      {/* ── Tamu Expected & Deposit Perlu Refund ── */}
+      {!summaryLoading && !summaryError && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Tamu Expected Hari Ini */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <CalendarCheck size={18} className="text-blue-600" />
+                <h2 className="font-semibold text-gray-800">Tamu Expected Hari Ini</h2>
+                {(summary.expected_arrivals?.length ?? 0) > 0 && (
+                  <span className="bg-blue-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                    {summary.expected_arrivals.length}
+                  </span>
+                )}
+              </div>
+              <Link
+                to="/fo/reservasi"
+                className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1"
+              >
+                Lihat Semua <ArrowRight size={12} />
+              </Link>
+            </div>
+
+            {(summary.expected_arrivals?.length ?? 0) === 0 ? (
+              <div className="text-center py-8 text-gray-400">
+                <CalendarCheck size={32} className="mx-auto mb-2 opacity-30" />
+                <p className="text-sm">Tidak ada tamu expected hari ini</p>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {summary.expected_arrivals.map((res) => (
+                  <div
+                    key={res.id}
+                    className="flex items-center justify-between p-3 bg-blue-50 border border-blue-100 rounded-xl"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-800 truncate">{res.guest_name}</p>
+                      <p className="text-xs text-gray-500">
+                        Kamar {res.room_number} • {res.invoice_number}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-0.5">
+                        DP: {formatRp(res.down_payment)} • Sisa: {formatRp(res.remaining_balance)}
+                      </p>
+                    </div>
+                    <Link
+                      to="/fo/reservasi"
+                      className="flex-shrink-0 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg transition-colors"
+                    >
+                      Check-In
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Deposit Perlu Refund */}
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <ShieldCheck size={18} className="text-amber-600" />
+                <h2 className="font-semibold text-gray-800">Deposit Perlu Refund</h2>
+                {(summary.deposits_due_refund?.length ?? 0) > 0 && (
+                  <span className="bg-amber-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                    {summary.deposits_due_refund.length}
+                  </span>
+                )}
+              </div>
+              <Link
+                to="/fo/deposit"
+                className="text-xs text-amber-600 hover:text-amber-800 flex items-center gap-1"
+              >
+                Kelola <ArrowRight size={12} />
+              </Link>
+            </div>
+
+            {(summary.deposits_due_refund?.length ?? 0) === 0 ? (
+              <div className="text-center py-8 text-gray-400">
+                <ShieldCheck size={32} className="mx-auto mb-2 opacity-30" />
+                <p className="text-sm">Tidak ada deposit perlu refund hari ini</p>
+              </div>
+            ) : (
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {summary.deposits_due_refund.map((dep) => (
+                  <div
+                    key={dep.id}
+                    className="flex items-center justify-between p-3 bg-amber-50 border border-amber-100 rounded-xl"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-gray-800 truncate">{dep.guest_name}</p>
+                      <p className="text-xs text-gray-500">
+                        Kamar {dep.room_number} • Checkout hari ini
+                      </p>
+                      <p className="text-xs font-medium text-amber-700 mt-0.5">
+                        Deposit: {formatRp(dep.amount)}
+                      </p>
+                    </div>
+                    <Link
+                      to="/fo/deposit"
+                      className="flex-shrink-0 px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white text-xs font-medium rounded-lg transition-colors"
+                    >
+                      Refund
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* ── Bottom Grid: Notifications + Shift Cash ── */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

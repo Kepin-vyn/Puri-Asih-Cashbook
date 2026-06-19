@@ -50,12 +50,18 @@ class DashboardController extends BaseApiController
                 ->unread()
                 ->count();
 
-            // 5. Expiring deposits (jatuh tempo hari ini & besok)
+            // 5. Deposits
             $today = Carbon::today()->toDateString();
             $tomorrow = Carbon::tomorrow()->toDateString();
             $expiring_deposits = Deposit::where('status', 'active')
                 ->whereIn('check_out_date', [$today, $tomorrow])
                 ->count();
+
+            // 5b. Deposit yang perlu refund hari ini (checkout hari ini, masih active)
+            $deposits_due_refund = Deposit::where('status', 'active')
+                ->whereDate('check_out_date', $today)
+                ->orderBy('room_number')
+                ->get(['id', 'guest_name', 'room_number', 'amount', 'check_out_date', 'payment_method']);
 
             // 6. Reservation counts hari ini
             $check_in_count = Reservation::whereDate('check_in_date', $today)
@@ -69,6 +75,15 @@ class DashboardController extends BaseApiController
             $reservation_count = Reservation::whereDate('created_at', $today)
                 ->count();
 
+            // 7. Tamu expected hari ini (reserved + check_in_date = hari ini)
+            $expected_arrivals = Reservation::where('status', 'reserved')
+                ->whereDate('check_in_date', $today)
+                ->orderBy('room_number')
+                ->get(['id', 'invoice_number', 'guest_name', 'room_number', 'check_in_date', 'check_out_date', 'room_price', 'down_payment', 'remaining_balance', 'payment_status']);
+
+            // 8. Tamu in-house (checkin, belum checkout)
+            $in_house_count = Reservation::where('status', 'checkin')->count();
+
             return [
                 'has_active_shift' => $has_active_shift,
                 'active_shift' => $active_shift,
@@ -76,6 +91,9 @@ class DashboardController extends BaseApiController
                 'check_in_count' => $check_in_count,
                 'check_out_count' => $check_out_count,
                 'reservation_count' => $reservation_count,
+                'in_house_count' => $in_house_count,
+                'expected_arrivals' => $expected_arrivals,
+                'deposits_due_refund' => $deposits_due_refund,
                 'notifications' => NotificationResource::collection($notifications),
                 'unread_count' => $unread_count,
                 'expiring_deposits' => $expiring_deposits,

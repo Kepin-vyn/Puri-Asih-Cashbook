@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Shift\HandoverRequest;
 use App\Http\Resources\ShiftResource;
+use App\Models\Attendance;
 use App\Models\Shift;
 use App\Services\ShiftService;
 use Illuminate\Http\JsonResponse;
@@ -99,12 +100,31 @@ class ShiftController extends BaseApiController
             return $this->errorResponse('Kamu masih memiliki shift aktif.', null, 422);
         }
 
+        // Cek apakah sudah checkin attendance hari ini
+        $todayAttendance = Attendance::where('user_id', $user->id)
+            ->whereDate('attendance_date', Carbon::today())
+            ->first();
+
+        if (!$todayAttendance) {
+            return $this->errorResponse(
+                'Anda harus melakukan absen masuk (check-in) dengan tanda tangan terlebih dahulu sebelum memulai shift.',
+                null,
+                422
+            );
+        }
+
+        // Buat shift baru berdasarkan attendance
         $shift = Shift::create([
             'user_id'    => $user->id,
-            'type'       => $user->shift ?? 'pagi',
+            'type'       => $todayAttendance->shift_type ?? $user->shift ?? 'pagi',
             'started_at' => Carbon::now(),
             'status'     => 'active',
         ]);
+
+        // Update attendance shift_id
+        if (!$todayAttendance->shift_id) {
+            $todayAttendance->update(['shift_id' => $shift->id]);
+        }
 
         $shift->load(['user', 'handoverUser']);
 

@@ -221,17 +221,23 @@ class DepositController extends BaseApiController
 
         $deposit->load('user');
 
+        // Gunakan shift aktif saat ini (bukan shift saat deposit dibuat)
+        $currentUser = Auth::user();
+        $currentShift = Shift::where('user_id', $currentUser->id)
+            ->where('status', 'active')
+            ->first();
+
         // Otomatis buat record KAS — deposit hangus = pemasukan hotel
         $kasNote = 'Deposit hangus - ' . $deposit->guest_name
                  . ' kamar ' . $deposit->room_number
-                 . ' - ' . $request->note;
+                 . ($request->note ? ' - ' . $request->note : '');
 
         $kasRecord = KasTransaction::create([
-            'shift_id'         => $deposit->shift_id,
-            'user_id'          => $deposit->user_id,
+            'shift_id'         => $currentShift?->id ?? $deposit->shift_id,
+            'user_id'          => $currentUser->id,
             'guest_name'       => $deposit->guest_name,
             'room_number'      => $deposit->room_number,
-            'transaction_type' => 'pelunasan',
+            'transaction_type' => 'deposit_hangus',
             'payment_method'   => $deposit->payment_method,
             'amount'           => $deposit->amount,
             'note'             => $kasNote,

@@ -30,6 +30,7 @@ const SOURCES = [
 ];
 
 const STATUSES = [
+  { value: "reserved", label: "Reserved" },
   { value: "checkin",  label: "Check-In" },
   { value: "checkout", label: "Check-Out" },
   { value: "cancel",   label: "Cancel" },
@@ -172,7 +173,7 @@ const ReservationPage = () => {
     mutationFn: ({ id, status }) => reservationService.updateStatus(id, status),
     onSuccess: (_, variables) => {
       const msg = variables.status === 'checkin'
-        ? '\u2705 Check-in berhasil! Transaksi KAS otomatis tercatat.'
+        ? '\u2705 Check-in berhasil! Pembayaran ditandai lunas & transaksi KAS otomatis tercatat.'
         : 'Status reservasi berhasil diperbarui!';
       toast.success(msg);
       queryClient.invalidateQueries({ queryKey: ['reservations'], exact: false });
