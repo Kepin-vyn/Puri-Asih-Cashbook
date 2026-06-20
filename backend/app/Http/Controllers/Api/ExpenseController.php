@@ -8,6 +8,7 @@ use App\Http\Resources\ExpenseResource;
 use App\Models\Expense;
 use App\Models\Shift;
 use App\Services\ExpenseService;
+use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,10 +18,12 @@ use Barryvdh\Snappy\Facades\SnappyPdf as PDF;
 class ExpenseController extends BaseApiController
 {
     private ExpenseService $expenseService;
+    private ActivityLogService $activityLog;
 
-    public function __construct(ExpenseService $expenseService)
+    public function __construct(ExpenseService $expenseService, ActivityLogService $activityLog)
     {
         $this->expenseService = $expenseService;
+        $this->activityLog = $activityLog;
     }
 
     /**
@@ -131,6 +134,8 @@ class ExpenseController extends BaseApiController
         $message = $status === 'pending' 
             ? 'Pengeluaran berhasil dicatat. Menunggu persetujuan Manager.' 
             : 'Pengeluaran berhasil dicatat dan disetujui otomatis.';
+
+        $this->activityLog->log('expense', 'create', 'Mencatat pengeluaran "' . $request->description . '" sebesar Rp ' . number_format($totalPrice, 0, ',', '.'), ['description' => $request->description, 'amount' => (float)$totalPrice, 'status' => $status]);
 
         return $this->successResponse(
             new ExpenseResource($expense),
@@ -244,6 +249,8 @@ class ExpenseController extends BaseApiController
 
         $expense->delete();
 
+        $this->activityLog->log('expense', 'delete', 'Menghapus pengeluaran "' . $expense->description . '" sebesar Rp ' . number_format($expense->total_price, 0, ',', '.'), ['description' => $expense->description, 'amount' => (float)$expense->total_price]);
+
         return $this->successResponse(null, 'Pengeluaran berhasil dihapus.');
     }
 
@@ -303,6 +310,8 @@ class ExpenseController extends BaseApiController
 
         $expense->load(['user', 'approvedBy']);
 
+        $this->activityLog->log('expense', 'approve', 'Menyetujui pengeluaran "' . $expense->description . '" sebesar Rp ' . number_format($expense->total_price, 0, ',', '.'), ['description' => $expense->description, 'amount' => (float)$expense->total_price]);
+
         return $this->successResponse(
             new ExpenseResource($expense),
             'Pengeluaran berhasil disetujui.'
@@ -330,6 +339,8 @@ class ExpenseController extends BaseApiController
         ]);
 
         $expense->load(['user', 'approvedBy']);
+
+        $this->activityLog->log('expense', 'reject', 'Menolak pengeluaran "' . $expense->description . '" dengan alasan: ' . $request->rejection_reason, ['description' => $expense->description, 'amount' => (float)$expense->total_price, 'reason' => $request->rejection_reason]);
 
         return $this->successResponse(
             new ExpenseResource($expense),

@@ -9,6 +9,7 @@ use App\Models\Reservation;
 use App\Models\Shift;
 use App\Services\ReservationService;
 use App\Services\KasAutomationService;
+use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,10 +18,12 @@ use Barryvdh\Snappy\Facades\SnappyPdf as PDF;
 class ReservationController extends BaseApiController
 {
     private ReservationService $reservationService;
+    private ActivityLogService $activityLog;
 
-    public function __construct(ReservationService $reservationService)
+    public function __construct(ReservationService $reservationService, ActivityLogService $activityLog)
     {
         $this->reservationService = $reservationService;
+        $this->activityLog = $activityLog;
     }
 
     /**
@@ -125,6 +128,13 @@ class ReservationController extends BaseApiController
             );
         }
 
+        $this->activityLog->log(
+            'reservation',
+            'create',
+            'Membuat reservasi ' . $invoiceNumber . ' untuk tamu "' . $reservation->guest_name . '" kamar ' . $reservation->room_number,
+            ['invoice' => $invoiceNumber, 'guest' => $reservation->guest_name, 'room' => $reservation->room_number, 'down_payment' => (float)$reservation->down_payment, 'remaining' => (float)$reservation->remaining_balance]
+        );
+
         return $this->successResponse(
             new ReservationResource($reservation),
             'Reservasi berhasil dicatat. Invoice: ' . $invoiceNumber,
@@ -192,6 +202,13 @@ class ReservationController extends BaseApiController
 
         $reservation->delete();
 
+        $this->activityLog->log(
+            'reservation',
+            'delete',
+            'Menghapus reservasi ' . $reservation->invoice_number . ' tamu "' . $reservation->guest_name . '" kamar ' . $reservation->room_number,
+            ['invoice' => $reservation->invoice_number, 'guest' => $reservation->guest_name, 'room' => $reservation->room_number]
+        );
+
         return $this->successResponse(null, 'Reservasi berhasil dihapus.');
     }
 
@@ -239,6 +256,13 @@ class ReservationController extends BaseApiController
         if ($request->status === 'checkin') {
             $message .= ' Pembayaran ditandai lunas.';
         }
+
+        $this->activityLog->log(
+            'reservation',
+            $request->status === 'checkin' ? 'checkin' : 'update_status',
+            'Mengubah status reservasi ' . $reservation->invoice_number . ' (' . $reservation->guest_name . ') menjadi ' . ($statusLabels[$request->status] ?? $request->status),
+            ['invoice' => $reservation->invoice_number, 'guest' => $reservation->guest_name, 'status' => $request->status, 'payment_status' => $reservation->payment_status]
+        );
 
         return $this->successResponse(
             new ReservationResource($reservation),

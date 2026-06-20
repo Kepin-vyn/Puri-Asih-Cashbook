@@ -106,7 +106,7 @@ const SuccessModal = ({ shiftId, onDownload, onFinish, isDownloading }) => (
       </div>
       <h2 className="text-xl font-bold text-gray-800 mb-2">Handover Berhasil!</h2>
       <p className="text-gray-500 text-sm mb-6">
-        Shift Report sudah dibuat dan tersimpan. Silakan unduh laporan atau selesaikan sesi ini.
+        Absen pulang & Shift Report otomatis tercatat. Silakan unduh laporan atau selesaikan sesi ini.
       </p>
       <div className="space-y-3">
         <button
@@ -259,7 +259,7 @@ const HandoverPage = () => {
       key: "transaction_type",
       label: "Jenis",
       render: (r) => {
-        const map = { reservasi: "Reservasi", checkin: "Check-In", pelunasan: "Pelunasan" };
+        const map = { reservasi: "Reservasi", checkin: "Check-In", pelunasan: "Pelunasan", deposit_hangus: "Deposit Hangus" };
         return map[r.transaction_type] ?? r.transaction_type;
       },
     },

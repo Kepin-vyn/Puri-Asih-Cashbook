@@ -7,6 +7,7 @@ use App\Http\Requests\Attendance\UpdateStatusRequest;
 use App\Models\Attendance;
 use App\Models\Shift;
 use App\Services\AttendanceService;
+use App\Services\ActivityLogService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -14,9 +15,14 @@ use Illuminate\Support\Facades\Auth;
 
 class AttendanceController extends BaseApiController
 {
+    private ActivityLogService $activityLog;
+
     public function __construct(
-        private AttendanceService $attendanceService
-    ) {}
+        private AttendanceService $attendanceService,
+        ActivityLogService $activityLog
+    ) {
+        $this->activityLog = $activityLog;
+    }
 
     /**
      * GET /api/v1/attendance/today-shift
@@ -183,6 +189,8 @@ class AttendanceController extends BaseApiController
 
         $attendance->load(['user', 'shift']);
 
+        $this->activityLog->log('attendance', 'checkin', 'Check-in absensi' . ($isLate ? ' (terlambat)' : '') . '. Shift ' . $resolvedShift . ' dimulai.', ['shift_type' => $resolvedShift, 'is_late' => $isLate], $user->id, $activeShift->id);
+
         return $this->successResponse(
             $attendance,
             $isLate
@@ -214,6 +222,8 @@ class AttendanceController extends BaseApiController
 
         $attendance->update(['actual_end' => Carbon::now()]);
         $attendance->load('user');
+
+        $this->activityLog->log('attendance', 'checkout', 'Check-out absensi.', ['actual_start' => $attendance->actual_start, 'actual_end' => $attendance->actual_end], $user->id, $attendance->shift_id);
 
         return $this->successResponse($attendance, 'Check-out berhasil.');
     }

@@ -11,10 +11,17 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Services\ActivityLogService;
 use Barryvdh\Snappy\Facades\SnappyPdf as PDF;
 
 class KasController extends BaseApiController
 {
+    private ActivityLogService $activityLog;
+
+    public function __construct(ActivityLogService $activityLog)
+    {
+        $this->activityLog = $activityLog;
+    }
     /**
      * GET /api/v1/kas
      * FO  : hanya transaksi dari shift aktif milik sendiri
@@ -105,6 +112,13 @@ class KasController extends BaseApiController
 
         $kasTransaction->load('user');
 
+        $this->activityLog->log(
+            'kas',
+            'create',
+            'Mencatat transaksi KAS ' . $request->transaction_type . ' sebesar Rp ' . number_format($request->amount, 0, ',', '.') . ' untuk ' . ($request->guest_name ?? 'tanpa nama'),
+            ['amount' => (float)$request->amount, 'type' => $request->transaction_type, 'guest' => $request->guest_name, 'room' => $request->room_number]
+        );
+
         return $this->successResponse(
             new KasTransactionResource($kasTransaction),
             'Transaksi KAS berhasil dicatat.',
@@ -172,6 +186,13 @@ class KasController extends BaseApiController
         $kasTransaction->update($request->validated());
         $kasTransaction->load('user');
 
+        $this->activityLog->log(
+            'kas',
+            'update',
+            'Memperbarui transaksi KAS ' . $kasTransaction->transaction_type . ' sebesar Rp ' . number_format($kasTransaction->amount, 0, ',', '.'),
+            ['amount' => (float)$kasTransaction->amount, 'type' => $kasTransaction->transaction_type]
+        );
+
         return $this->successResponse(
             new KasTransactionResource($kasTransaction),
             'Transaksi KAS berhasil diperbarui.'
@@ -207,6 +228,13 @@ class KasController extends BaseApiController
         }
 
         $kasTransaction->delete(); // Soft delete
+
+        $this->activityLog->log(
+            'kas',
+            'delete',
+            'Menghapus transaksi KAS ' . $kasTransaction->transaction_type . ' sebesar Rp ' . number_format($kasTransaction->amount, 0, ',', '.'),
+            ['amount' => (float)$kasTransaction->amount, 'type' => $kasTransaction->transaction_type]
+        );
 
         return $this->successResponse(null, 'Transaksi KAS berhasil dihapus.');
     }

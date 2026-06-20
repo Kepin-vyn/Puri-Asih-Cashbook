@@ -8,6 +8,7 @@ use App\Http\Resources\DepositResource;
 use App\Models\Deposit;
 use App\Models\KasTransaction;
 use App\Models\Shift;
+use App\Services\ActivityLogService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,6 +17,12 @@ use Barryvdh\Snappy\Facades\SnappyPdf as PDF;
 
 class DepositController extends BaseApiController
 {
+    private ActivityLogService $activityLog;
+
+    public function __construct(ActivityLogService $activityLog)
+    {
+        $this->activityLog = $activityLog;
+    }
     /**
      * GET /api/v1/deposits
      */
@@ -96,6 +103,8 @@ class DepositController extends BaseApiController
         ]);
 
         $deposit->load('user');
+
+        $this->activityLog->log('deposit', 'create', 'Mencatat deposit Rp ' . number_format($request->amount, 0, ',', '.') . ' untuk tamu "' . $request->guest_name . '" kamar ' . $request->room_number, ['amount' => (float)$request->amount, 'guest' => $request->guest_name, 'room' => $request->room_number]);
 
         return $this->successResponse(
             new DepositResource($deposit),
@@ -181,16 +190,14 @@ class DepositController extends BaseApiController
         }
 
         // PENTING: Refund hanya mengubah status, tidak mempengaruhi kas
-        $deposit->update([
-            'status'      => 'refunded',
-            'refund_date' => Carbon::today()->toDateString(),
-        ]);
-
+        $deposit->update(['status' => 'refunded', 'refund_date' => Carbon::today()->toDateString()]);
         $deposit->load('user');
+
+        $this->activityLog->log('deposit', 'refund', 'Refund deposit Rp ' . number_format($deposit->amount, 0, ',', '.') . ' untuk tamu "' . $deposit->guest_name . '" kamar ' . $deposit->room_number, ['amount' => (float)$deposit->amount, 'guest' => $deposit->guest_name, 'room' => $deposit->room_number]);
 
         return $this->successResponse(
             new DepositResource($deposit),
-            'Deposit berhasil dikembalikan kepada tamu. Catatan: refund tidak mempengaruhi laporan keuangan.'
+            'Deposit berhasil dikembalikan kepada tamu.'
         );
     }
 
@@ -244,6 +251,8 @@ class DepositController extends BaseApiController
             'auto_generated'   => true,
             'source_reference' => 'deposit:' . $deposit->id,
         ]);
+
+        $this->activityLog->log('deposit', 'forfeit', 'Menghanguskan deposit Rp ' . number_format($deposit->amount, 0, ',', '.') . ' untuk tamu "' . $deposit->guest_name . '" kamar ' . $deposit->room_number, ['amount' => (float)$deposit->amount, 'guest' => $deposit->guest_name, 'room' => $deposit->room_number, 'note' => $request->note]);
 
         return $this->successResponse(
             [

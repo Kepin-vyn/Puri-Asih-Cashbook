@@ -7,6 +7,7 @@ import {
   FileDown,
   LogOut,
   Hotel,
+  FileText,
 } from "lucide-react";
 import authStore from "../../store/authStore";
 import { useQuery } from "@tanstack/react-query";
@@ -18,6 +19,7 @@ const navItems = [
   { to: "/manager/approval",      label: "Approval",       icon: CheckSquare, showBadge: true },
   { to: "/manager/monthly-report",label: "Monthly Report", icon: Layers },
   { to: "/manager/penggajian",    label: "Payroll",        icon: FileDown },
+  { to: "/manager/activity-logs", label: "Activity Log",   icon: FileText },
 ];
 
 export const ManagerLayout = () => {
