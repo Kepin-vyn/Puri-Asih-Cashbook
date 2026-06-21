@@ -125,6 +125,14 @@ const DashboardPage = () => {
     refetchInterval: 10 * 60 * 1000, // polling setiap 10 menit
   });
 
+  // FO Stats — produktivitas per staff hari ini
+  const { data: foStatsData, isLoading: foStatsLoading, refetch: refetchFoStats } = useQuery({
+    queryKey: ["fo-stats-today", today],
+    queryFn:  () => api.get("/dashboard/fo-stats").then(r => r.data),
+    staleTime:       5 * 60 * 1000,
+    refetchInterval: 10 * 60 * 1000,
+  });
+
   // Approve mutation
   const approveMutation = useMutation({
     mutationFn: (id) => api.post(`/expenses/${id}/approve`),
@@ -150,7 +158,7 @@ const DashboardPage = () => {
   const revenueRate     = Math.min(Math.round((totalRevenue / maxDailyRevenue) * 100), 100);
 
   const handleRefreshAll = () => {
-    refetchKas(); refetchExp(); refetchPending(); refetchResv();
+    refetchKas(); refetchExp(); refetchPending(); refetchResv(); refetchFoStats();
   };
 
   return (
@@ -323,56 +331,64 @@ const DashboardPage = () => {
         </div>
       </div>
 
-      {/* ── FO Statistics (Recent Transactions) ── */}
+      {/* ── FO Statistics (Per-Staff Productivity) ── */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
         <div className="flex items-center gap-2 mb-4">
           <Users size={18} className="text-indigo-600" />
           <h2 className="font-semibold text-gray-800">Front Office Statistics</h2>
-          <span className="text-xs text-gray-400 ml-1">Aktivitas hari ini</span>
+          <span className="text-xs text-gray-400 ml-1">Produktivitas hari ini</span>
         </div>
 
-        {expLoading ? (
+        {foStatsLoading ? (
           <div className="space-y-3">{[1, 2, 3].map(i => <Skeleton key={i} className="h-12" />)}</div>
-        ) : (expenseData?.data ?? []).length === 0 ? (
+        ) : (foStatsData?.data ?? []).length === 0 ? (
           <div className="text-center py-6 text-gray-400">
             <Users size={28} className="mx-auto mb-2 opacity-30" />
-            <p className="text-sm">Belum ada aktivitas FO hari ini</p>
+            <p className="text-sm">Belum ada data staff FO</p>
           </div>
         ) : (
-          <div className="space-y-2">
-            {(expenseData?.data ?? []).slice(0, 5).map(exp => (
-              <div key={exp.id} className="flex items-center gap-4 p-3 rounded-xl hover:bg-gray-50 transition-colors">
-                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm flex-shrink-0">
-                  {exp.user?.name?.charAt(0).toUpperCase() ?? "F"}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-800 truncate">{exp.user?.name}</p>
-                  <p className="text-xs text-gray-500 truncate">{exp.description}</p>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <p className="text-sm font-semibold text-red-500">{exp.total_price_formatted}</p>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                    exp.status === "auto_approved" || exp.status === "approved"
-                      ? "bg-emerald-50 text-emerald-700"
-                      : exp.status === "pending"
-                      ? "bg-amber-50 text-amber-700"
-                      : "bg-red-50 text-red-700"
-                  }`}>
-                    {exp.status_label}
-                  </span>
-                </div>
-                {exp.status === "pending" && (
-                  <button
-                    onClick={() => approveMutation.mutate(exp.id)}
-                    disabled={approveMutation.isPending}
-                    className="p-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 rounded-lg transition-colors flex-shrink-0"
-                    title="Setujui"
-                  >
-                    <CheckCircle size={15} />
-                  </button>
-                )}
-              </div>
-            ))}
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-100">
+                  <th className="text-left py-2 px-3 text-xs font-semibold text-gray-500">Staff</th>
+                  <th className="text-center py-2 px-2 text-xs font-semibold text-gray-500">Shift</th>
+                  <th className="text-center py-2 px-2 text-xs font-semibold text-blue-600">Reservasi</th>
+                  <th className="text-center py-2 px-2 text-xs font-semibold text-emerald-600">KAS</th>
+                  <th className="text-center py-2 px-2 text-xs font-semibold text-amber-600">Deposit</th>
+                  <th className="text-center py-2 px-2 text-xs font-semibold text-red-600">Pengeluaran</th>
+                  <th className="text-center py-2 px-2 text-xs font-semibold text-indigo-600">Absensi</th>
+                  <th className="text-center py-2 px-2 text-xs font-semibold text-gray-700">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(foStatsData?.data ?? []).map((staff) => (
+                  <tr key={staff.user_id} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                    <td className="py-3 px-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs flex-shrink-0">
+                          {staff.name?.charAt(0).toUpperCase()}
+                        </div>
+                        <span className="text-sm font-medium text-gray-800">{staff.name}</span>
+                      </div>
+                    </td>
+                    <td className="py-3 px-2 text-center">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
+                        {staff.shift || "-"}
+                      </span>
+                    </td>
+                    <td className="py-3 px-2 text-center text-sm font-semibold text-blue-700">{staff.reservasi}</td>
+                    <td className="py-3 px-2 text-center text-sm font-semibold text-emerald-700">{staff.kas}</td>
+                    <td className="py-3 px-2 text-center text-sm font-semibold text-amber-700">{staff.deposit}</td>
+                    <td className="py-3 px-2 text-center text-sm font-semibold text-red-700">{staff.pengeluaran}</td>
+                    <td className="py-3 px-2 text-center text-sm font-semibold text-indigo-700">{staff.absensi}</td>
+                    <td className="py-3 px-2 text-center">
+                      <span className="text-sm font-bold text-gray-800">{staff.total}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

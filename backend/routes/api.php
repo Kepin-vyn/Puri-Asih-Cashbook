@@ -91,6 +91,9 @@ Route::prefix('v1')->group(function () {
         Route::get('shift-schedules/week',  [ShiftScheduleController::class, 'getWeek']);
         Route::get('shift-schedules/today', [ShiftScheduleController::class, 'getTodayShift']);
 
+        // --- FO Active Users (untuk dropdown handover) ---
+        Route::get('users/fo-active', [UserController::class, 'foActive']);
+
 
         // ============================================
         // MANAGER ONLY ROUTES — role:manager
@@ -99,6 +102,7 @@ Route::prefix('v1')->group(function () {
 
             // --- Dashboard Manager ---
             Route::get('dashboard/manager', [DashboardController::class, 'manager']);
+            Route::get('dashboard/fo-stats', [DashboardController::class, 'foStats']);
 
             // --- Approval Pengeluaran ---
             Route::post('expenses/{id}/approve', [ExpenseController::class, 'approve']);

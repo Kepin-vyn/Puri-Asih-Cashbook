@@ -62,4 +62,20 @@ class Shift extends Model
     {
         return $this->hasMany(Deposit::class);
     }
+
+    // ==========================================
+    // Accessor
+    // ==========================================
+
+    /**
+     * Hitung saldo dari transaksi KAS pada shift ini.
+     * Income - Expenses
+     */
+    public function getBalanceAttribute(): float
+    {
+        $income = $this->kasTransactions()->sum('amount');
+        $expense = $this->expenses()->where('status', 'approved')->sum('amount');
+
+        return (float) ($income - $expense);
+    }
 }

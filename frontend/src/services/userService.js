@@ -2,13 +2,11 @@ import api from "../utils/axios";
 
 const userService = {
   /**
-   * GET /api/v1/users?role=fo
-   * Ambil semua staff FO (untuk dropdown handover)
-   * Hanya bisa diakses Manager — FO menggunakan endpoint ini
-   * hanya untuk keperluan dropdown pilih penerima handover.
+   * GET /api/v1/users/fo-active
+   * Ambil staff FO yang aktif saja (untuk dropdown handover)
    */
   getAllFo: async () => {
-    const response = await api.get("/users", { params: { role: "fo" } });
+    const response = await api.get("/users/fo-active");
     return response.data;
   },
 

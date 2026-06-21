@@ -47,7 +47,16 @@ class ShiftController extends BaseApiController
             $query->whereDate('started_at', $request->date);
         }
 
-        $shifts = $query->orderBy('started_at', 'desc')->paginate(20);
+        if ($request->filled('month')) {
+            $query->whereMonth('started_at', (int) $request->month);
+        }
+
+        if ($request->filled('year')) {
+            $query->whereYear('started_at', (int) $request->year);
+        }
+
+        $perPage = $request->boolean('all') ? 1000 : 20;
+        $shifts = $query->orderBy('started_at', 'desc')->paginate($perPage);
 
         return $this->successResponse(
             ShiftResource::collection($shifts->items()),

@@ -82,9 +82,10 @@ const AttendancePage = () => {
   const shiftHours = todayShiftData?.data?.shift_hours;
   const isOff = todayShiftData?.data?.is_off;
   const isWithinWindow = todayShiftData?.data?.is_within_window ?? true;
+  const serverDate = todayShiftData?.data?.server_date;
 
-  // ── Fetch today's attendance ──────────────────────────────────────────────
-  const today = new Date().toISOString().split("T")[0];
+  // ── Fetch today's attendance (gunakan server_date dari backend) ───────────
+  const today = serverDate ?? new Date().toISOString().split("T")[0];
   const { data: todayData, isLoading: todayLoading } = useQuery({
     queryKey: ["attendance-today", today],
     queryFn:  () => attendanceService.getAll({ date: today }),

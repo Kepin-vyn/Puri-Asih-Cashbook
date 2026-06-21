@@ -62,6 +62,21 @@ class UserController extends BaseApiController
     }
 
     /**
+     * GET /api/v1/users/fo-active
+     * Ambil staff FO yang aktif saja (untuk dropdown handover)
+     * Bisa diakses oleh FO dan Manager.
+     */
+    public function foActive(): JsonResponse
+    {
+        $users = User::where('role', 'fo')
+            ->where('status', 'active')
+            ->orderBy('name', 'asc')
+            ->get(['id', 'name', 'shift']);
+
+        return $this->successResponse($users->toArray(), 'Data FO aktif berhasil diambil.');
+    }
+
+    /**
      * POST /api/v1/users
      * Buat user baru
      */
