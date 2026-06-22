@@ -15,6 +15,7 @@ use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ShiftScheduleController;
 use App\Http\Controllers\Api\ActivityLogController;
+use App\Http\Controllers\Api\RoomRateController;
 
 // Semua route diakses melalui: http://localhost:8000/api/v1/...
 Route::prefix('v1')->group(function () {
@@ -94,6 +95,10 @@ Route::prefix('v1')->group(function () {
         // --- FO Active Users (untuk dropdown handover) ---
         Route::get('users/fo-active', [UserController::class, 'foActive']);
 
+        // --- Room Rates (baca: semua role) ---
+        Route::get('room-rates',           [RoomRateController::class, 'index']);
+        Route::get('room-rates/calculate', [RoomRateController::class, 'calculate']);
+
 
         // ============================================
         // MANAGER ONLY ROUTES — role:manager
@@ -141,6 +146,10 @@ Route::prefix('v1')->group(function () {
             Route::get('activity-logs/modules', [ActivityLogController::class, 'modules']);
             Route::get('activity-logs/shifts',  [ActivityLogController::class, 'shifts']);
             Route::get('activity-logs/{id}',    [ActivityLogController::class, 'show']);
+
+            // --- Room Rates (write: manager only) ---
+            Route::put('room-rates/bulk',           [RoomRateController::class, 'bulkUpdate']);
+            Route::put('room-rates/{roomNumber}',   [RoomRateController::class, 'update']);
         });
     });
 });

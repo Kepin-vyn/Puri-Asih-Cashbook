@@ -8,6 +8,7 @@ import {
   LogOut,
   Hotel,
   FileText,
+  Building2,
 } from "lucide-react";
 import authStore from "../../store/authStore";
 import { useQuery } from "@tanstack/react-query";
@@ -20,6 +21,7 @@ const navItems = [
   { to: "/manager/monthly-report",label: "Monthly Report", icon: Layers },
   { to: "/manager/penggajian",    label: "Payroll",        icon: FileDown },
   { to: "/manager/activity-logs", label: "Activity Log",   icon: FileText },
+  { to: "/manager/room-rates",    label: "Tarif Kamar",    icon: Building2 },
 ];
 
 export const ManagerLayout = () => {

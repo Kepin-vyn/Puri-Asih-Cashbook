@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import toast from "react-hot-toast";
 import reservationService from "../../services/reservationService";
+import roomRateService from "../../services/roomRateService";
 import authStore from "../../store/authStore";
 import api from "../../utils/axios";
 import RupiahInput from "../../components/ui/RupiahInput";
@@ -114,6 +115,36 @@ const ReservationPage = () => {
 
   // ── Derived: remaining balance ────────────────────────────────────────────
   const remainingBalance = Math.max(0, (form.room_price ?? 0) - (form.down_payment ?? 0));
+
+  // ── Auto-calculate room price from rate ──────────────────────────────────
+  const [autoPriceInfo, setAutoPriceInfo] = useState(null);
+  const [priceAutoFilled, setPriceAutoFilled] = useState(false);
+
+  useEffect(() => {
+    if (!form.room_number || !form.check_in_date || !form.check_out_date || form.check_out_date <= form.check_in_date) {
+      setAutoPriceInfo(null);
+      return;
+    }
+    let cancelled = false;
+    roomRateService.calculate(form.room_number, form.check_in_date, form.check_out_date)
+      .then((res) => {
+        if (cancelled) return;
+        const info = res?.data;
+        setAutoPriceInfo(info ?? null);
+        if (info?.has_rate && info.total_price > 0) {
+          setField("room_price", info.total_price);
+          setPriceAutoFilled(true);
+        }
+      })
+      .catch(() => setAutoPriceInfo(null));
+    return () => { cancelled = true; };
+  }, [form.room_number, form.check_in_date, form.check_out_date]);
+
+  // When user manually edits price, clear auto-filled flag
+  const handlePriceChange = (v) => {
+    setField("room_price", v);
+    setPriceAutoFilled(false);
+  };
 
   // ── Active shift via centralized hook ────────────────────────────────────
   const { activeShift, hasNoShift } = useActiveShift();
@@ -734,13 +765,18 @@ const ReservationPage = () => {
                   <RupiahInput
                     id="room-price"
                     value={form.room_price}
-                    onChange={(v) => setField("room_price", v)}
+                    onChange={handlePriceChange}
                     className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                       errors.room_price ? "border-red-400 bg-red-50" : "border-gray-200"
                     }`}
                   />
                   {errors.room_price && (
                     <p className="text-xs text-red-500 mt-1">{errors.room_price}</p>
+                  )}
+                  {autoPriceInfo?.has_rate && (
+                    <p className="text-[10px] text-blue-500 mt-1">
+                      {priceAutoFilled ? "✓ Otomatis" : "Diedit manual"} · {autoPriceInfo.nights} malam × {formatRp(autoPriceInfo.price_per_night)}
+                    </p>
                   )}
                 </div>
                 <div>

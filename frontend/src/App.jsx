@@ -33,6 +33,7 @@ import LaporanManagerPage from "./pages/manager/ReportPage";
 import MonthlyReportPage from "./pages/manager/MonthlyReportPage";
 import PenggajianPage from "./pages/manager/PayrollPage";
 import ActivityLogPage from "./pages/manager/ActivityLogPage";
+import RoomRatePage from "./pages/manager/RoomRatePage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -100,6 +101,7 @@ const App = () => {
             <Route path="monthly-report" element={<MonthlyReportPage />} />
             <Route path="penggajian"     element={<PenggajianPage />} />
             <Route path="activity-logs"  element={<ActivityLogPage />} />
+            <Route path="room-rates"    element={<RoomRatePage />} />
           </Route>
 
           {/* Fallback 404 */}
