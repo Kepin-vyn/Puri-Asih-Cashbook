@@ -74,7 +74,7 @@
         </div>
         <div class="summary-row">
             <span>Total Pemasukan Reservasi OTT ({{ $summary['reservasi_count'] }} reservasi)</span>
-            <span>{{ $summary['total_pemasukan_reservasi_formatted'] }}</span>
+            <span>{{ $summary['total_reservasi_formatted'] }}</span>
         </div>
         <div class="summary-divider"></div>
         <div class="summary-row" style="font-weight: bold;">
@@ -98,7 +98,7 @@
     <div class="section-title">Detail Pemasukan KAS</div>
     @if(count($kas) > 0)
         @php
-            $typeLabels = ['reservasi' => 'Reservasi', 'checkin' => 'Check-In', 'pelunasan' => 'Pelunasan'];
+            $typeLabels = ['reservasi' => 'Reservasi', 'checkin' => 'Check-In', 'pelunasan' => 'Pelunasan', 'deposit_hangus' => 'Deposit Hangus', 'parkir' => 'Parkir', 'late_checkout' => 'Late Checkout', 'early_checkin' => 'Early Check-In'];
             $methodLabels = ['tunai' => 'Tunai', 'transfer' => 'Transfer', 'qris' => 'QRIS', 'kartu_kredit' => 'Kartu Kredit'];
         @endphp
         <table>
@@ -141,7 +141,7 @@
     <div class="section-title">Detail Reservasi</div>
     @if(count($reservations) > 0)
         @php
-            $statusLabels = ['pending' => 'Pending', 'checkin' => 'Check-In', 'checkout' => 'Check-Out', 'cancelled' => 'Batal'];
+            $statusLabels = ['reserved' => 'Reserved', 'pending' => 'Pending', 'checkin' => 'Check-In', 'checkout' => 'Check-Out', 'cancelled' => 'Batal', 'noshow' => 'No Show'];
         @endphp
         <table>
             <thead>
@@ -171,7 +171,7 @@
                 @endforeach
                 <tr class="total-row">
                     <td colspan="6" class="text-right">SUBTOTAL RESERVASI</td>
-                    <td class="text-right">{{ number_format($summary['total_pemasukan_reservasi'], 0, ',', '.') }}</td>
+                    <td class="text-right">{{ number_format($summary['total_reservasi'], 0, ',', '.') }}</td>
                     <td></td>
                 </tr>
             </tbody>

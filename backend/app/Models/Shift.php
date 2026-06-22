@@ -74,7 +74,9 @@ class Shift extends Model
     public function getBalanceAttribute(): float
     {
         $income = $this->kasTransactions()->sum('amount');
-        $expense = $this->expenses()->where('status', 'approved')->sum('amount');
+        $expense = $this->expenses()
+            ->whereIn('status', ['approved', 'auto_approved'])
+            ->sum('total_price');
 
         return (float) ($income - $expense);
     }
