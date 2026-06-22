@@ -140,6 +140,7 @@ Route::prefix('v1')->group(function () {
             Route::get('activity-logs',         [ActivityLogController::class, 'index']);
             Route::get('activity-logs/modules', [ActivityLogController::class, 'modules']);
             Route::get('activity-logs/shifts',  [ActivityLogController::class, 'shifts']);
+            Route::get('activity-logs/{id}',    [ActivityLogController::class, 'show']);
         });
     });
 });
