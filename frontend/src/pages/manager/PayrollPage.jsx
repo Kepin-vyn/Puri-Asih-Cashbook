@@ -350,7 +350,7 @@ const PayrollPage = () => {
                 value={dailyRate}
                 onChange={(v) => {
                   setDailyRate(v);
-                  setRateChanged(v !== savedRate);
+                  setRateChanged(v !== currentDailyRate);
                 }}
                 className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />

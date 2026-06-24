@@ -118,7 +118,7 @@ class AttendanceController extends BaseApiController
         $now = Carbon::now();
 
         // Cek keterlambatan
-        $isLate = $this->attendanceService->checkIsLate($request->shift_type, $now);
+        $isLate = $this->attendanceService->checkIsLate((int) $user->id, $request->shift_type, $now);
 
         // Ambil shift aktif jika ada
         $activeShift = Shift::where('user_id', $user->id)

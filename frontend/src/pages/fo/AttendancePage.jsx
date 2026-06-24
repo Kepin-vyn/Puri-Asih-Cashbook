@@ -1,9 +1,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { Clock, CheckCircle, LogOut, Calendar } from "lucide-react";
 import toast from "react-hot-toast";
 import attendanceService from "../../services/attendanceService";
+import shiftService from "../../services/shiftService";
 import authStore from "../../store/authStore";
 import SignatureCanvas from "../../components/ui/SignatureCanvas";
 import MonthYearPicker from "../../components/ui/MonthYearPicker";
@@ -56,6 +58,11 @@ const SkeletonRow = () => (
 const AttendancePage = () => {
   const user        = authStore.getUser();
   const queryClient = useQueryClient();
+  const [searchParams]  = useSearchParams();
+  const navigate        = useNavigate();
+
+  // Deteksi apakah datang dari "Mulai Shift" di Dashboard
+  const isStartShiftFlow = searchParams.get("action") === "start_shift";
 
   const [currentTime,   setCurrentTime]   = useState(new Date());
   const [signature,     setSignature]     = useState(null);
@@ -110,11 +117,24 @@ const AttendancePage = () => {
   // ── Checkin mutation ──────────────────────────────────────────────────────
   const checkinMutation = useMutation({
     mutationFn: attendanceService.checkin,
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Absen masuk berhasil!");
       queryClient.invalidateQueries({ queryKey: ["attendance-today"] });
       queryClient.invalidateQueries({ queryKey: ["attendance-monthly"] });
       setSignature(null);
+
+      // Jika datang dari alur "Mulai Shift", otomatis start shift lalu redirect
+      if (isStartShiftFlow) {
+        try {
+          await shiftService.startShift();
+          toast.success("Shift berhasil dimulai!");
+          queryClient.invalidateQueries({ queryKey: ["fo-shift-summary"] });
+          queryClient.invalidateQueries({ queryKey: ["active-shift"] });
+        } catch (e) {
+          toast.error(e.response?.data?.message ?? "Absen berhasil, tapi gagal memulai shift.");
+        }
+        navigate("/fo/dashboard", { replace: true });
+      }
     },
     onError: (e) => toast.error(e.response?.data?.message ?? "Gagal absen masuk."),
   });
@@ -179,6 +199,19 @@ const AttendancePage = () => {
       {/* ── Section 1: Status Absensi Hari Ini ── */}
       <div>
         <h1 className="text-2xl font-bold text-gray-800 mb-4">Absensi</h1>
+
+        {/* Banner info jika dari alur Mulai Shift */}
+        {isStartShiftFlow && !hasCheckin && (
+          <div className="bg-blue-50 border border-blue-300 rounded-xl p-4 mb-4 flex items-start gap-3">
+            <span className="text-blue-500 text-xl flex-shrink-0">ℹ️</span>
+            <div>
+              <p className="font-semibold text-blue-800">Absen untuk Memulai Shift</p>
+              <p className="text-sm text-blue-600 mt-0.5">
+                Setelah tanda tangan dan absen masuk tersimpan, shift kamu akan otomatis dimulai.
+              </p>
+            </div>
+          </div>
+        )}
 
         {todayLoading ? (
           <div className="h-48 bg-gray-100 rounded-2xl animate-pulse" />
