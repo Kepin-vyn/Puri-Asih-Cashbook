@@ -96,3 +96,63 @@ Gunakan akun berikut untuk login ke dalam sistem (hasil dari database seeder):
 **3. Front Office (FO) 2:**
 - **Email:** fo2@puriasih.com
 - **Password:** password
+
+## 🚀 Production Deployment Checklist
+
+Sebelum deploy ke production, pastikan hal-hal berikut sudah dilakukan:
+
+### Backend
+
+- [ ] **`APP_DEBUG=false`** — Wajib diubah agar stack trace tidak terekspos ke publik
+  ```env
+  APP_DEBUG=false
+  APP_ENV=production
+  ```
+
+- [ ] **CORS diperketat** — Ubah `config/cors.php` ke domain production saja
+  ```php
+  'allowed_origins' => ['https://namadomain.com'],
+  ```
+
+- [ ] **`SANCTUM_STATEFUL_DOMAINS`** — Sesuaikan dengan domain production
+  ```env
+  SANCTUM_STATEFUL_DOMAINS=namadomain.com
+  ```
+
+- [ ] **Generate APP_KEY baru** untuk environment production
+  ```bash
+  php artisan key:generate
+  ```
+
+- [ ] **Optimize** untuk production
+  ```bash
+  php artisan config:cache
+  php artisan route:cache
+  php artisan view:cache
+  php artisan optimize
+  ```
+
+### Frontend
+
+- [ ] **Update `VITE_API_URL`** di `.env` ke URL production
+  ```env
+  VITE_API_URL=https://api.namadomain.com/api/v1
+  ```
+
+- [ ] **Build** untuk production
+  ```bash
+  npm run build
+  ```
+
+### Infrastruktur
+
+- [ ] **Setup reverse proxy (Nginx/Apache)** agar frontend dan backend berada di domain/subdomain yang sama — ini juga mengurangi risiko XSS karena token bisa dipindahkan ke HttpOnly cookie
+- [ ] **HTTPS** wajib aktif (SSL certificate)
+- [ ] **Database backup** otomatis terjadwal
+- [ ] **wkhtmltopdf** terinstall di server untuk fitur export PDF
+
+### Keamanan
+
+- [ ] Ubah semua default password (lihat bagian Default Credentials di atas)
+- [ ] Pastikan `.env` tidak ikut ter-deploy atau ter-commit
+- [ ] Review log akses secara berkala (`storage/logs/`)
