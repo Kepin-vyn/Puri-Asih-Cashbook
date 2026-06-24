@@ -43,15 +43,15 @@ const ExpenseStatusBadge = ({ status, rejectionReason }) => {
   const map = {
     auto_approved: "bg-emerald-100 text-emerald-700 ring-emerald-200",
     pending:       "bg-amber-100 text-amber-700 ring-amber-200",
-    approved:      "bg-blue-100 text-blue-700 ring-blue-200",
+    approved:      "bg-blue-100 text-black ring-[#e5e5e5]",
     rejected:      "bg-red-100 text-red-700 ring-red-200",
   };
-  const cls   = map[status] ?? "bg-gray-100 text-gray-500 ring-gray-200";
+  const cls   = map[status] ?? "bg-[#fafafa] text-[#737373] ring-gray-200";
   const label = EXPENSE_STATUS_LABELS[status] ?? status;
 
   return (
     <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ring-1 cursor-default ${cls}`}
+      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold  cursor-default ${cls}`}
       title={status === "rejected" && rejectionReason ? `Alasan: ${rejectionReason}` : undefined}
     >
       {label}
@@ -67,7 +67,7 @@ const SkeletonRow = () => (
   <tr>
     {Array.from({ length: 9 }).map((_, i) => (
       <td key={i} className="px-4 py-3">
-        <div className="h-4 bg-gray-200 rounded animate-pulse" />
+        <div className="h-4 bg-[#e5e5e5] rounded animate-pulse" />
       </td>
     ))}
   </tr>
@@ -299,19 +299,19 @@ const ExpensesPage = () => {
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Expenses</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-2xl font-bold text-black">Expenses</h1>
+          <p className="text-sm text-[#737373] mt-0.5">
             {new Date().toLocaleDateString("id-ID", {
               weekday: "long", year: "numeric", month: "long", day: "numeric",
             })}
-            {activeShift && <span className="ml-2 text-blue-600">· Shift Aktif</span>}
+            {activeShift && <span className="ml-2 text-black">· Shift Aktif</span>}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={handleExport}
             disabled={exporting}
-            className="flex items-center gap-2 text-sm text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 px-3 py-2.5 rounded-xl transition-colors disabled:opacity-50 shadow-sm"
+            className="flex items-center gap-2 text-sm text-[#525252] bg-white border border-[#e5e5e5] hover:bg-[#fafafa] px-3 py-2.5 rounded-xl transition-colors disabled:opacity-50 "
           >
             <Download size={15} />
             {exporting ? "Mengunduh..." : "Export PDF"}
@@ -324,8 +324,8 @@ const ExpensesPage = () => {
               : 'Tambah transaksi baru'}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
               hasNoShift
-                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
+                ? 'bg-[#e5e5e5] text-[#a3a3a3] cursor-not-allowed'
+                : 'bg-black text-white hover:bg-[#090909] cursor-pointer'
             }`}
             id="btn-tambah-expense"
           >
@@ -340,7 +340,7 @@ const ExpensesPage = () => {
         <select
           value={filterStatus}
           onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
-          className="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-2 text-sm border border-[#e5e5e5] rounded-xl bg-white focus:outline-none  focus:ring-0"
         >
           <option value="">Semua Status</option>
           <option value="auto_approved">Auto Approved</option>
@@ -349,35 +349,35 @@ const ExpensesPage = () => {
           <option value="rejected">Ditolak</option>
         </select>
         {filterStatus && (
-          <button onClick={() => { setFilterStatus(""); setPage(1); }} className="text-xs text-gray-500 hover:text-gray-700 underline">
+          <button onClick={() => { setFilterStatus(""); setPage(1); }} className="text-xs text-[#737373] hover:text-[#525252] underline">
             Reset filter
           </button>
         )}
       </div>
 
       {/* ── Tabel ── */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-        <div className="p-5 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-800">Daftar Pengeluaran</h2>
+      <div className="bg-white rounded-xl  border border-[#e5e5e5]">
+        <div className="p-5 border-b border-[#e5e5e5]">
+          <h2 className="font-semibold text-black">Daftar Pengeluaran</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 text-left">
+              <tr className="bg-[#fafafa] text-left">
                 {["No", "Tanggal", "Keterangan", "Qty", "Harga/Item", "Total", "Metode", "Status", "Aksi"].map(h => (
-                  <th key={h} className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
+                  <th key={h} className="px-4 py-3 text-xs font-semibold text-[#737373] uppercase tracking-wide whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-[#e5e5e5]">
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
               ) : expenses.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="text-center py-16 text-gray-400">
+                  <td colSpan={9} className="text-center py-16 text-[#a3a3a3]">
                     <FileText size={40} className="mx-auto mb-3 opacity-20" />
                     <p className="text-sm">Belum ada data pengeluaran</p>
-                    <button onClick={openAdd} className="mt-3 text-xs text-blue-600 underline">Tambah pengeluaran pertama</button>
+                    <button onClick={openAdd} className="mt-3 text-xs text-black underline">Tambah pengeluaran pertama</button>
                   </td>
                 </tr>
               ) : (
@@ -385,14 +385,14 @@ const ExpensesPage = () => {
                   const methodLabel = PAYMENT_METHODS.find(m => m.value === exp.payment_method)?.label ?? exp.payment_method;
                   const canEdit     = exp.status === "pending";
                   return (
-                    <tr key={exp.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 text-gray-500">{(page - 1) * (meta.per_page ?? 15) + idx + 1}</td>
-                      <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{formatDate(exp.created_at)}</td>
-                      <td className="px-4 py-3 text-gray-800 max-w-[200px] truncate" title={exp.description}>{exp.description}</td>
-                      <td className="px-4 py-3 text-gray-600 text-center">{exp.quantity}</td>
-                      <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{formatRp(exp.price_per_item)}</td>
-                      <td className="px-4 py-3 font-semibold text-gray-800 whitespace-nowrap">{formatRp(exp.total_price)}</td>
-                      <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{methodLabel}</td>
+                    <tr key={exp.id} className="hover:bg-[#fafafa] transition-colors">
+                      <td className="px-4 py-3 text-[#737373]">{(page - 1) * (meta.per_page ?? 15) + idx + 1}</td>
+                      <td className="px-4 py-3 text-[#525252] whitespace-nowrap">{formatDate(exp.created_at)}</td>
+                      <td className="px-4 py-3 text-black max-w-[200px] truncate" title={exp.description}>{exp.description}</td>
+                      <td className="px-4 py-3 text-[#525252] text-center">{exp.quantity}</td>
+                      <td className="px-4 py-3 text-[#525252] whitespace-nowrap">{formatRp(exp.price_per_item)}</td>
+                      <td className="px-4 py-3 font-semibold text-black whitespace-nowrap">{formatRp(exp.total_price)}</td>
+                      <td className="px-4 py-3 text-[#525252] whitespace-nowrap">{methodLabel}</td>
                       <td className="px-4 py-3">
                         <ExpenseStatusBadge status={exp.status} rejectionReason={exp.rejection_reason} />
                       </td>
@@ -402,7 +402,7 @@ const ExpensesPage = () => {
                           {canEdit && (
                             <button
                               onClick={() => openEdit(exp)}
-                              className="p-1.5 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                              className="p-1.5 text-[#737373] hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
                               title="Edit"
                             >
                               <Pencil size={14} />
@@ -420,7 +420,7 @@ const ExpensesPage = () => {
                               <Image size={14} />
                             </a>
                           ) : (
-                            <label className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer" title="Upload Struk">
+                            <label className="p-1.5 text-[#737373] hover:text-black hover:bg-[#fafafa] rounded-lg transition-colors cursor-pointer" title="Upload Struk">
                               <Upload size={14} />
                               <input
                                 type="file"
@@ -433,7 +433,7 @@ const ExpensesPage = () => {
                           {/* Hapus */}
                           <button
                             onClick={() => setDeleteTarget(exp)}
-                            className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-1.5 text-[#737373] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                             title="Hapus"
                           >
                             <Trash2 size={14} />
@@ -450,24 +450,24 @@ const ExpensesPage = () => {
 
         {/* Pagination */}
         {meta.last_page > 1 && (
-          <div className="flex items-center justify-between px-5 py-4 border-t border-gray-100">
-            <p className="text-xs text-gray-500">Menampilkan {expenses.length} dari {meta.total} data</p>
+          <div className="flex items-center justify-between px-5 py-4 border-t border-[#e5e5e5]">
+            <p className="text-xs text-[#737373]">Menampilkan {expenses.length} dari {meta.total} data</p>
             <div className="flex items-center gap-1">
               <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}
-                className="px-3 py-1.5 text-xs text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg disabled:opacity-40 transition-colors">← Prev</button>
+                className="px-3 py-1.5 text-xs text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-lg disabled:opacity-40 transition-colors">← Prev</button>
               {Array.from({ length: meta.last_page }, (_, i) => i + 1)
                 .filter(p => p === 1 || p === meta.last_page || Math.abs(p - page) <= 1)
                 .reduce((acc, p, i, arr) => { if (i > 0 && p - arr[i-1] > 1) acc.push("..."); acc.push(p); return acc; }, [])
                 .map((p, i) => p === "..." ? (
-                  <span key={`e-${i}`} className="px-2 text-gray-400 text-xs">…</span>
+                  <span key={`e-${i}`} className="px-2 text-[#a3a3a3] text-xs">…</span>
                 ) : (
                   <button key={p} onClick={() => setPage(p)}
-                    className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${page === p ? "bg-blue-600 text-white" : "text-gray-600 bg-gray-100 hover:bg-gray-200"}`}>
+                    className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${page === p ? "bg-black text-white" : "text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5]"}`}>
                     {p}
                   </button>
                 ))}
               <button onClick={() => setPage(p => Math.min(meta.last_page, p + 1))} disabled={page === meta.last_page}
-                className="px-3 py-1.5 text-xs text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg disabled:opacity-40 transition-colors">Next →</button>
+                className="px-3 py-1.5 text-xs text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-lg disabled:opacity-40 transition-colors">Next →</button>
             </div>
           </div>
         )}
@@ -477,10 +477,10 @@ const ExpensesPage = () => {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={!isSaving ? closeModal : undefined} />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-5 border-b border-gray-100 sticky top-0 bg-white z-10">
-              <h3 className="font-bold text-gray-800">{editItem ? "Edit Pengeluaran" : "Tambah Pengeluaran"}</h3>
-              <button onClick={closeModal} disabled={isSaving} className="p-1 text-gray-400 hover:text-gray-600 rounded-lg"><X size={18} /></button>
+          <div className="relative bg-white rounded-xl  w-full max-w-lg max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-[#e5e5e5] sticky top-0 bg-white z-10">
+              <h3 className="font-bold text-black">{editItem ? "Edit Pengeluaran" : "Tambah Pengeluaran"}</h3>
+              <button onClick={closeModal} disabled={isSaving} className="p-1 text-[#a3a3a3] hover:text-[#525252] rounded-lg"><X size={18} /></button>
             </div>
 
             <form onSubmit={handleSubmit} className="p-5 space-y-4">
@@ -488,28 +488,28 @@ const ExpensesPage = () => {
               {/* Date + Shift */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Tanggal</label>
+                  <label className="block text-xs font-semibold text-[#737373] mb-1 uppercase tracking-wide">Tanggal</label>
                   <input type="date" value={today} readOnly
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed" />
+                    className="w-full px-3 py-2 bg-[#fafafa] border border-[#e5e5e5] rounded-xl text-sm text-[#737373] cursor-not-allowed" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Shift</label>
+                  <label className="block text-xs font-semibold text-[#737373] mb-1 uppercase tracking-wide">Shift</label>
                   <input type="text" readOnly
                     value={activeShift ? `Shift #${activeShift.id} (${activeShift.type ?? ""})` : "Tidak ada shift aktif"}
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed" />
+                    className="w-full px-3 py-2 bg-[#fafafa] border border-[#e5e5e5] rounded-xl text-sm text-[#737373] cursor-not-allowed" />
                 </div>
               </div>
 
               {/* Staff */}
               <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Staff</label>
+                <label className="block text-xs font-semibold text-[#737373] mb-1 uppercase tracking-wide">Staff</label>
                 <input type="text" value={user?.name ?? ""} readOnly
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed" />
+                  className="w-full px-3 py-2 bg-[#fafafa] border border-[#e5e5e5] rounded-xl text-sm text-[#737373] cursor-not-allowed" />
               </div>
 
               {/* Description */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
                   Keterangan <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -517,8 +517,8 @@ const ExpensesPage = () => {
                   value={form.description}
                   onChange={(e) => setField("description", e.target.value)}
                   placeholder="Contoh: Pembelian sabun mandi, dll."
-                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.description ? "border-red-400 bg-red-50" : "border-gray-200"
+                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none  focus:ring-0 ${
+                    errors.description ? "border-red-400 bg-red-50" : "border-[#e5e5e5]"
                   }`}
                 />
                 {errors.description && <p className="text-xs text-red-500 mt-1">{errors.description}</p>}
@@ -527,21 +527,21 @@ const ExpensesPage = () => {
               {/* Price Per Item + Quantity */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                  <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
                     Harga / Item <span className="text-red-500">*</span>
                   </label>
                   <RupiahInput
                     id="price-per-item"
                     value={form.price_per_item}
                     onChange={(v) => setField("price_per_item", v)}
-                    className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.price_per_item ? "border-red-400 bg-red-50" : "border-gray-200"
+                    className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none  focus:ring-0 ${
+                      errors.price_per_item ? "border-red-400 bg-red-50" : "border-[#e5e5e5]"
                     }`}
                   />
                   {errors.price_per_item && <p className="text-xs text-red-500 mt-1">{errors.price_per_item}</p>}
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                  <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
                     Jumlah <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -549,8 +549,8 @@ const ExpensesPage = () => {
                     min={1}
                     value={form.quantity}
                     onChange={(e) => setField("quantity", Math.max(1, parseInt(e.target.value) || 1))}
-                    className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.quantity ? "border-red-400 bg-red-50" : "border-gray-200"
+                    className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none  focus:ring-0 ${
+                      errors.quantity ? "border-red-400 bg-red-50" : "border-[#e5e5e5]"
                     }`}
                   />
                   {errors.quantity && <p className="text-xs text-red-500 mt-1">{errors.quantity}</p>}
@@ -559,8 +559,8 @@ const ExpensesPage = () => {
 
               {/* Total Price (readonly) + Approval Indicator */}
               <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Total Harga</label>
-                <div className="w-full px-3 py-3 bg-gray-50 border border-gray-200 rounded-xl text-lg font-extrabold text-gray-800">
+                <label className="block text-xs font-semibold text-[#737373] mb-1 uppercase tracking-wide">Total Harga</label>
+                <div className="w-full px-3 py-3 bg-[#fafafa] border border-[#e5e5e5] rounded-xl text-lg font-extrabold text-black">
                   {formatRp(totalPrice)}
                 </div>
                 {totalPrice > 0 && (
@@ -581,11 +581,11 @@ const ExpensesPage = () => {
 
               {/* Payment Method */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">Payment Option</label>
+                <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">Payment Option</label>
                 <select
                   value={form.payment_method}
                   onChange={(e) => setField("payment_method", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-[#e5e5e5] rounded-xl text-sm focus:outline-none  focus:ring-0"
                 >
                   {PAYMENT_METHODS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
                 </select>
@@ -593,12 +593,12 @@ const ExpensesPage = () => {
 
               {/* Upload Struk */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">Upload Struk</label>
+                <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">Upload Struk</label>
                 <label className={`flex items-center gap-3 px-3 py-2.5 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
-                  receiptFile ? "border-blue-400 bg-blue-50" : "border-gray-200 hover:border-gray-300"
+                  receiptFile ? "border-blue-400 bg-[#fafafa]" : "border-[#e5e5e5] hover:border-gray-300"
                 }`}>
-                  <Upload size={16} className={receiptFile ? "text-blue-500" : "text-gray-400"} />
-                  <span className={`text-sm ${receiptFile ? "text-blue-700 font-medium" : "text-gray-400"}`}>
+                  <Upload size={16} className={receiptFile ? "text-blue-500" : "text-[#a3a3a3]"} />
+                  <span className={`text-sm ${receiptFile ? "text-black font-medium" : "text-[#a3a3a3]"}`}>
                     {receiptFile ? receiptFile.name : "Pilih file (JPG, PNG, PDF)"}
                   </span>
                   <input
@@ -614,11 +614,11 @@ const ExpensesPage = () => {
               {/* Actions */}
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={closeModal} disabled={isSaving}
-                  className="flex-1 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors disabled:opacity-50">
+                  className="flex-1 py-2.5 text-sm font-medium text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-xl transition-colors disabled:opacity-50">
                   Cancel
                 </button>
                 <button type="submit" disabled={isSaving}
-                  className="flex-1 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 text-sm font-medium text-white bg-black hover:bg-[#090909] rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                   id="btn-save-expense">
                   {isSaving ? (
                     <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Menyimpan...</>

@@ -24,9 +24,9 @@ const SHIFT_LABEL = { pagi: "Pagi", siang: "Siang", malam: "Malam" };
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 const SkeletonCard = () => (
-  <div className="bg-white rounded-2xl p-5 border border-gray-100 animate-pulse">
-    <div className="h-3 bg-gray-200 rounded w-1/2 mb-3" />
-    <div className="h-7 bg-gray-200 rounded w-3/4" />
+  <div className="bg-white rounded-xl p-5 border border-[#e5e5e5] animate-pulse">
+    <div className="h-3 bg-[#e5e5e5] rounded w-1/2 mb-3" />
+    <div className="h-7 bg-[#e5e5e5] rounded w-3/4" />
   </div>
 );
 
@@ -34,7 +34,7 @@ const SkeletonRow = () => (
   <tr>
     {[1, 2, 3, 4].map((i) => (
       <td key={i} className="px-4 py-3">
-        <div className="h-4 bg-gray-200 rounded animate-pulse" />
+        <div className="h-4 bg-[#e5e5e5] rounded animate-pulse" />
       </td>
     ))}
   </tr>
@@ -44,12 +44,12 @@ const SkeletonRow = () => (
 const SummaryCard = ({ label, value, color, bold }) => {
   const colorMap = {
     green: "bg-emerald-50 border-emerald-200 text-emerald-700",
-    blue: "bg-blue-50 border-blue-200 text-blue-700",
+    blue: "bg-[#fafafa] border-[#e5e5e5] text-black",
     red: "bg-red-50 border-red-200 text-red-700",
-    navy: "bg-indigo-600 border-indigo-600 text-white",
+    navy: "bg-black border-indigo-600 text-white",
   };
   return (
-    <div className={`rounded-2xl p-5 border ${colorMap[color]}`}>
+    <div className={`rounded-xl p-5 border ${colorMap[color]}`}>
       <p className={`text-xs font-semibold uppercase tracking-wide mb-1 ${color === "navy" ? "opacity-80" : "opacity-70"}`}>
         {label}
       </p>
@@ -63,28 +63,28 @@ const TransactionTab = ({ items = [], columns, emptyMsg, isLoading }) => (
   <div className="overflow-x-auto">
     <table className="w-full text-sm">
       <thead>
-        <tr className="bg-gray-50 text-left">
+        <tr className="bg-[#fafafa] text-left">
           {columns.map((c) => (
-            <th key={c.key} className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
+            <th key={c.key} className="px-4 py-3 text-xs font-semibold text-[#737373] uppercase tracking-wide whitespace-nowrap">
               {c.label}
             </th>
           ))}
         </tr>
       </thead>
-      <tbody className="divide-y divide-gray-50">
+      <tbody className="divide-y divide-[#e5e5e5]">
         {isLoading ? (
           Array.from({ length: 3 }).map((_, i) => <SkeletonRow key={i} />)
         ) : items.length === 0 ? (
           <tr>
-            <td colSpan={columns.length} className="text-center py-10 text-gray-400 text-sm">
+            <td colSpan={columns.length} className="text-center py-10 text-[#a3a3a3] text-sm">
               {emptyMsg}
             </td>
           </tr>
         ) : (
           items.map((item, idx) => (
-            <tr key={item.id ?? idx} className="hover:bg-gray-50 transition-colors">
+            <tr key={item.id ?? idx} className="hover:bg-[#fafafa] transition-colors">
               {columns.map((c) => (
-                <td key={c.key} className={`px-4 py-3 ${c.className ?? "text-gray-700"}`}>
+                <td key={c.key} className={`px-4 py-3 ${c.className ?? "text-[#525252]"}`}>
                   {c.render ? c.render(item) : item[c.key] ?? "-"}
                 </td>
               ))}
@@ -100,26 +100,26 @@ const TransactionTab = ({ items = [], columns, emptyMsg, isLoading }) => (
 const SuccessModal = ({ shiftId, onDownload, onFinish, isDownloading }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
     <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
-    <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-8 text-center">
+    <div className="relative bg-white rounded-xl  w-full max-w-md p-8 text-center">
       <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
         <CheckCircle size={36} className="text-emerald-600" />
       </div>
-      <h2 className="text-xl font-bold text-gray-800 mb-2">Handover Berhasil!</h2>
-      <p className="text-gray-500 text-sm mb-6">
+      <h2 className="text-xl font-bold text-black mb-2">Handover Berhasil!</h2>
+      <p className="text-[#737373] text-sm mb-6">
         Absen pulang & Shift Report otomatis tercatat. Silakan unduh laporan atau selesaikan sesi ini.
       </p>
       <div className="space-y-3">
         <button
           onClick={onDownload}
           disabled={isDownloading}
-          className="w-full flex items-center justify-center gap-2 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-colors disabled:opacity-60"
+          className="w-full flex items-center justify-center gap-2 py-3 bg-black hover:bg-[#090909] text-white rounded-xl font-semibold transition-colors disabled:opacity-60"
         >
           <Download size={16} />
           {isDownloading ? "Mengunduh..." : "Download Shift Report PDF"}
         </button>
         <button
           onClick={onFinish}
-          className="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl font-semibold transition-colors"
+          className="w-full py-3 bg-[#fafafa] hover:bg-[#e5e5e5] text-[#525252] rounded-xl font-semibold transition-colors"
         >
           Selesai (Logout)
         </button>
@@ -266,7 +266,7 @@ const HandoverPage = () => {
     {
       key: "amount",
       label: "Jumlah",
-      className: "text-right font-semibold text-gray-800",
+      className: "text-right font-semibold text-black",
       render: (r) => formatRp(r.amount),
     },
   ];
@@ -277,7 +277,7 @@ const HandoverPage = () => {
     {
       key: "total_price",
       label: "Total",
-      className: "text-right font-semibold text-gray-800",
+      className: "text-right font-semibold text-black",
       render: (r) => formatRp(r.total_price),
     },
     {
@@ -287,7 +287,7 @@ const HandoverPage = () => {
         const map = {
           auto_approved: "bg-emerald-100 text-emerald-700",
           pending: "bg-amber-100 text-amber-700",
-          approved: "bg-blue-100 text-blue-700",
+          approved: "bg-blue-100 text-black",
           rejected: "bg-red-100 text-red-700",
         };
         const labels = {
@@ -297,7 +297,7 @@ const HandoverPage = () => {
           rejected: "Ditolak",
         };
         return (
-          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${map[r.status] ?? "bg-gray-100 text-gray-500"}`}>
+          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${map[r.status] ?? "bg-[#fafafa] text-[#737373]"}`}>
             {labels[r.status] ?? r.status}
           </span>
         );
@@ -312,7 +312,7 @@ const HandoverPage = () => {
     {
       key: "amount",
       label: "Jumlah",
-      className: "text-right font-semibold text-gray-800",
+      className: "text-right font-semibold text-black",
       render: (r) => formatRp(r.down_payment ?? r.amount ?? 0),
     },
   ];
@@ -324,7 +324,7 @@ const HandoverPage = () => {
     {
       key: "amount",
       label: "Jumlah",
-      className: "text-right font-semibold text-gray-800",
+      className: "text-right font-semibold text-black",
       render: (r) => formatRp(r.amount),
     },
   ];
@@ -343,8 +343,8 @@ const HandoverPage = () => {
         <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center">
           <Clock size={32} className="text-amber-500" />
         </div>
-        <h2 className="text-xl font-bold text-gray-800">Tidak Ada Shift Aktif</h2>
-        <p className="text-gray-500 text-sm max-w-sm">
+        <h2 className="text-xl font-bold text-black">Tidak Ada Shift Aktif</h2>
+        <p className="text-[#737373] text-sm max-w-sm">
           Kamu belum memulai shift. Mulai shift terlebih dahulu dari halaman Dashboard.
         </p>
       </div>
@@ -365,15 +365,15 @@ const HandoverPage = () => {
       )}
 
       {/* ── Section 1: Header ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+      <div className="bg-white rounded-xl border border-[#e5e5e5]  p-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
-              <ArrowRightLeft size={20} className="text-blue-600" />
+              <ArrowRightLeft size={20} className="text-black" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">Shift Handover</h1>
-              <p className="text-sm text-gray-500 mt-0.5">{formatDateLong(activeShift?.started_at)}</p>
+              <h1 className="text-2xl font-bold text-black">Shift Handover</h1>
+              <p className="text-sm text-[#737373] mt-0.5">{formatDateLong(activeShift?.started_at)}</p>
             </div>
           </div>
           <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-full text-sm font-semibold">
@@ -385,28 +385,28 @@ const HandoverPage = () => {
         {shiftLoading ? (
           <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-12 bg-gray-100 rounded-xl animate-pulse" />
+              <div key={i} className="h-12 bg-[#fafafa] rounded-xl animate-pulse" />
             ))}
           </div>
         ) : (
           <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="bg-gray-50 rounded-xl p-3">
-              <p className="text-xs text-gray-500 font-medium">Staff FO</p>
-              <p className="text-sm font-bold text-gray-800 mt-0.5 truncate">{activeShift?.user?.name ?? user?.name ?? "-"}</p>
+            <div className="bg-[#fafafa] rounded-xl p-3">
+              <p className="text-xs text-[#737373] font-medium">Staff FO</p>
+              <p className="text-sm font-bold text-black mt-0.5 truncate">{activeShift?.user?.name ?? user?.name ?? "-"}</p>
             </div>
-            <div className="bg-gray-50 rounded-xl p-3">
-              <p className="text-xs text-gray-500 font-medium">Tipe Shift</p>
-              <p className="text-sm font-bold text-gray-800 mt-0.5">
+            <div className="bg-[#fafafa] rounded-xl p-3">
+              <p className="text-xs text-[#737373] font-medium">Tipe Shift</p>
+              <p className="text-sm font-bold text-black mt-0.5">
                 {SHIFT_LABEL[activeShift?.type] ?? activeShift?.type ?? "-"}
               </p>
             </div>
-            <div className="bg-gray-50 rounded-xl p-3">
-              <p className="text-xs text-gray-500 font-medium">Jam Mulai</p>
-              <p className="text-sm font-bold text-gray-800 mt-0.5">{formatTime(activeShift?.started_at)}</p>
+            <div className="bg-[#fafafa] rounded-xl p-3">
+              <p className="text-xs text-[#737373] font-medium">Jam Mulai</p>
+              <p className="text-sm font-bold text-black mt-0.5">{formatTime(activeShift?.started_at)}</p>
             </div>
-            <div className="bg-gray-50 rounded-xl p-3">
-              <p className="text-xs text-gray-500 font-medium">Durasi</p>
-              <p className="text-sm font-bold text-gray-800 mt-0.5">{formatDuration(activeShift?.started_at)}</p>
+            <div className="bg-[#fafafa] rounded-xl p-3">
+              <p className="text-xs text-[#737373] font-medium">Durasi</p>
+              <p className="text-sm font-bold text-black mt-0.5">{formatDuration(activeShift?.started_at)}</p>
             </div>
           </div>
         )}
@@ -414,7 +414,7 @@ const HandoverPage = () => {
 
       {/* ── Section 2: Ringkasan Shift ── */}
       <div>
-        <h2 className="text-base font-bold text-gray-700 mb-3">Ringkasan Shift</h2>
+        <h2 className="text-base font-bold text-[#525252] mb-3">Ringkasan Shift</h2>
         {summaryLoading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => <SkeletonCard key={i} />)}
@@ -430,9 +430,9 @@ const HandoverPage = () => {
       </div>
 
       {/* ── Section 3: Detail Transaksi per Tab ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
-        <div className="p-5 border-b border-gray-100">
-          <h2 className="font-bold text-gray-800">Detail Transaksi Shift Ini</h2>
+      <div className="bg-white rounded-xl border border-[#e5e5e5] ">
+        <div className="p-5 border-b border-[#e5e5e5]">
+          <h2 className="font-bold text-black">Detail Transaksi Shift Ini</h2>
         </div>
 
         {/* Pending Expenses Warning */}
@@ -451,7 +451,7 @@ const HandoverPage = () => {
         )}
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-100 px-5 mt-4 gap-1">
+        <div className="flex border-b border-[#e5e5e5] px-5 mt-4 gap-1">
           {TABS.map((tab) => {
             const count = (report?.[tab.key] ?? []).length;
             const isPendingTab = tab.key === "expenses" && hasPending;
@@ -461,14 +461,14 @@ const HandoverPage = () => {
                 onClick={() => setActiveTab(tab.key)}
                 className={`px-4 py-2.5 text-sm font-semibold rounded-t-lg transition-colors relative ${
                   activeTab === tab.key
-                    ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50/50"
-                    : "text-gray-500 hover:text-gray-700"
+                    ? "text-black border-b-2 border-black bg-[#fafafa]/50"
+                    : "text-[#737373] hover:text-[#525252]"
                 }`}
               >
                 {tab.label}
                 {count > 0 && (
                   <span className={`ml-1.5 px-1.5 py-0.5 rounded-full text-xs font-bold ${
-                    isPendingTab ? "bg-red-500 text-white" : "bg-gray-200 text-gray-600"
+                    isPendingTab ? "bg-red-500 text-white" : "bg-[#e5e5e5] text-[#525252]"
                   }`}>
                     {count}
                   </span>
@@ -489,20 +489,20 @@ const HandoverPage = () => {
       </div>
 
       {/* ── Section 4: Form Handover ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        <h2 className="font-bold text-gray-800 mb-4">Serahkan Shift ke:</h2>
+      <div className="bg-white rounded-xl border border-[#e5e5e5]  p-6">
+        <h2 className="font-bold text-black mb-4">Serahkan Shift ke:</h2>
 
         <div className="space-y-4">
           {/* Dropdown FO */}
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">
+            <label className="block text-xs font-semibold text-[#525252] mb-1.5 uppercase tracking-wide">
               Staff FO Penerima <span className="text-red-500">*</span>
             </label>
             <select
               value={handoverTo}
               onChange={(e) => setHandoverTo(e.target.value)}
               disabled={hasPending || handoverMutation.isPending}
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2.5 border border-[#e5e5e5] rounded-xl text-sm focus:outline-none  focus:ring-0 disabled:bg-[#fafafa] disabled:text-[#a3a3a3] disabled:cursor-not-allowed"
             >
               <option value="">-- Pilih Staff FO --</option>
               {foUsers.map((fo) => (
@@ -515,8 +515,8 @@ const HandoverPage = () => {
 
           {/* Catatan */}
           <div>
-            <label className="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">
-              Catatan Handover <span className="text-gray-400 font-normal">(opsional)</span>
+            <label className="block text-xs font-semibold text-[#525252] mb-1.5 uppercase tracking-wide">
+              Catatan Handover <span className="text-[#a3a3a3] font-normal">(opsional)</span>
             </label>
             <textarea
               value={handoverNote}
@@ -524,7 +524,7 @@ const HandoverPage = () => {
               disabled={hasPending || handoverMutation.isPending}
               rows={3}
               placeholder="Contoh: Ada tamu kamar 205 yang belum check-out, deposit belum dikembalikan..."
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
+              className="w-full px-3 py-2.5 border border-[#e5e5e5] rounded-xl text-sm focus:outline-none  focus:ring-0 resize-none disabled:bg-[#fafafa] disabled:text-[#a3a3a3] disabled:cursor-not-allowed"
             />
           </div>
 
@@ -532,7 +532,7 @@ const HandoverPage = () => {
           <button
             onClick={handleHandover}
             disabled={hasPending || !handoverTo || handoverMutation.isPending}
-            className="w-full py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
+            className="w-full py-3.5 bg-black hover:bg-[#090909] text-white rounded-xl font-bold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 "
             id="btn-konfirmasi-handover"
           >
             {handoverMutation.isPending ? (

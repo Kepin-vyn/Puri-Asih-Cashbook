@@ -1,14 +1,7 @@
 import { useState, useRef } from "react";
 
 /**
- * RupiahInput — Input number yang auto-format ke Rupiah
- * Props:
- *   value: number (nilai numerik dari parent)
- *   onChange: (numericValue) => void
- *   placeholder: string
- *   className: string
- *   disabled: boolean
- *   id: string
+ * RupiahInput — Input number dengan format Rupiah (Ollama Design System)
  */
 const RupiahInput = ({
   value,
@@ -29,32 +22,23 @@ const RupiahInput = ({
   }
 
   const handleChange = (e) => {
-    // Ambil hanya angka dari input
     const raw = e.target.value.replace(/\D/g, "");
     const numeric = raw === "" ? "" : parseInt(raw, 10);
-
-    // Format untuk display
     setDisplayValue(numeric === "" ? "" : formatDisplay(numeric));
-
-    // Kembalikan nilai numerik ke parent
     onChange(numeric === "" ? 0 : numeric);
   };
 
   const handleFocus = () => {
-    // Saat focus, hilangkan format agar lebih mudah edit
-    if (value) {
-      setDisplayValue(String(value));
-    }
+    if (value) setDisplayValue(String(value));
   };
 
   const handleBlur = () => {
-    // Saat blur, format ulang
     setDisplayValue(value ? formatDisplay(value) : "");
   };
 
   return (
     <div className="relative">
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm font-medium pointer-events-none">
+      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#a3a3a3] text-[14px] pointer-events-none">
         Rp
       </span>
       <input

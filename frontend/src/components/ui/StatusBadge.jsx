@@ -1,29 +1,25 @@
 /**
- * StatusBadge — Badge generik untuk status berbagai modul
- *
- * Props:
- *   status: string  — nilai status dari DB
- *   type: "reservation" | "deposit" | "expense"  — menentukan palet warna
+ * StatusBadge — Badge status fungsional (warna dipertahankan untuk UX)
+ * Menggunakan token semantic dari Ollama Design System
  */
 
 const CONFIGS = {
   reservation: {
-    reserved: { label: "Reserved",  cls: "bg-blue-100 text-blue-700 ring-blue-200" },
-    checkin:  { label: "Check-In",  cls: "bg-emerald-100 text-emerald-700 ring-emerald-200" },
-    checkout: { label: "Check-Out", cls: "bg-gray-100 text-gray-600 ring-gray-200" },
-    cancel:   { label: "Cancel",    cls: "bg-red-100 text-red-700 ring-red-200" },
-    noshow:   { label: "No Show",   cls: "bg-amber-100 text-amber-700 ring-amber-200" },
+    checkin:  { label: "Check-In",  cls: "bg-[#f0fdf4] text-[#15803d]" },
+    checkout: { label: "Check-Out", cls: "bg-[#f9fafb] text-[#6b7280]" },
+    cancel:   { label: "Cancel",    cls: "bg-[#fef2f2] text-[#b91c1c]" },
+    noshow:   { label: "No Show",   cls: "bg-[#fffbeb] text-[#b45309]" },
   },
   deposit: {
-    active:    { label: "Aktif",      cls: "bg-emerald-100 text-emerald-700 ring-emerald-200" },
-    refunded:  { label: "Refunded",   cls: "bg-blue-100 text-blue-700 ring-blue-200" },
-    forfeited: { label: "Forfeited",  cls: "bg-red-100 text-red-700 ring-red-200" },
+    active:    { label: "Aktif",     cls: "bg-[#f0fdf4] text-[#15803d]" },
+    refunded:  { label: "Refunded",  cls: "bg-[#eff6ff] text-[#1d4ed8]" },
+    forfeited: { label: "Forfeited", cls: "bg-[#fef2f2] text-[#b91c1c]" },
   },
   expense: {
-    auto_approved: { label: "Auto Approved", cls: "bg-emerald-100 text-emerald-700 ring-emerald-200" },
-    pending:       { label: "Pending",       cls: "bg-amber-100 text-amber-700 ring-amber-200" },
-    approved:      { label: "Approved",      cls: "bg-blue-100 text-blue-700 ring-blue-200" },
-    rejected:      { label: "Rejected",      cls: "bg-red-100 text-red-700 ring-red-200" },
+    auto_approved: { label: "Auto Approved", cls: "bg-[#f0fdf4] text-[#15803d]" },
+    pending:       { label: "Pending",       cls: "bg-[#fffbeb] text-[#b45309]" },
+    approved:      { label: "Approved",      cls: "bg-[#eff6ff] text-[#1d4ed8]" },
+    rejected:      { label: "Rejected",      cls: "bg-[#fef2f2] text-[#b91c1c]" },
   },
 };
 
@@ -32,16 +28,14 @@ const StatusBadge = ({ status, type = "reservation" }) => {
 
   if (!config) {
     return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ring-1 bg-gray-100 text-gray-500 ring-gray-200">
+      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-[500] bg-[#f9fafb] text-[#6b7280]">
         {status ?? "-"}
       </span>
     );
   }
 
   return (
-    <span
-      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ring-1 ${config.cls}`}
-    >
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-[500] ${config.cls}`}>
       {config.label}
     </span>
   );

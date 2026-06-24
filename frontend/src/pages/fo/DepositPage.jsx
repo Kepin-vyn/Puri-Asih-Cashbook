@@ -68,7 +68,7 @@ const SkeletonRow = () => (
   <tr>
     {Array.from({ length: 9 }).map((_, i) => (
       <td key={i} className="px-4 py-3">
-        <div className="h-4 bg-gray-200 rounded animate-pulse" />
+        <div className="h-4 bg-[#e5e5e5] rounded animate-pulse" />
       </td>
     ))}
   </tr>
@@ -302,7 +302,7 @@ const DepositPage = () => {
 
       {/* ── Expiring Banner ── */}
       {expiringDeposits.length > 0 && (
-        <div className="bg-gradient-to-r from-orange-400 to-amber-400 rounded-2xl p-5 flex items-center gap-4 shadow-md">
+        <div className="bg-gradient-to-r from-orange-400 to-amber-400 rounded-xl p-5 flex items-center gap-4 ">
           <div className="flex-shrink-0 w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
             <AlertTriangle size={22} className="text-white" />
           </div>
@@ -325,19 +325,19 @@ const DepositPage = () => {
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Refundable Deposit</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-2xl font-bold text-black">Refundable Deposit</h1>
+          <p className="text-sm text-[#737373] mt-0.5">
             {new Date().toLocaleDateString("id-ID", {
               weekday: "long", year: "numeric", month: "long", day: "numeric",
             })}
-            {activeShift && <span className="ml-2 text-blue-600">· Shift Aktif</span>}
+            {activeShift && <span className="ml-2 text-black">· Shift Aktif</span>}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={handleExport}
             disabled={exporting}
-            className="flex items-center gap-2 text-sm text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 px-3 py-2.5 rounded-xl transition-colors disabled:opacity-50 shadow-sm"
+            className="flex items-center gap-2 text-sm text-[#525252] bg-white border border-[#e5e5e5] hover:bg-[#fafafa] px-3 py-2.5 rounded-xl transition-colors disabled:opacity-50 "
             id="btn-export-deposit"
           >
             <Download size={15} />
@@ -351,8 +351,8 @@ const DepositPage = () => {
               : 'Tambah transaksi baru'}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
               hasNoShift
-                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
+                ? 'bg-[#e5e5e5] text-[#a3a3a3] cursor-not-allowed'
+                : 'bg-black text-white hover:bg-[#090909] cursor-pointer'
             }`}
             id="btn-tambah-deposit"
           >
@@ -367,7 +367,7 @@ const DepositPage = () => {
         <select
           value={filterStatus}
           onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
-          className="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-2 text-sm border border-[#e5e5e5] rounded-xl bg-white focus:outline-none  focus:ring-0"
         >
           <option value="">Semua Status</option>
           {STATUSES.map(s => (
@@ -377,7 +377,7 @@ const DepositPage = () => {
         {filterStatus && (
           <button
             onClick={() => { setFilterStatus(""); setPage(1); }}
-            className="text-xs text-gray-500 hover:text-gray-700 underline"
+            className="text-xs text-[#737373] hover:text-[#525252] underline"
           >
             Reset filter
           </button>
@@ -385,31 +385,31 @@ const DepositPage = () => {
       </div>
 
       {/* ── Tabel ── */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-        <div className="p-5 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-800">Daftar Deposit</h2>
+      <div className="bg-white rounded-xl  border border-[#e5e5e5]">
+        <div className="p-5 border-b border-[#e5e5e5]">
+          <h2 className="font-semibold text-black">Daftar Deposit</h2>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 text-left">
+              <tr className="bg-[#fafafa] text-left">
                 {["No", "Tamu", "Kamar", "Check-In", "Check-Out", "Jumlah", "Metode", "Status", "Aksi"].map(h => (
-                  <th key={h} className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
+                  <th key={h} className="px-4 py-3 text-xs font-semibold text-[#737373] uppercase tracking-wide whitespace-nowrap">
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-[#e5e5e5]">
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
               ) : deposits.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="text-center py-16 text-gray-400">
+                  <td colSpan={9} className="text-center py-16 text-[#a3a3a3]">
                     <FileText size={40} className="mx-auto mb-3 opacity-20" />
                     <p className="text-sm">Belum ada data deposit</p>
-                    <button onClick={openAdd} className="mt-3 text-xs text-blue-600 underline">
+                    <button onClick={openAdd} className="mt-3 text-xs text-black underline">
                       Tambah deposit pertama
                     </button>
                   </td>
@@ -426,31 +426,31 @@ const DepositPage = () => {
                       className={`transition-colors ${
                         isExpiring && isActive
                           ? "bg-red-50 hover:bg-red-100"
-                          : "hover:bg-gray-50"
+                          : "hover:bg-[#fafafa]"
                       }`}
                     >
-                      <td className="px-4 py-3 text-gray-500">
+                      <td className="px-4 py-3 text-[#737373]">
                         {(page - 1) * (meta.per_page ?? 15) + idx + 1}
                         {isExpiring && isActive && (
                           <span className="ml-1.5 inline-block w-2 h-2 rounded-full bg-red-500 animate-pulse" title="Jatuh tempo segera" />
                         )}
                       </td>
-                      <td className="px-4 py-3 font-medium text-gray-800 whitespace-nowrap">
+                      <td className="px-4 py-3 font-medium text-black whitespace-nowrap">
                         {dep.guest_name}
                       </td>
-                      <td className="px-4 py-3 text-gray-600">{dep.room_number}</td>
-                      <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                      <td className="px-4 py-3 text-[#525252]">{dep.room_number}</td>
+                      <td className="px-4 py-3 text-[#525252] whitespace-nowrap">
                         {formatDate(dep.check_in_date)}
                       </td>
                       <td className="px-4 py-3 whitespace-nowrap">
-                        <span className={isExpiring && isActive ? "font-semibold text-red-600" : "text-gray-600"}>
+                        <span className={isExpiring && isActive ? "font-semibold text-red-600" : "text-[#525252]"}>
                           {formatDate(dep.check_out_date)}
                         </span>
                       </td>
-                      <td className="px-4 py-3 font-semibold text-gray-800 whitespace-nowrap">
+                      <td className="px-4 py-3 font-semibold text-black whitespace-nowrap">
                         {formatRp(dep.amount)}
                       </td>
-                      <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                      <td className="px-4 py-3 text-[#525252] whitespace-nowrap">
                         {methodLabel}
                       </td>
                       <td className="px-4 py-3">
@@ -463,7 +463,7 @@ const DepositPage = () => {
                               {/* Edit */}
                               <button
                                 onClick={() => openEdit(dep)}
-                                className="p-1.5 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                                className="p-1.5 text-[#737373] hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
                                 title="Edit"
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
@@ -491,7 +491,7 @@ const DepositPage = () => {
                             /* View only untuk refunded/forfeited */
                             <button
                               onClick={() => setViewItem(dep)}
-                              className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+                              className="flex items-center gap-1 px-2 py-1 text-xs font-medium text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-lg transition-colors"
                               title="Lihat Detail"
                             >
                               <Eye size={12} />
@@ -510,15 +510,15 @@ const DepositPage = () => {
 
         {/* ── Pagination ── */}
         {meta.last_page > 1 && (
-          <div className="flex items-center justify-between px-5 py-4 border-t border-gray-100">
-            <p className="text-xs text-gray-500">
+          <div className="flex items-center justify-between px-5 py-4 border-t border-[#e5e5e5]">
+            <p className="text-xs text-[#737373]">
               Menampilkan {deposits.length} dari {meta.total} data
             </p>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1.5 text-xs text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg disabled:opacity-40 transition-colors"
+                className="px-3 py-1.5 text-xs text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-lg disabled:opacity-40 transition-colors"
               >
                 ← Prev
               </button>
@@ -531,13 +531,13 @@ const DepositPage = () => {
                 }, [])
                 .map((p, i) =>
                   p === "..." ? (
-                    <span key={`e-${i}`} className="px-2 text-gray-400 text-xs">…</span>
+                    <span key={`e-${i}`} className="px-2 text-[#a3a3a3] text-xs">…</span>
                   ) : (
                     <button
                       key={p}
                       onClick={() => setPage(p)}
                       className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
-                        page === p ? "bg-blue-600 text-white" : "text-gray-600 bg-gray-100 hover:bg-gray-200"
+                        page === p ? "bg-black text-white" : "text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5]"
                       }`}
                     >
                       {p}
@@ -547,7 +547,7 @@ const DepositPage = () => {
               <button
                 onClick={() => setPage(p => Math.min(meta.last_page, p + 1))}
                 disabled={page === meta.last_page}
-                className="px-3 py-1.5 text-xs text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg disabled:opacity-40 transition-colors"
+                className="px-3 py-1.5 text-xs text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-lg disabled:opacity-40 transition-colors"
               >
                 Next →
               </button>
@@ -564,13 +564,13 @@ const DepositPage = () => {
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={!isSaving ? closeModal : undefined}
           />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[90vh] overflow-y-auto">
+          <div className="relative bg-white rounded-xl  w-full max-w-xl max-h-[90vh] overflow-y-auto">
             {/* Header */}
-            <div className="flex items-center justify-between p-5 border-b border-gray-100 sticky top-0 bg-white z-10">
-              <h3 className="font-bold text-gray-800">
+            <div className="flex items-center justify-between p-5 border-b border-[#e5e5e5] sticky top-0 bg-white z-10">
+              <h3 className="font-bold text-black">
                 {editItem ? "Edit Deposit" : "Tambah Deposit"}
               </h3>
-              <button onClick={closeModal} disabled={isSaving} className="p-1 text-gray-400 hover:text-gray-600 rounded-lg">
+              <button onClick={closeModal} disabled={isSaving} className="p-1 text-[#a3a3a3] hover:text-[#525252] rounded-lg">
                 <X size={18} />
               </button>
             </div>
@@ -580,39 +580,39 @@ const DepositPage = () => {
               {/* Date + Shift */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Tanggal</label>
+                  <label className="block text-xs font-semibold text-[#737373] mb-1 uppercase tracking-wide">Tanggal</label>
                   <input
                     type="date"
                     value={form.date}
                     onChange={(e) => setField("date", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-[#e5e5e5] rounded-xl text-sm focus:outline-none  focus:ring-0"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Shift</label>
+                  <label className="block text-xs font-semibold text-[#737373] mb-1 uppercase tracking-wide">Shift</label>
                   <input
                     type="text"
                     value={activeShift ? `Shift #${activeShift.id} (${activeShift.type ?? ""})` : "Tidak ada shift aktif"}
                     readOnly
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed"
+                    className="w-full px-3 py-2 bg-[#fafafa] border border-[#e5e5e5] rounded-xl text-sm text-[#737373] cursor-not-allowed"
                   />
                 </div>
               </div>
 
               {/* Staff */}
               <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Staff</label>
+                <label className="block text-xs font-semibold text-[#737373] mb-1 uppercase tracking-wide">Staff</label>
                 <input
                   type="text"
                   value={user?.name ?? ""}
                   readOnly
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed"
+                  className="w-full px-3 py-2 bg-[#fafafa] border border-[#e5e5e5] rounded-xl text-sm text-[#737373] cursor-not-allowed"
                 />
               </div>
 
               {/* Guest Name */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
                   Nama Tamu <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -620,8 +620,8 @@ const DepositPage = () => {
                   value={form.guest_name}
                   onChange={(e) => setField("guest_name", e.target.value)}
                   placeholder="Masukkan nama tamu"
-                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.guest_name ? "border-red-400 bg-red-50" : "border-gray-200"
+                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none  focus:ring-0 ${
+                    errors.guest_name ? "border-red-400 bg-red-50" : "border-[#e5e5e5]"
                   }`}
                 />
                 {errors.guest_name && <p className="text-xs text-red-500 mt-1">{errors.guest_name}</p>}
@@ -629,11 +629,11 @@ const DepositPage = () => {
 
               {/* Room Number */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">No. Kamar</label>
+                <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">No. Kamar</label>
                 <select
                   value={form.room_number}
                   onChange={(e) => setField("room_number", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-[#e5e5e5] rounded-xl text-sm focus:outline-none  focus:ring-0"
                 >
                   {ROOM_NUMBERS.map(r => <option key={r} value={r}>{r}</option>)}
                 </select>
@@ -642,21 +642,21 @@ const DepositPage = () => {
               {/* Check-In + Check-Out */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                  <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
                     Check-In Date <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="date"
                     value={form.check_in_date}
                     onChange={(e) => setField("check_in_date", e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.check_in_date ? "border-red-400 bg-red-50" : "border-gray-200"
+                    className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none  focus:ring-0 ${
+                      errors.check_in_date ? "border-red-400 bg-red-50" : "border-[#e5e5e5]"
                     }`}
                   />
                   {errors.check_in_date && <p className="text-xs text-red-500 mt-1">{errors.check_in_date}</p>}
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                  <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
                     Check-Out Date <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -664,8 +664,8 @@ const DepositPage = () => {
                     value={form.check_out_date}
                     min={form.check_in_date || today}
                     onChange={(e) => setField("check_out_date", e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.check_out_date ? "border-red-400 bg-red-50" : "border-gray-200"
+                    className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none  focus:ring-0 ${
+                      errors.check_out_date ? "border-red-400 bg-red-50" : "border-[#e5e5e5]"
                     }`}
                   />
                   {errors.check_out_date && <p className="text-xs text-red-500 mt-1">{errors.check_out_date}</p>}
@@ -674,15 +674,15 @@ const DepositPage = () => {
 
               {/* Amount */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
                   Jumlah Deposit <span className="text-red-500">*</span>
                 </label>
                 <RupiahInput
                   id="deposit-amount"
                   value={form.amount}
                   onChange={(v) => setField("amount", v)}
-                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.amount ? "border-red-400 bg-red-50" : "border-gray-200"
+                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none  focus:ring-0 ${
+                    errors.amount ? "border-red-400 bg-red-50" : "border-[#e5e5e5]"
                   }`}
                 />
                 {errors.amount && <p className="text-xs text-red-500 mt-1">{errors.amount}</p>}
@@ -691,21 +691,21 @@ const DepositPage = () => {
               {/* Payment Option + Payment Status */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">Payment Option</label>
+                  <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">Payment Option</label>
                   <select
                     value={form.payment_method}
                     onChange={(e) => setField("payment_method", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-[#e5e5e5] rounded-xl text-sm focus:outline-none  focus:ring-0"
                   >
                     {PAYMENT_METHODS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">Payment Status</label>
+                  <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">Payment Status</label>
                   <select
                     value={form.payment_status}
                     onChange={(e) => setField("payment_status", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-[#e5e5e5] rounded-xl text-sm focus:outline-none  focus:ring-0"
                   >
                     {PAYMENT_STATUSES.map(p => <option key={p.value} value={p.value}>{p.label}</option>)}
                   </select>
@@ -714,13 +714,13 @@ const DepositPage = () => {
 
               {/* Remarks */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">Remarks</label>
+                <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">Remarks</label>
                 <textarea
                   value={form.note}
                   onChange={(e) => setField("note", e.target.value)}
                   rows={2}
                   placeholder="Catatan tambahan (opsional)"
-                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full px-3 py-2 border border-[#e5e5e5] rounded-xl text-sm focus:outline-none  focus:ring-0 resize-none"
                 />
               </div>
 
@@ -730,14 +730,14 @@ const DepositPage = () => {
                   type="button"
                   onClick={closeModal}
                   disabled={isSaving}
-                  className="flex-1 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors disabled:opacity-50"
+                  className="flex-1 py-2.5 text-sm font-medium text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-xl transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="flex-1 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 text-sm font-medium text-white bg-black hover:bg-[#090909] rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                   id="btn-save-deposit"
                 >
                   {isSaving ? (
@@ -756,10 +756,10 @@ const DepositPage = () => {
       {viewItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setViewItem(null)} />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+          <div className="relative bg-white rounded-xl  w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="font-bold text-gray-800">Detail Deposit</h3>
-              <button onClick={() => setViewItem(null)} className="p-1 text-gray-400 hover:text-gray-600 rounded-lg">
+              <h3 className="font-bold text-black">Detail Deposit</h3>
+              <button onClick={() => setViewItem(null)} className="p-1 text-[#a3a3a3] hover:text-[#525252] rounded-lg">
                 <X size={18} />
               </button>
             </div>
@@ -774,12 +774,12 @@ const DepositPage = () => {
                 ["Catatan",     viewItem.note || "-"],
               ].map(([label, val]) => (
                 <div key={label} className="flex justify-between">
-                  <span className="text-gray-500">{label}</span>
-                  <span className="font-medium text-gray-800 text-right max-w-[60%]">{val}</span>
+                  <span className="text-[#737373]">{label}</span>
+                  <span className="font-medium text-black text-right max-w-[60%]">{val}</span>
                 </div>
               ))}
               <div className="flex justify-between items-center pt-1">
-                <span className="text-gray-500">Status</span>
+                <span className="text-[#737373]">Status</span>
                 <StatusBadge status={viewItem.status} type="deposit" />
               </div>
               {viewItem.note && viewItem.status === "forfeited" && (
@@ -790,7 +790,7 @@ const DepositPage = () => {
             </div>
             <button
               onClick={() => setViewItem(null)}
-              className="mt-5 w-full py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+              className="mt-5 w-full py-2.5 text-sm font-medium text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-xl transition-colors"
             >
               Tutup
             </button>
@@ -817,13 +817,13 @@ const DepositPage = () => {
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={!forfeitMutation.isPending ? () => { setForfeitTarget(null); setForfeitNote(""); } : undefined}
           />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md p-6">
+          <div className="relative bg-white rounded-xl  w-full max-w-md p-6">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-gray-800">Konfirmasi Hanguskan Deposit</h3>
+              <h3 className="font-bold text-black">Konfirmasi Hanguskan Deposit</h3>
               <button
                 onClick={() => { setForfeitTarget(null); setForfeitNote(""); }}
                 disabled={forfeitMutation.isPending}
-                className="p-1 text-gray-400 hover:text-gray-600 rounded-lg"
+                className="p-1 text-[#a3a3a3] hover:text-[#525252] rounded-lg"
               >
                 <X size={18} />
               </button>
@@ -838,7 +838,7 @@ const DepositPage = () => {
             </div>
 
             <div className="mb-4">
-              <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+              <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
                 Alasan Hangus <span className="text-red-500">*</span>
               </label>
               <textarea
@@ -846,8 +846,8 @@ const DepositPage = () => {
                 onChange={(e) => { setForfeitNote(e.target.value); setForfeitNoteErr(""); }}
                 rows={3}
                 placeholder="Contoh: Kerusakan fasilitas kamar, biaya tambahan, dll."
-                className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-400 resize-none ${
-                  forfeitNoteErr ? "border-red-400 bg-red-50" : "border-gray-200"
+                className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none  focus:ring-red-400 resize-none ${
+                  forfeitNoteErr ? "border-red-400 bg-red-50" : "border-[#e5e5e5]"
                 }`}
               />
               {forfeitNoteErr && <p className="text-xs text-red-500 mt-1">{forfeitNoteErr}</p>}
@@ -857,7 +857,7 @@ const DepositPage = () => {
               <button
                 onClick={() => { setForfeitTarget(null); setForfeitNote(""); }}
                 disabled={forfeitMutation.isPending}
-                className="flex-1 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors disabled:opacity-50"
+                className="flex-1 py-2.5 text-sm font-medium text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-xl transition-colors disabled:opacity-50"
               >
                 Batal
               </button>

@@ -1,1 +1,201 @@
 @import "tailwindcss";
+
+/* ── Ollama Design System Tokens ─────────────────────────────────────────── */
+@theme {
+  /* Colors */
+  --color-canvas:          #ffffff;
+  --color-surface-soft:    #fafafa;
+  --color-surface-dark:    #171717;
+  --color-hairline:        #e5e5e5;
+  --color-hairline-strong: #d4d4d4;
+
+  --color-ink:             #000000;
+  --color-ink-deep:        #090909;
+  --color-charcoal:        #525252;
+  --color-body:            #737373;
+  --color-mute:            #a3a3a3;
+  --color-on-dark:         #ffffff;
+
+  --color-primary:         #000000;
+  --color-focus-ring:      rgba(59,130,246,0.5);
+
+  /* Semantic status (retained for functional UX) */
+  --color-status-green-bg:  #f0fdf4;
+  --color-status-green-txt: #15803d;
+  --color-status-red-bg:    #fef2f2;
+  --color-status-red-txt:   #b91c1c;
+  --color-status-amber-bg:  #fffbeb;
+  --color-status-amber-txt: #b45309;
+  --color-status-blue-bg:   #eff6ff;
+  --color-status-blue-txt:  #1d4ed8;
+  --color-status-gray-bg:   #f9fafb;
+  --color-status-gray-txt:  #6b7280;
+
+  /* Border radius */
+  --radius-none: 0px;
+  --radius-sm:   6px;
+  --radius-md:   8px;
+  --radius-lg:   12px;
+  --radius-full: 9999px;
+
+  /* Spacing */
+  --spacing-section: 88px;
+
+  /* Typography */
+  --font-display: "SF Pro Rounded", "Nunito", ui-rounded, system-ui, -apple-system, sans-serif;
+  --font-body:    ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono:    ui-monospace, "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+}
+
+/* ── Base ───────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-font-smoothing: antialiased; }
+
+body {
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+/* ── Focus ring ─────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-focus-ring);
+  outline-offset: 2px;
+}
+
+/* ── Scrollbar (minimal) ────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-hairline-strong); border-radius: 9999px; }
+
+/* ── Reusable UI patterns ────────────────────────────────────────────────── */
+
+/* Page heading */
+.page-title {
+  font-family: var(--font-display);
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1.2;
+  color: #000;
+}
+
+/* Section heading */
+.section-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #000;
+}
+
+/* Card (hairline border, 12px radius) */
+.card {
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+}
+
+/* Pill button - primary */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 20px;
+  border-radius: 9999px;
+  background: #000;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.15s;
+  cursor: pointer;
+  border: none;
+}
+.btn-primary:hover  { background: #090909; }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Pill button - secondary */
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 20px;
+  border-radius: 9999px;
+  background: #fff;
+  color: #000;
+  font-size: 14px;
+  font-weight: 500;
+  border: 1px solid #d4d4d4;
+  transition: border-color 0.15s;
+  cursor: pointer;
+}
+.btn-secondary:hover   { border-color: #a3a3a3; }
+.btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* Input - pill */
+.input-pill {
+  width: 100%;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 9999px;
+  border: 1px solid #e5e5e5;
+  background: #fff;
+  font-size: 16px;
+  color: #000;
+  transition: border-color 0.15s;
+  outline: none;
+}
+.input-pill::placeholder { color: #a3a3a3; }
+.input-pill:focus         { border-color: #000; }
+.input-pill:disabled      { opacity: 0.6; cursor: not-allowed; }
+
+/* Table */
+.table-header th {
+  padding: 10px 16px;
+  font-size: 12px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #737373;
+  background: #fafafa;
+  border-bottom: 1px solid #e5e5e5;
+  white-space: nowrap;
+  text-align: left;
+}
+.table-row td {
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #525252;
+  border-bottom: 1px solid #e5e5e5;
+}
+.table-row:hover td { background: #fafafa; }
+.table-row:last-child td { border-bottom: none; }
+
+/* Select */
+select.input-pill {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a3a3a3' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 36px;
+}
+
+/* Textarea */
+textarea.input-area {
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid #e5e5e5;
+  background: #fff;
+  font-size: 14px;
+  color: #000;
+  resize: none;
+  outline: none;
+  font-family: inherit;
+  transition: border-color 0.15s;
+}
+textarea.input-area:focus { border-color: #000; }

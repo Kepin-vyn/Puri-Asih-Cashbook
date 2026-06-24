@@ -25,7 +25,7 @@ const STATUS_OPTIONS = [
 
 // ── Status badge ──────────────────────────────────────────────────────────────
 const StatusBadge = ({ status }) => (
-  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ring-1 ${
+  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold  ${
     status === "active"
       ? "bg-emerald-100 text-emerald-700 ring-emerald-200"
       : "bg-red-100 text-red-700 ring-red-200"
@@ -39,7 +39,7 @@ const SkeletonRow = () => (
   <tr>
     {Array.from({ length: 5 }).map((_, i) => (
       <td key={i} className="px-4 py-3">
-        <div className="h-4 bg-gray-200 rounded animate-pulse" />
+        <div className="h-4 bg-[#e5e5e5] rounded animate-pulse" />
       </td>
     ))}
   </tr>
@@ -171,57 +171,57 @@ const WeeklyScheduleTab = () => {
   return (
     <div className="space-y-4">
       {/* Week picker */}
-      <div className="flex items-center justify-between bg-white rounded-2xl border border-gray-100 shadow-sm p-4">
+      <div className="flex items-center justify-between bg-white rounded-xl border border-[#e5e5e5]  p-4">
         <button
           onClick={prevWeek}
-          className="flex items-center gap-1 px-3 py-2 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+          className="flex items-center gap-1 px-3 py-2 text-sm text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-xl transition-colors"
         >
           <ChevronLeft size={16} /> Minggu Lalu
         </button>
         <div className="text-center">
-          <p className="text-sm font-bold text-gray-800">{weekLabel}</p>
-          <p className="text-xs text-gray-400 mt-0.5">Klik dropdown untuk ubah jadwal</p>
+          <p className="text-sm font-bold text-black">{weekLabel}</p>
+          <p className="text-xs text-[#a3a3a3] mt-0.5">Klik dropdown untuk ubah jadwal</p>
         </div>
         <button
           onClick={nextWeek}
-          className="flex items-center gap-1 px-3 py-2 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+          className="flex items-center gap-1 px-3 py-2 text-sm text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-xl transition-colors"
         >
           Minggu Depan <ChevronRight size={16} />
         </button>
       </div>
 
       {/* Tabel jadwal */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-x-auto">
+      <div className="bg-white rounded-xl border border-[#e5e5e5]  overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-50 text-left">
-              <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap sticky left-0 bg-gray-50">
+            <tr className="bg-[#fafafa] text-left">
+              <th className="px-4 py-3 text-xs font-semibold text-[#737373] uppercase tracking-wide whitespace-nowrap sticky left-0 bg-[#fafafa]">
                 Nama FO
               </th>
               {DAY_KEYS.map((_, i) => (
-                <th key={i} className="px-3 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap text-center">
+                <th key={i} className="px-3 py-3 text-xs font-semibold text-[#737373] uppercase tracking-wide whitespace-nowrap text-center">
                   {DAYS_ID[i]}<br />
-                  <span className="font-normal normal-case text-gray-400">
+                  <span className="font-normal normal-case text-[#a3a3a3]">
                     {formatDayHeader(addDays(weekStart, i))}
                   </span>
                 </th>
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-50">
+          <tbody className="divide-y divide-[#e5e5e5]">
             {isLoading ? (
               Array.from({ length: 4 }).map((_, i) => (
                 <tr key={i}>
                   {Array.from({ length: 8 }).map((_, j) => (
                     <td key={j} className="px-4 py-3">
-                      <div className="h-8 bg-gray-200 rounded animate-pulse" />
+                      <div className="h-8 bg-[#e5e5e5] rounded animate-pulse" />
                     </td>
                   ))}
                 </tr>
               ))
             ) : schedules.length === 0 ? (
               <tr>
-                <td colSpan={8} className="text-center py-12 text-gray-400 text-sm">
+                <td colSpan={8} className="text-center py-12 text-[#a3a3a3] text-sm">
                   Tidak ada staff FO aktif
                 </td>
               </tr>
@@ -229,8 +229,8 @@ const WeeklyScheduleTab = () => {
               schedules.map((row) => {
                 const hasLocalChange = !!localSchedule[row.user_id];
                 return (
-                  <tr key={row.user_id} className={`transition-colors ${hasLocalChange ? "bg-blue-50/40" : "hover:bg-gray-50"}`}>
-                    <td className="px-4 py-3 font-medium text-gray-800 whitespace-nowrap sticky left-0 bg-inherit">
+                  <tr key={row.user_id} className={`transition-colors ${hasLocalChange ? "bg-[#fafafa]/40" : "hover:bg-[#fafafa]"}`}>
+                    <td className="px-4 py-3 font-medium text-black whitespace-nowrap sticky left-0 bg-inherit">
                       {row.user_name}
                       {hasLocalChange && (
                         <span className="ml-2 text-xs text-blue-500 font-normal">• diubah</span>
@@ -256,16 +256,16 @@ const WeeklyScheduleTab = () => {
       {/* Tombol Simpan */}
       <div className="flex items-center justify-between">
         {hasChanges ? (
-          <p className="text-sm text-blue-600 font-medium">
+          <p className="text-sm text-black font-medium">
             {Object.keys(localSchedule).length} staff memiliki perubahan yang belum disimpan
           </p>
         ) : (
-          <p className="text-sm text-gray-400">Belum ada perubahan</p>
+          <p className="text-sm text-[#a3a3a3]">Belum ada perubahan</p>
         )}
         <button
           onClick={handleSave}
           disabled={!hasChanges || saving}
-          className="flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed shadow-sm"
+          className="flex items-center gap-2 px-5 py-2.5 bg-black hover:bg-[#090909] text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed "
         >
           {saving ? (
             <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Menyimpan...</>
@@ -484,12 +484,12 @@ const FoManagementPage = () => {
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Front Office Management</h1>
-          <p className="text-sm text-gray-500 mt-0.5">Kelola data dan jadwal staff Front Office</p>
+          <h1 className="text-2xl font-bold text-black">Front Office Management</h1>
+          <p className="text-sm text-[#737373] mt-0.5">Kelola data dan jadwal staff Front Office</p>
         </div>
         <button
           onClick={openAdd}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm"
+          className="flex items-center gap-2 bg-black hover:bg-[#090909] text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors "
           id="btn-tambah-fo"
         >
           <Plus size={16} />
@@ -500,30 +500,30 @@ const FoManagementPage = () => {
       {/* ── Summary bar ── */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "FO Staff",  value: summary.total_fo       ?? 0, icon: Users,      color: "bg-indigo-50 text-indigo-700" },
+          { label: "FO Staff",  value: summary.total_fo       ?? 0, icon: Users,      color: "bg-[#fafafa] text-black" },
           { label: "Active",    value: summary.total_active   ?? 0, icon: UserCheck,  color: "bg-emerald-50 text-emerald-700" },
           { label: "Inactive",  value: summary.total_inactive ?? 0, icon: UserMinus,  color: "bg-red-50 text-red-700" },
         ].map(({ label, value, icon: Icon, color }) => (
-          <div key={label} className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 flex items-center gap-3">
+          <div key={label} className="bg-white rounded-xl border border-[#e5e5e5]  p-4 flex items-center gap-3">
             <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>
               <Icon size={18} />
             </div>
             <div>
-              <p className="text-2xl font-bold text-gray-800">{value}</p>
-              <p className="text-xs text-gray-500">{label}</p>
+              <p className="text-2xl font-bold text-black">{value}</p>
+              <p className="text-xs text-[#737373]">{label}</p>
             </div>
           </div>
         ))}
       </div>
 
       {/* ── Tab Navigation ── */}
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-xl w-fit">
+      <div className="flex gap-1 bg-[#fafafa] p-1 rounded-xl w-fit">
         <button
           onClick={() => setActiveTab("staff")}
           className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
             activeTab === "staff"
-              ? "bg-white text-indigo-700 shadow-sm"
-              : "text-gray-500 hover:text-gray-700"
+              ? "bg-white text-black "
+              : "text-[#737373] hover:text-[#525252]"
           }`}
         >
           👥 Daftar Staff
@@ -532,8 +532,8 @@ const FoManagementPage = () => {
           onClick={() => setActiveTab("schedule")}
           className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
             activeTab === "schedule"
-              ? "bg-white text-indigo-700 shadow-sm"
-              : "text-gray-500 hover:text-gray-700"
+              ? "bg-white text-black "
+              : "text-[#737373] hover:text-[#525252]"
           }`}
         >
           📅 Jadwal Mingguan
@@ -553,12 +553,12 @@ const FoManagementPage = () => {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Cari nama atau email..."
-          className="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 w-56"
+          className="px-3 py-2 text-sm border border-[#e5e5e5] rounded-xl bg-white focus:outline-none  focus:ring-0 w-56"
         />
         <select
           value={filterStatus}
           onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
-          className="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          className="px-3 py-2 text-sm border border-[#e5e5e5] rounded-xl bg-white focus:outline-none  focus:ring-0"
         >
           <option value="">Semua Status</option>
           <option value="active">Active</option>
@@ -567,7 +567,7 @@ const FoManagementPage = () => {
         {(filterStatus || search) && (
           <button
             onClick={() => { setFilterStatus(""); setSearch(""); setPage(1); }}
-            className="text-xs text-gray-500 hover:text-gray-700 underline"
+            className="text-xs text-[#737373] hover:text-[#525252] underline"
           >
             Reset filter
           </button>
@@ -575,46 +575,46 @@ const FoManagementPage = () => {
       </div>
 
       {/* ── Tabel ── */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-        <div className="p-5 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-800">Front Office List</h2>
+      <div className="bg-white rounded-xl  border border-[#e5e5e5]">
+        <div className="p-5 border-b border-[#e5e5e5]">
+          <h2 className="font-semibold text-black">Front Office List</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 text-left">
+              <tr className="bg-[#fafafa] text-left">
                 {["No", "Nama", "Shift", "Status", "Aksi"].map((h) => (
-                  <th key={h} className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
+                  <th key={h} className="px-4 py-3 text-xs font-semibold text-[#737373] uppercase tracking-wide whitespace-nowrap">
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-[#e5e5e5]">
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-16 text-gray-400">
+                  <td colSpan={5} className="text-center py-16 text-[#a3a3a3]">
                     <Users size={40} className="mx-auto mb-3 opacity-20" />
                     <p className="text-sm">Tidak ada staff FO ditemukan</p>
-                    <button onClick={openAdd} className="mt-3 text-xs text-indigo-600 underline">
+                    <button onClick={openAdd} className="mt-3 text-xs text-black underline">
                       Tambah staff pertama
                     </button>
                   </td>
                 </tr>
               ) : (
                 filtered.map((user, idx) => (
-                  <tr key={user.id} className={`transition-colors ${user.status === "inactive" ? "bg-gray-50/60" : "hover:bg-gray-50"}`}>
-                    <td className="px-4 py-3 text-gray-500">
+                  <tr key={user.id} className={`transition-colors ${user.status === "inactive" ? "bg-[#fafafa]/60" : "hover:bg-[#fafafa]"}`}>
+                    <td className="px-4 py-3 text-[#737373]">
                       {(page - 1) * (meta?.pagination?.per_page ?? 20) + idx + 1}
                     </td>
                     <td className="px-4 py-3">
                       <div>
-                        <p className={`font-medium ${user.status === "inactive" ? "text-gray-400" : "text-gray-800"}`}>
+                        <p className={`font-medium ${user.status === "inactive" ? "text-[#a3a3a3]" : "text-black"}`}>
                           {user.name}
                         </p>
-                        <p className="text-xs text-gray-400">{user.email}</p>
+                        <p className="text-xs text-[#a3a3a3]">{user.email}</p>
                       </div>
                     </td>
                     <td className="px-4 py-3">
@@ -639,7 +639,7 @@ const FoManagementPage = () => {
                         {/* Edit */}
                         <button
                           onClick={() => openEdit(user)}
-                          className="p-1.5 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                          className="p-1.5 text-[#737373] hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
                           title="Edit"
                         >
                           <Pencil size={14} />
@@ -647,7 +647,7 @@ const FoManagementPage = () => {
                         {/* View */}
                         <button
                           onClick={() => setViewItem(user)}
-                          className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="p-1.5 text-[#737373] hover:text-black hover:bg-[#fafafa] rounded-lg transition-colors"
                           title="Lihat Detail"
                         >
                           <Eye size={14} />
@@ -656,7 +656,7 @@ const FoManagementPage = () => {
                         {user.status === "active" && (
                           <button
                             onClick={() => setDeactivateTarget(user)}
-                            className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-1.5 text-[#737373] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                             title="Nonaktifkan"
                           >
                             <UserX size={14} />
@@ -673,15 +673,15 @@ const FoManagementPage = () => {
 
         {/* Pagination */}
         {meta?.pagination?.last_page > 1 && (
-          <div className="flex items-center justify-between px-5 py-4 border-t border-gray-100">
-            <p className="text-xs text-gray-500">
+          <div className="flex items-center justify-between px-5 py-4 border-t border-[#e5e5e5]">
+            <p className="text-xs text-[#737373]">
               Menampilkan {filtered.length} dari {meta.pagination.total} data
             </p>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setPage((p) => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1.5 text-xs text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg disabled:opacity-40 transition-colors"
+                className="px-3 py-1.5 text-xs text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-lg disabled:opacity-40 transition-colors"
               >
                 ← Prev
               </button>
@@ -694,13 +694,13 @@ const FoManagementPage = () => {
                 }, [])
                 .map((p, i) =>
                   p === "..." ? (
-                    <span key={`e-${i}`} className="px-2 text-gray-400 text-xs">…</span>
+                    <span key={`e-${i}`} className="px-2 text-[#a3a3a3] text-xs">…</span>
                   ) : (
                     <button
                       key={p}
                       onClick={() => setPage(p)}
                       className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
-                        page === p ? "bg-indigo-600 text-white" : "text-gray-600 bg-gray-100 hover:bg-gray-200"
+                        page === p ? "bg-black text-white" : "text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5]"
                       }`}
                     >
                       {p}
@@ -710,7 +710,7 @@ const FoManagementPage = () => {
               <button
                 onClick={() => setPage((p) => Math.min(meta.pagination.last_page, p + 1))}
                 disabled={page === meta.pagination.last_page}
-                className="px-3 py-1.5 text-xs text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg disabled:opacity-40 transition-colors"
+                className="px-3 py-1.5 text-xs text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-lg disabled:opacity-40 transition-colors"
               >
                 Next →
               </button>
@@ -723,12 +723,12 @@ const FoManagementPage = () => {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={!isSaving ? closeModal : undefined} />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-5 border-b border-gray-100 sticky top-0 bg-white z-10">
-              <h3 className="font-bold text-gray-800">
+          <div className="relative bg-white rounded-xl  w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-[#e5e5e5] sticky top-0 bg-white z-10">
+              <h3 className="font-bold text-black">
                 {editItem ? "Edit Staff FO" : "Tambah Staff FO"}
               </h3>
-              <button onClick={closeModal} disabled={isSaving} className="p-1 text-gray-400 hover:text-gray-600 rounded-lg">
+              <button onClick={closeModal} disabled={isSaving} className="p-1 text-[#a3a3a3] hover:text-[#525252] rounded-lg">
                 <X size={18} />
               </button>
             </div>
@@ -737,7 +737,7 @@ const FoManagementPage = () => {
 
               {/* Nama */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
                   Nama <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -745,8 +745,8 @@ const FoManagementPage = () => {
                   value={form.name}
                   onChange={(e) => setField("name", e.target.value)}
                   placeholder="Nama lengkap staff"
-                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                    errors.name ? "border-red-400 bg-red-50" : "border-gray-200"
+                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none  focus:ring-0 ${
+                    errors.name ? "border-red-400 bg-red-50" : "border-[#e5e5e5]"
                   }`}
                 />
                 {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
@@ -754,7 +754,7 @@ const FoManagementPage = () => {
 
               {/* Email */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
                   Email <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -762,8 +762,8 @@ const FoManagementPage = () => {
                   value={form.email}
                   onChange={(e) => setField("email", e.target.value)}
                   placeholder="email@puriasih.com"
-                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                    errors.email ? "border-red-400 bg-red-50" : "border-gray-200"
+                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none  focus:ring-0 ${
+                    errors.email ? "border-red-400 bg-red-50" : "border-[#e5e5e5]"
                   }`}
                 />
                 {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
@@ -771,17 +771,17 @@ const FoManagementPage = () => {
 
               {/* Password */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
                   Password {!editItem && <span className="text-red-500">*</span>}
-                  {editItem && <span className="text-gray-400 font-normal normal-case">(kosongkan jika tidak ingin mengubah)</span>}
+                  {editItem && <span className="text-[#a3a3a3] font-normal normal-case">(kosongkan jika tidak ingin mengubah)</span>}
                 </label>
                 <input
                   type="password"
                   value={form.password}
                   onChange={(e) => setField("password", e.target.value)}
                   placeholder={editItem ? "Biarkan kosong jika tidak diubah" : "Min. 6 karakter"}
-                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                    errors.password ? "border-red-400 bg-red-50" : "border-gray-200"
+                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none  focus:ring-0 ${
+                    errors.password ? "border-red-400 bg-red-50" : "border-[#e5e5e5]"
                   }`}
                 />
                 {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
@@ -789,7 +789,7 @@ const FoManagementPage = () => {
 
               {/* Konfirmasi Password */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
                   Konfirmasi Password {!editItem && <span className="text-red-500">*</span>}
                 </label>
                 <input
@@ -797,8 +797,8 @@ const FoManagementPage = () => {
                   value={form.password_confirmation}
                   onChange={(e) => setField("password_confirmation", e.target.value)}
                   placeholder="Ulangi password"
-                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                    errors.password_confirmation ? "border-red-400 bg-red-50" : "border-gray-200"
+                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none  focus:ring-0 ${
+                    errors.password_confirmation ? "border-red-400 bg-red-50" : "border-[#e5e5e5]"
                   }`}
                 />
                 {errors.password_confirmation && (
@@ -808,14 +808,14 @@ const FoManagementPage = () => {
 
               {/* Shift */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
                   Shift <span className="text-red-500">*</span>
                 </label>
                 <select
                   value={form.shift}
                   onChange={(e) => setField("shift", e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
-                    errors.shift ? "border-red-400 bg-red-50" : "border-gray-200"
+                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none  focus:ring-0 ${
+                    errors.shift ? "border-red-400 bg-red-50" : "border-[#e5e5e5]"
                   }`}
                 >
                   {SHIFT_OPTIONS.map((s) => (
@@ -827,12 +827,12 @@ const FoManagementPage = () => {
 
               {/* Role (readonly) */}
               <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Role</label>
+                <label className="block text-xs font-semibold text-[#737373] mb-1 uppercase tracking-wide">Role</label>
                 <input
                   type="text"
                   value="Front Office"
                   readOnly
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed"
+                  className="w-full px-3 py-2 bg-[#fafafa] border border-[#e5e5e5] rounded-xl text-sm text-[#737373] cursor-not-allowed"
                 />
               </div>
 
@@ -842,14 +842,14 @@ const FoManagementPage = () => {
                   type="button"
                   onClick={closeModal}
                   disabled={isSaving}
-                  className="flex-1 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors disabled:opacity-50"
+                  className="flex-1 py-2.5 text-sm font-medium text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-xl transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="flex-1 py-2.5 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 text-sm font-medium text-white bg-black hover:bg-[#090909] rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                   id="btn-save-fo"
                 >
                   {isSaving ? (
@@ -868,28 +868,28 @@ const FoManagementPage = () => {
       {viewItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setViewItem(null)} />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between p-5 border-b border-gray-100 sticky top-0 bg-white z-10">
-              <h3 className="font-bold text-gray-800">Detail Staff FO</h3>
-              <button onClick={() => setViewItem(null)} className="p-1 text-gray-400 hover:text-gray-600 rounded-lg">
+          <div className="relative bg-white rounded-xl  w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-[#e5e5e5] sticky top-0 bg-white z-10">
+              <h3 className="font-bold text-black">Detail Staff FO</h3>
+              <button onClick={() => setViewItem(null)} className="p-1 text-[#a3a3a3] hover:text-[#525252] rounded-lg">
                 <X size={18} />
               </button>
             </div>
 
             {detailLoading ? (
-              <div className="p-8 text-center text-gray-400">
+              <div className="p-8 text-center text-[#a3a3a3]">
                 <span className="w-6 h-6 border-2 border-gray-300 border-t-indigo-500 rounded-full animate-spin inline-block" />
               </div>
             ) : detail ? (
               <div className="p-5 space-y-4">
                 {/* Avatar + nama */}
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl">
+                  <div className="w-14 h-14 rounded-xl bg-indigo-100 flex items-center justify-center text-black font-bold text-xl">
                     {detail.user?.name?.charAt(0).toUpperCase() ?? "?"}
                   </div>
                   <div>
-                    <p className="font-bold text-gray-800 text-lg">{detail.user?.name}</p>
-                    <p className="text-sm text-gray-500">{detail.user?.email}</p>
+                    <p className="font-bold text-black text-lg">{detail.user?.name}</p>
+                    <p className="text-sm text-[#737373]">{detail.user?.email}</p>
                     <StatusBadge status={detail.user?.status} />
                   </div>
                 </div>
@@ -902,15 +902,15 @@ const FoManagementPage = () => {
                     ["Bergabung",     detail.user?.created_at ?? "-"],
                   ].map(([label, val]) => (
                     <div key={label} className="flex justify-between py-1.5 border-b border-gray-50">
-                      <span className="text-gray-500">{label}</span>
-                      <span className="font-medium text-gray-800">{val}</span>
+                      <span className="text-[#737373]">{label}</span>
+                      <span className="font-medium text-black">{val}</span>
                     </div>
                   ))}
                 </div>
 
                 {/* Statistik */}
                 <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Statistik</p>
+                  <p className="text-xs font-semibold text-[#737373] uppercase tracking-wide mb-2">Statistik</p>
                   <div className="grid grid-cols-2 gap-2">
                     {[
                       ["Total Shift",       detail.stats?.total_shift ?? 0],
@@ -918,22 +918,22 @@ const FoManagementPage = () => {
                       ["Total Pengeluaran", detail.stats?.total_expenses ?? 0],
                       ["Total Reservasi",   detail.stats?.total_reservations ?? 0],
                     ].map(([label, val]) => (
-                      <div key={label} className="bg-gray-50 rounded-xl p-3 text-center">
-                        <p className="text-xl font-bold text-gray-800">{val}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">{label}</p>
+                      <div key={label} className="bg-[#fafafa] rounded-xl p-3 text-center">
+                        <p className="text-xl font-bold text-black">{val}</p>
+                        <p className="text-xs text-[#737373] mt-0.5">{label}</p>
                       </div>
                     ))}
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="p-8 text-center text-gray-400 text-sm">Gagal memuat detail.</div>
+              <div className="p-8 text-center text-[#a3a3a3] text-sm">Gagal memuat detail.</div>
             )}
 
-            <div className="p-5 border-t border-gray-100">
+            <div className="p-5 border-t border-[#e5e5e5]">
               <button
                 onClick={() => setViewItem(null)}
-                className="w-full py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+                className="w-full py-2.5 text-sm font-medium text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-xl transition-colors"
               >
                 Tutup
               </button>

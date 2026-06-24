@@ -34,24 +34,24 @@ const defaultPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStar
 const SummaryCard = ({ icon: Icon, label, value, count, countLabel, color }) => {
   const colorMap = {
     green:  { bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700", icon: "bg-emerald-100 text-emerald-600" },
-    blue:   { bg: "bg-blue-50",    border: "border-blue-200",    text: "text-blue-700",    icon: "bg-blue-100 text-blue-600" },
+    blue:   { bg: "bg-[#fafafa]",    border: "border-[#e5e5e5]",    text: "text-black",    icon: "bg-blue-100 text-black" },
     red:    { bg: "bg-red-50",     border: "border-red-200",     text: "text-red-700",     icon: "bg-red-100 text-red-600" },
-    auto:   { bg: "bg-white",      border: "border-gray-200",    text: "text-gray-800",    icon: "bg-gray-100 text-gray-600" },
+    auto:   { bg: "bg-white",      border: "border-[#e5e5e5]",    text: "text-black",    icon: "bg-[#fafafa] text-[#525252]" },
   };
   const c = colorMap[color] ?? colorMap.auto;
   return (
-    <div className={`rounded-2xl p-5 border ${c.bg} ${c.border}`}>
+    <div className={`rounded-xl p-5 border ${c.bg} ${c.border}`}>
       <div className="flex items-start justify-between mb-3">
         <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${c.icon}`}>
           <Icon size={18} />
         </div>
         {count != null && (
-          <span className="text-xs font-semibold text-gray-400">
+          <span className="text-xs font-semibold text-[#a3a3a3]">
             {count} {countLabel}
           </span>
         )}
       </div>
-      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">{label}</p>
+      <p className="text-xs font-semibold text-[#737373] uppercase tracking-wide mb-1">{label}</p>
       <p className={`text-xl font-extrabold ${c.text}`}>{formatRp(value)}</p>
     </div>
   );
@@ -69,14 +69,14 @@ const DrillDownModal = ({ date, params, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white w-full sm:max-w-2xl rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[85vh] flex flex-col">
+      <div className="relative bg-white w-full sm:max-w-2xl rounded-t-2xl sm:rounded-xl  max-h-[85vh] flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-100 flex-shrink-0">
+        <div className="flex items-center justify-between p-5 border-b border-[#e5e5e5] flex-shrink-0">
           <div>
-            <h3 className="font-bold text-gray-800">Detail Transaksi</h3>
-            <p className="text-sm text-gray-500 mt-0.5">{formatDate(date)}</p>
+            <h3 className="font-bold text-black">Detail Transaksi</h3>
+            <p className="text-sm text-[#737373] mt-0.5">{formatDate(date)}</p>
           </div>
-          <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg transition-colors">
+          <button onClick={onClose} className="p-1.5 text-[#a3a3a3] hover:text-[#525252] rounded-lg transition-colors">
             <X size={18} />
           </button>
         </div>
@@ -86,7 +86,7 @@ const DrillDownModal = ({ date, params, onClose }) => {
           {isLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse" />
+                <div key={i} className="h-16 bg-[#fafafa] rounded-xl animate-pulse" />
               ))}
             </div>
           ) : (
@@ -94,13 +94,13 @@ const DrillDownModal = ({ date, params, onClose }) => {
               {/* KAS */}
               {(detail.kas ?? []).length > 0 && (
                 <div>
-                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">KAS Harian</h4>
+                  <h4 className="text-xs font-bold text-[#737373] uppercase tracking-wide mb-2">KAS Harian</h4>
                   <div className="space-y-2">
                     {detail.kas.map((t) => (
                       <div key={t.id} className="flex items-center justify-between bg-emerald-50 rounded-xl px-4 py-2.5">
                         <div>
-                          <p className="text-sm font-semibold text-gray-800">{t.guest_name}</p>
-                          <p className="text-xs text-gray-500">Kamar {t.room_number} · {t.transaction_type}</p>
+                          <p className="text-sm font-semibold text-black">{t.guest_name}</p>
+                          <p className="text-xs text-[#737373]">Kamar {t.room_number} · {t.transaction_type}</p>
                         </div>
                         <p className="text-sm font-bold text-emerald-700">{formatRp(t.amount)}</p>
                       </div>
@@ -118,20 +118,20 @@ const DrillDownModal = ({ date, params, onClose }) => {
               {/* Reservasi */}
               {(detail.reservations ?? []).length > 0 && (
                 <div>
-                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Reservasi OTT</h4>
+                  <h4 className="text-xs font-bold text-[#737373] uppercase tracking-wide mb-2">Reservasi OTT</h4>
                   <div className="space-y-2">
                     {detail.reservations.map((r) => (
-                      <div key={r.id} className="flex items-center justify-between bg-blue-50 rounded-xl px-4 py-2.5">
+                      <div key={r.id} className="flex items-center justify-between bg-[#fafafa] rounded-xl px-4 py-2.5">
                         <div>
-                          <p className="text-sm font-semibold text-gray-800">{r.guest_name}</p>
-                          <p className="text-xs text-gray-500">Kamar {r.room_number} · {r.invoice_number ?? "-"}</p>
+                          <p className="text-sm font-semibold text-black">{r.guest_name}</p>
+                          <p className="text-xs text-[#737373]">Kamar {r.room_number} · {r.invoice_number ?? "-"}</p>
                         </div>
-                        <p className="text-sm font-bold text-blue-700">{formatRp(r.down_payment ?? r.room_price ?? 0)}</p>
+                        <p className="text-sm font-bold text-black">{formatRp(r.down_payment ?? r.room_price ?? 0)}</p>
                       </div>
                     ))}
                     <div className="flex justify-between px-4 py-2 bg-blue-100 rounded-xl">
-                      <span className="text-xs font-bold text-blue-700">Subtotal Reservasi</span>
-                      <span className="text-xs font-bold text-blue-700">
+                      <span className="text-xs font-bold text-black">Subtotal Reservasi</span>
+                      <span className="text-xs font-bold text-black">
                         {formatRp(detail.reservations.reduce((s, r) => s + Number(r.down_payment ?? r.room_price ?? 0), 0))}
                       </span>
                     </div>
@@ -142,13 +142,13 @@ const DrillDownModal = ({ date, params, onClose }) => {
               {/* Pengeluaran */}
               {(detail.expenses ?? []).length > 0 && (
                 <div>
-                  <h4 className="text-xs font-bold text-gray-500 uppercase tracking-wide mb-2">Pengeluaran</h4>
+                  <h4 className="text-xs font-bold text-[#737373] uppercase tracking-wide mb-2">Pengeluaran</h4>
                   <div className="space-y-2">
                     {detail.expenses.map((e) => (
                       <div key={e.id} className="flex items-center justify-between bg-red-50 rounded-xl px-4 py-2.5">
                         <div>
-                          <p className="text-sm font-semibold text-gray-800">{e.description}</p>
-                          <p className="text-xs text-gray-500">{e.user?.name ?? "-"}</p>
+                          <p className="text-sm font-semibold text-black">{e.description}</p>
+                          <p className="text-xs text-[#737373]">{e.user?.name ?? "-"}</p>
                         </div>
                         <p className="text-sm font-bold text-red-700">{formatRp(e.total_price)}</p>
                       </div>
@@ -165,7 +165,7 @@ const DrillDownModal = ({ date, params, onClose }) => {
 
               {/* Empty */}
               {!detail.kas?.length && !detail.reservations?.length && !detail.expenses?.length && (
-                <p className="text-center text-gray-400 text-sm py-8">Tidak ada transaksi pada tanggal ini.</p>
+                <p className="text-center text-[#a3a3a3] text-sm py-8">Tidak ada transaksi pada tanggal ini.</p>
               )}
             </>
           )}
@@ -257,7 +257,7 @@ const MonthlyReportPage = () => {
       render: (r) => (
         <button
           onClick={(e) => { e.stopPropagation(); setDrillDate(r.created_at?.split("T")[0]); }}
-          className="text-blue-600 hover:underline font-medium text-left"
+          className="text-black hover:underline font-medium text-left"
         >
           {formatDate(r.created_at)}
         </button>
@@ -266,7 +266,7 @@ const MonthlyReportPage = () => {
     {
       key: "shift_type", label: "Shift",
       render: (r) => (
-        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-black">
           {SHIFT_LABEL[r.shift?.type ?? r.shift_type] ?? "-"}
         </span>
       ),
@@ -289,7 +289,7 @@ const MonthlyReportPage = () => {
     },
     {
       key: "amount", label: "Jumlah", sortable: true,
-      className: "text-right font-semibold text-gray-800",
+      className: "text-right font-semibold text-black",
       render: (r) => formatRp(r.amount),
     },
   ];
@@ -300,7 +300,7 @@ const MonthlyReportPage = () => {
       render: (r) => (
         <button
           onClick={(e) => { e.stopPropagation(); setDrillDate(r.created_at?.split("T")[0]); }}
-          className="text-blue-600 hover:underline font-medium text-left"
+          className="text-black hover:underline font-medium text-left"
         >
           {formatDate(r.created_at)}
         </button>
@@ -318,7 +318,7 @@ const MonthlyReportPage = () => {
     },
     {
       key: "down_payment", label: "Total", sortable: true,
-      className: "text-right font-semibold text-gray-800",
+      className: "text-right font-semibold text-black",
       render: (r) => formatRp(r.down_payment ?? r.room_price ?? 0),
     },
     {
@@ -326,12 +326,12 @@ const MonthlyReportPage = () => {
       render: (r) => {
         const map = {
           checkin:  "bg-emerald-100 text-emerald-700",
-          checkout: "bg-gray-100 text-gray-600",
+          checkout: "bg-[#fafafa] text-[#525252]",
           cancel:   "bg-red-100 text-red-700",
           noshow:   "bg-amber-100 text-amber-700",
         };
         return (
-          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${map[r.status] ?? "bg-gray-100 text-gray-500"}`}>
+          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${map[r.status] ?? "bg-[#fafafa] text-[#737373]"}`}>
             {r.status ?? "-"}
           </span>
         );
@@ -345,7 +345,7 @@ const MonthlyReportPage = () => {
       render: (r) => (
         <button
           onClick={(e) => { e.stopPropagation(); setDrillDate(r.created_at?.split("T")[0]); }}
-          className="text-blue-600 hover:underline font-medium text-left"
+          className="text-black hover:underline font-medium text-left"
         >
           {formatDate(r.created_at)}
         </button>
@@ -355,7 +355,7 @@ const MonthlyReportPage = () => {
     { key: "description", label: "Keterangan",  sortable: true },
     {
       key: "total_price", label: "Total", sortable: true,
-      className: "text-right font-semibold text-gray-800",
+      className: "text-right font-semibold text-black",
       render: (r) => formatRp(r.total_price),
     },
     {
@@ -363,11 +363,11 @@ const MonthlyReportPage = () => {
       render: (r) => {
         const map = {
           auto_approved: "bg-emerald-100 text-emerald-700",
-          approved:      "bg-blue-100 text-blue-700",
+          approved:      "bg-blue-100 text-black",
         };
         const labels = { auto_approved: "Auto Approved", approved: "Disetujui" };
         return (
-          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${map[r.status] ?? "bg-gray-100 text-gray-500"}`}>
+          <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${map[r.status] ?? "bg-[#fafafa] text-[#737373]"}`}>
             {labels[r.status] ?? r.status ?? "-"}
           </span>
         );
@@ -417,28 +417,28 @@ const MonthlyReportPage = () => {
       )}
 
       {/* ── Section 1: Filter Bar ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+      <div className="bg-white rounded-xl border border-[#e5e5e5]  p-5">
         <div className="flex flex-col sm:flex-row sm:items-end gap-4">
           <div className="flex-1">
-            <h1 className="text-2xl font-bold text-gray-800 mb-1">Monthly Report</h1>
-            <p className="text-sm text-gray-500">Laporan keuangan bulanan Hotel Puri Asih</p>
+            <h1 className="text-2xl font-bold text-black mb-1">Monthly Report</h1>
+            <p className="text-sm text-[#737373]">Laporan keuangan bulanan Hotel Puri Asih</p>
           </div>
 
           {/* Filters */}
           <div className="flex flex-wrap items-end gap-3">
             {/* Month + Year */}
             <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Periode</label>
+              <label className="block text-xs font-semibold text-[#737373] mb-1.5 uppercase tracking-wide">Periode</label>
               <MonthYearPicker value={period} onChange={setPeriod} />
             </div>
 
             {/* Staff filter */}
             <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Staff FO</label>
+              <label className="block text-xs font-semibold text-[#737373] mb-1.5 uppercase tracking-wide">Staff FO</label>
               <select
                 value={staffId}
                 onChange={(e) => setStaffId(e.target.value)}
-                className="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-2 text-sm border border-[#e5e5e5] rounded-xl bg-white focus:outline-none  focus:ring-0"
               >
                 <option value="">All Staff</option>
                 {foUsers.map((u) => (
@@ -451,14 +451,14 @@ const MonthlyReportPage = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={handleApply}
-                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm"
+                className="px-4 py-2 bg-black hover:bg-[#090909] text-white text-sm font-semibold rounded-xl transition-colors "
               >
                 Tampilkan
               </button>
               <button
                 onClick={handleExport}
                 disabled={exporting}
-                className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-semibold rounded-xl transition-colors shadow-sm disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-white border border-[#e5e5e5] hover:bg-[#fafafa] text-[#525252] text-sm font-semibold rounded-xl transition-colors  disabled:opacity-50"
               >
                 <Download size={14} />
                 {exporting ? "Mengunduh..." : "Export PDF"}
@@ -471,9 +471,9 @@ const MonthlyReportPage = () => {
       {/* ── Section 2: Summary Cards ── */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-bold text-gray-700">Ringkasan — {periodLabel}</h2>
+          <h2 className="text-base font-bold text-[#525252]">Ringkasan — {periodLabel}</h2>
           {appliedStaff && (
-            <span className="text-xs text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full font-semibold">
+            <span className="text-xs text-black bg-[#fafafa] px-2.5 py-1 rounded-full font-semibold">
               Filter: {foUsers.find((u) => String(u.id) === appliedStaff)?.name ?? "Staff"}
             </span>
           )}
@@ -482,7 +482,7 @@ const MonthlyReportPage = () => {
         {summaryLoading ? (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-28 bg-gray-100 rounded-2xl animate-pulse" />
+              <div key={i} className="h-28 bg-[#fafafa] rounded-xl animate-pulse" />
             ))}
           </div>
         ) : (
@@ -513,7 +513,7 @@ const MonthlyReportPage = () => {
                 color="red"
               />
               {/* Saldo Bersih — hijau jika positif, merah jika negatif */}
-              <div className={`rounded-2xl p-5 border ${
+              <div className={`rounded-xl p-5 border ${
                 isPositive
                   ? "bg-emerald-600 border-emerald-600 text-white"
                   : "bg-red-600 border-red-600 text-white"
@@ -530,7 +530,7 @@ const MonthlyReportPage = () => {
             </div>
 
             {/* Catatan deposit */}
-            <p className="text-xs text-gray-400 mt-2 italic">
+            <p className="text-xs text-[#a3a3a3] mt-2 italic">
               * Deposit tidak termasuk dalam laporan keuangan
             </p>
           </>
@@ -538,27 +538,27 @@ const MonthlyReportPage = () => {
       </div>
 
       {/* ── Section 3: Tab Detail ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
-        <div className="p-5 border-b border-gray-100">
-          <h2 className="font-bold text-gray-800">Detail Transaksi</h2>
-          <p className="text-xs text-gray-400 mt-0.5">Klik tanggal untuk melihat detail transaksi hari tersebut</p>
+      <div className="bg-white rounded-xl border border-[#e5e5e5] ">
+        <div className="p-5 border-b border-[#e5e5e5]">
+          <h2 className="font-bold text-black">Detail Transaksi</h2>
+          <p className="text-xs text-[#a3a3a3] mt-0.5">Klik tanggal untuk melihat detail transaksi hari tersebut</p>
         </div>
 
         {/* Tabs */}
-        <div className="flex border-b border-gray-100 px-5 gap-1">
+        <div className="flex border-b border-[#e5e5e5] px-5 gap-1">
           {TABS.map((tab) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={`px-4 py-2.5 text-sm font-semibold rounded-t-lg transition-colors ${
                 activeTab === tab.key
-                  ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50/50"
-                  : "text-gray-500 hover:text-gray-700"
+                  ? "text-black border-b-2 border-black bg-[#fafafa]/50"
+                  : "text-[#737373] hover:text-[#525252]"
               }`}
             >
               {tab.label}
               {tab.count > 0 && (
-                <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-xs font-bold bg-gray-200 text-gray-600">
+                <span className="ml-1.5 px-1.5 py-0.5 rounded-full text-xs font-bold bg-[#e5e5e5] text-[#525252]">
                   {tab.count}
                 </span>
               )}
@@ -596,7 +596,7 @@ const MonthlyReportPage = () => {
                   <SubtotalRow
                     label="Subtotal Reservasi"
                     value={reservationSubtotal}
-                    color="bg-blue-50 text-blue-700"
+                    color="bg-[#fafafa] text-black"
                   />
                 )
               }

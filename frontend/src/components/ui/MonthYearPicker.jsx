@@ -43,9 +43,9 @@ const MonthYearPicker = ({ value = "", onChange, disabled = false }) => {
     onChange(`${e.target.value}-${month}`);
   };
 
-  const selectClass = `px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white
-    focus:outline-none focus:ring-2 focus:ring-blue-500
-    disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed`;
+  const selectClass = `px-3 py-2 text-sm border border-[#e5e5e5] rounded-xl bg-white
+    focus:outline-none  focus:ring-0
+    disabled:bg-[#fafafa] disabled:text-[#a3a3a3] disabled:cursor-not-allowed`;
 
   return (
     <div className="flex items-center gap-2">
