@@ -135,6 +135,7 @@ class DepositController extends BaseApiController
      */
     public function update(StoreDepositRequest $request, string $id): JsonResponse
     {
+        $user    = Auth::user();
         $deposit = Deposit::find($id);
 
         if (! $deposit) {
@@ -143,6 +144,17 @@ class DepositController extends BaseApiController
 
         if ($deposit->status !== 'active') {
             return $this->errorResponse('Hanya deposit berstatus Aktif yang dapat diubah.', null, 400);
+        }
+
+        // FO hanya bisa edit deposit dari shift sendiri
+        if ($user->role === 'fo') {
+            $activeShift = Shift::where('user_id', $user->id)
+                                ->where('status', 'active')
+                                ->first();
+
+            if (! $activeShift || $deposit->shift_id !== $activeShift->id) {
+                return $this->forbiddenResponse('Anda tidak dapat mengubah deposit ini.');
+            }
         }
 
         $deposit->update($request->validated());
@@ -159,13 +171,27 @@ class DepositController extends BaseApiController
      */
     public function destroy(string $id): JsonResponse
     {
+        $user    = Auth::user();
         $deposit = Deposit::find($id);
 
         if (! $deposit) {
             return $this->notFoundResponse('Data deposit tidak ditemukan.');
         }
 
+        // FO hanya bisa hapus deposit dari shift sendiri
+        if ($user->role === 'fo') {
+            $activeShift = Shift::where('user_id', $user->id)
+                                ->where('status', 'active')
+                                ->first();
+
+            if (! $activeShift || $deposit->shift_id !== $activeShift->id) {
+                return $this->forbiddenResponse('Anda tidak dapat menghapus deposit ini.');
+            }
+        }
+
         $deposit->delete();
+
+        $this->activityLog->log('deposit', 'delete', 'Menghapus deposit Rp ' . number_format($deposit->amount, 0, ',', '.') . ' tamu "' . $deposit->guest_name . '"', ['amount' => (float)$deposit->amount, 'guest' => $deposit->guest_name]);
 
         return $this->successResponse(null, 'Data deposit berhasil dihapus.');
     }
@@ -175,6 +201,7 @@ class DepositController extends BaseApiController
      */
     public function refund(string $id): JsonResponse
     {
+        $user    = Auth::user();
         $deposit = Deposit::find($id);
 
         if (! $deposit) {
@@ -187,6 +214,17 @@ class DepositController extends BaseApiController
                 null,
                 400
             );
+        }
+
+        // FO hanya bisa refund deposit dari shift sendiri
+        if ($user->role === 'fo') {
+            $activeShift = Shift::where('user_id', $user->id)
+                                ->where('status', 'active')
+                                ->first();
+
+            if (! $activeShift || $deposit->shift_id !== $activeShift->id) {
+                return $this->forbiddenResponse('Anda tidak dapat melakukan refund deposit ini.');
+            }
         }
 
         // PENTING: Refund hanya mengubah status, tidak mempengaruhi kas
@@ -206,6 +244,7 @@ class DepositController extends BaseApiController
      */
     public function forfeit(ForfeitDepositRequest $request, string $id): JsonResponse
     {
+        $user    = Auth::user();
         $deposit = Deposit::find($id);
 
         if (! $deposit) {
@@ -218,6 +257,17 @@ class DepositController extends BaseApiController
                 null,
                 400
             );
+        }
+
+        // FO hanya bisa hanguskan deposit dari shift sendiri
+        if ($user->role === 'fo') {
+            $activeShift = Shift::where('user_id', $user->id)
+                                ->where('status', 'active')
+                                ->first();
+
+            if (! $activeShift || $deposit->shift_id !== $activeShift->id) {
+                return $this->forbiddenResponse('Anda tidak dapat menghanguskan deposit ini.');
+            }
         }
 
         // Update status deposit ke forfeited
