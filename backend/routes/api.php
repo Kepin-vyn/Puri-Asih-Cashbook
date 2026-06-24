@@ -23,7 +23,7 @@ Route::prefix('v1')->group(function () {
     // ============================================
     // PUBLIC ROUTES — Tanpa Autentikasi
     // ============================================
-    Route::post('/auth/login', [AuthController::class, 'login']);
+    Route::post('/auth/login', [AuthController::class, 'login'])->middleware('throttle:login');
 
 
     // ============================================
