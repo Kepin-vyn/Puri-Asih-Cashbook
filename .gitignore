@@ -27,3 +27,8 @@ storage/logs/
 npm-debug.log
 yarn-error.log
 yarn-debug.log
+
+# Documentation / planning files
+DESIGN.md
+guideline.md
+planning.md
