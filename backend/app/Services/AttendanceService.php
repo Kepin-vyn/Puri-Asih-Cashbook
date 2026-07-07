@@ -19,9 +19,90 @@ class AttendanceService
     ];
 
     /**
+     * Window check-in: [start_hour, end_hour].
+     * Shift malam melewati tengah malam (22:00 → 08:00).
+     */
+    private const SHIFT_WINDOWS = [
+        'pagi'  => ['start' => 8,  'end' => 15],
+        'siang' => ['start' => 15, 'end' => 22],
+        'malam' => ['start' => 22, 'end' => 8],
+    ];
+
+    /**
      * Toleransi keterlambatan dalam menit.
      */
     private const LATE_TOLERANCE_MINUTES = 15;
+
+    /**
+     * Toleransi check-in lebih awal dalam menit.
+     */
+    private const EARLY_CHECKIN_MINUTES = 30;
+
+    /**
+     * Resolve shift hari ini untuk user.
+     * Prioritas: jadwal mingguan → fallback ke shift statis user.
+     *
+     * @return string 'pagi'|'siang'|'malam'|'off'
+     */
+    public function resolveShift(int $userId, ?string $userShift = null): string
+    {
+        $weekStart = Carbon::now()->startOfWeek(Carbon::MONDAY)->toDateString();
+        $schedule  = ShiftSchedule::where('user_id', $userId)
+            ->where('week_start_date', $weekStart)
+            ->first();
+
+        $dayShift = $schedule?->today_shift; // accessor dari ShiftSchedule model
+
+        if ($dayShift && $dayShift !== 'off') {
+            return $dayShift;
+        }
+
+        if ($dayShift === 'off') {
+            return 'off';
+        }
+
+        return $userShift ?? 'off';
+    }
+
+    /**
+     * Cek apakah waktu saat ini berada dalam window check-in shift.
+     * Toleransi: 30 menit sebelum shift dimulai, sampai shift berakhir.
+     *
+     * @param  string $shiftType pagi|siang|malam
+     * @param  Carbon $now       Waktu saat ini
+     * @return bool
+     */
+    public function isWithinShiftWindow(string $shiftType, Carbon $now): bool
+    {
+        $window = self::SHIFT_WINDOWS[$shiftType] ?? null;
+        if (!$window) return false;
+
+        $currentMinutes = $now->hour * 60 + $now->minute;
+        $startMinutes   = $window['start'] * 60;
+        $endMinutes     = $window['end'] * 60;
+        $earlyMinutes   = $startMinutes - self::EARLY_CHECKIN_MINUTES;
+
+        if ($startMinutes < $endMinutes) {
+            // Shift normal (pagi: 480–900, siang: 900–1320)
+            return $currentMinutes >= $earlyMinutes && $currentMinutes < $endMinutes;
+        } else {
+            // Shift melewati tengah malam (malam: 1320–480)
+            return $currentMinutes >= $earlyMinutes || $currentMinutes < $endMinutes;
+        }
+    }
+
+    /**
+     * Ambil label jam shift untuk ditampilkan.
+     */
+    public function getShiftHours(string $shiftType): string
+    {
+        return match($shiftType) {
+            'pagi'  => '08:00 - 15:00',
+            'siang' => '15:00 - 22:00',
+            'malam' => '22:00 - 08:00',
+            default => '-',
+        };
+    }
 
     /**
      * Cek apakah staff terlambat.

@@ -24,11 +24,12 @@ const ROOM_NUMBERS = [
   ...Array.from({ length: 10 }, (_, i) => `${301 + i}`),
 ];
 
-// Nilai sesuai DB enum: reservasi | checkin | pelunasan
+// Nilai sesuai DB enum: reservasi | checkin | pelunasan | deposit_hangus
 const TRANSACTION_TYPES = [
-  { value: "reservasi",  label: "Reservasi" },
-  { value: "checkin",    label: "Check-In" },
-  { value: "pelunasan",  label: "Pelunasan Reservasi" },
+  { value: "reservasi",       label: "Reservasi" },
+  { value: "checkin",         label: "Check-In" },
+  { value: "pelunasan",       label: "Pelunasan Reservasi" },
+  { value: "deposit_hangus",  label: "Deposit Hangus" },
 ];
 const PAYMENT_METHODS   = [
   { value: "tunai",        label: "Cash" },

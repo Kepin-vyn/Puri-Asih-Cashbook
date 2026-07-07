@@ -10,6 +10,7 @@ import authStore from "../../store/authStore";
 import SignatureCanvas from "../../components/ui/SignatureCanvas";
 import MonthYearPicker from "../../components/ui/MonthYearPicker";
 import { formatTime, formatDateShort, formatDuration } from "../../utils/dateFormatter";
+import { QUERY_KEYS } from "../../utils/queryKeys";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const formatDate = (iso) => formatDateShort(iso);
@@ -87,6 +88,7 @@ const AttendancePage = () => {
   const shiftLabel = todayShiftData?.data?.shift_label;
   const shiftHours = todayShiftData?.data?.shift_hours;
   const isOff = todayShiftData?.data?.is_off;
+  const isWithinWindow = todayShiftData?.data?.is_within_window ?? true;
 
   // ── Fetch today's attendance ──────────────────────────────────────────────
   const today = new Date().toISOString().split("T")[0];
@@ -121,6 +123,8 @@ const AttendancePage = () => {
       toast.success("Absen masuk berhasil!");
       queryClient.invalidateQueries({ queryKey: ["attendance-today"] });
       queryClient.invalidateQueries({ queryKey: ["attendance-monthly"] });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.activeShift, exact: false, refetchType: "all" });
       setSignature(null);
 
       // Jika datang dari alur "Mulai Shift", otomatis start shift lalu redirect
@@ -247,7 +251,24 @@ const AttendancePage = () => {
                 </p>
               </div>
             ) : (
-              <div className="bg-white rounded-2xl border-2 border-amber-300 shadow-sm p-6 space-y-4">
+              <div className={`bg-white rounded-2xl border-2 shadow-sm p-6 space-y-4 ${
+                isWithinWindow ? 'border-amber-300' : 'border-red-300'
+              }`}>
+
+            {/* Peringatan jika di luar jam shift */}
+            {!isWithinWindow && (
+              <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2">
+                <span className="text-xl">⏰</span>
+                <div>
+                  <p className="font-semibold text-red-800 text-sm">Di Luar Jam Shift</p>
+                  <p className="text-xs text-red-600 mt-0.5">
+                    Shift Anda: <strong>{shiftLabel}</strong> ({shiftHours}).
+                    Check-in hanya bisa dilakukan pada jam shift Anda.
+                  </p>
+                </div>
+              </div>
+            )}
+
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="font-bold text-gray-800">Absen Masuk</h2>
@@ -285,7 +306,7 @@ const AttendancePage = () => {
 
             <button
               onClick={handleCheckin}
-              disabled={!signature || checkinMutation.isPending}
+              disabled={!signature || checkinMutation.isPending || !isWithinWindow}
               className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
               id="btn-absen-masuk"
             >

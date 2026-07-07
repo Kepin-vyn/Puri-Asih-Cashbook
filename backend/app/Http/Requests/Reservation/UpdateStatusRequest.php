@@ -14,7 +14,7 @@ class UpdateStatusRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'status' => ['required', 'in:checkin,checkout,cancel,noshow'],
+            'status' => ['required', 'in:reserved,checkin,checkout,cancel,noshow'],
         ];
     }
 
@@ -22,7 +22,7 @@ class UpdateStatusRequest extends FormRequest
     {
         return [
             'status.required' => 'Status reservasi wajib diisi.',
-            'status.in'       => 'Status tidak valid. Pilih: checkin, checkout, cancel, atau noshow.',
+            'status.in'       => 'Status tidak valid. Pilih: reserved, checkin, checkout, cancel, atau noshow.',
         ];
     }
 }

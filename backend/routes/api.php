@@ -14,6 +14,7 @@ use App\Http\Controllers\Api\PayrollController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\ShiftScheduleController;
+use App\Http\Controllers\Api\ActivityLogController;
 
 // Semua route diakses melalui: http://localhost:8000/api/v1/...
 Route::prefix('v1')->group(function () {
@@ -130,6 +131,11 @@ Route::prefix('v1')->group(function () {
             // --- Shift Schedules (write: manager only) ---
             Route::apiResource('shift-schedules', ShiftScheduleController::class)
                 ->except(['show']);
+
+            // --- Activity Logs (Manager Only) ---
+            Route::get('activity-logs',         [ActivityLogController::class, 'index']);
+            Route::get('activity-logs/modules', [ActivityLogController::class, 'modules']);
+            Route::get('activity-logs/shifts',  [ActivityLogController::class, 'shifts']);
         });
     });
 });

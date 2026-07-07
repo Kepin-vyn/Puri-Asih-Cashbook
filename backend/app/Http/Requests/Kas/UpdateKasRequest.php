@@ -16,7 +16,7 @@ class UpdateKasRequest extends FormRequest
         return [
             'guest_name'       => ['sometimes', 'string', 'max:255'],
             'room_number'      => ['sometimes', 'nullable', 'string', 'max:10'],
-            'transaction_type' => ['sometimes', 'in:reservasi,checkin,pelunasan'],
+            'transaction_type' => ['sometimes', 'in:reservasi,checkin,pelunasan,deposit_hangus'],
             'payment_method'   => ['sometimes', 'in:tunai,transfer,qris,kartu_kredit'],
             'amount'           => ['sometimes', 'numeric', 'min:1'],
             'note'             => ['sometimes', 'nullable', 'string', 'max:500'],

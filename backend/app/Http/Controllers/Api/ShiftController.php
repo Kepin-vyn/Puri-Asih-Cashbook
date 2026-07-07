@@ -4,8 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Shift\HandoverRequest;
 use App\Http\Resources\ShiftResource;
+use App\Models\Attendance;
 use App\Models\Shift;
 use App\Services\ShiftService;
+use App\Services\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -16,10 +18,12 @@ use Barryvdh\Snappy\Facades\SnappyPdf as PDF;
 class ShiftController extends BaseApiController
 {
     protected ShiftService $shiftService;
+    private ActivityLogService $activityLog;
 
-    public function __construct(ShiftService $shiftService)
+    public function __construct(ShiftService $shiftService, ActivityLogService $activityLog)
     {
         $this->shiftService = $shiftService;
+        $this->activityLog = $activityLog;
     }
 
     public function index(Request $request): JsonResponse
@@ -99,12 +103,31 @@ class ShiftController extends BaseApiController
             return $this->errorResponse('Kamu masih memiliki shift aktif.', null, 422);
         }
 
+        // Cek apakah sudah checkin attendance hari ini
+        $todayAttendance = Attendance::where('user_id', $user->id)
+            ->whereDate('attendance_date', Carbon::today())
+            ->first();
+
+        if (!$todayAttendance) {
+            return $this->errorResponse(
+                'Anda harus melakukan absen masuk (check-in) dengan tanda tangan terlebih dahulu sebelum memulai shift.',
+                null,
+                422
+            );
+        }
+
+        // Buat shift baru berdasarkan attendance
         $shift = Shift::create([
             'user_id'    => $user->id,
-            'type'       => $user->shift ?? 'pagi',
+            'type'       => $todayAttendance->shift_type ?? $user->shift ?? 'pagi',
             'started_at' => Carbon::now(),
             'status'     => 'active',
         ]);
+
+        // Update attendance shift_id
+        if (!$todayAttendance->shift_id) {
+            $todayAttendance->update(['shift_id' => $shift->id]);
+        }
 
         $shift->load(['user', 'handoverUser']);
 
@@ -153,8 +176,20 @@ class ShiftController extends BaseApiController
             ], 422);
         }
 
+        $now = Carbon::now();
+
+        // Otomatis absen pulang (check-out attendance)
+        $attendance = Attendance::where('user_id', Auth::id())
+            ->whereDate('attendance_date', Carbon::today())
+            ->first();
+
+        if ($attendance && !$attendance->actual_end) {
+            $attendance->update(['actual_end' => $now]);
+        }
+
+        // Tutup shift & serah terima
         $shift->update([
-            'ended_at'      => Carbon::now(),
+            'ended_at'      => $now,
             'handover_to'   => $request->handover_to,
             'handover_note' => $request->handover_note,
             'status'        => 'closed',
@@ -163,10 +198,19 @@ class ShiftController extends BaseApiController
         $reportData = $this->shiftService->generateShiftReport($shift);
         $shift->load(['user', 'handoverUser']);
 
+        $this->activityLog->log(
+            'shift',
+            'handover',
+            'Handover shift ke user ID ' . $request->handover_to . '. Catatan: ' . ($request->handover_note ?? '-'),
+            ['handover_to' => $request->handover_to, 'note' => $request->handover_note, 'cash_balance' => $reportData['summary']['cash_balance'] ?? 0],
+            Auth::id(),
+            $shift->id
+        );
+
         return $this->successResponse([
             'shift'   => new ShiftResource($shift),
             'summary' => $reportData['summary'],
-        ], 'Shift berhasil diserahterimakan.');
+        ], 'Shift berhasil diserahterimakan. Absen pulang otomatis tercatat.');
     }
 
     public function report(string $id): JsonResponse

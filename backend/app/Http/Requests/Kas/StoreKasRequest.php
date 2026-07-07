@@ -16,7 +16,7 @@ class StoreKasRequest extends FormRequest
         return [
             'guest_name'       => ['required', 'string', 'max:255'],
             'room_number'      => ['nullable', 'string', 'max:10'],
-            'transaction_type' => ['required', 'in:reservasi,checkin,pelunasan'],
+            'transaction_type' => ['required', 'in:reservasi,checkin,pelunasan,deposit_hangus'],
             'payment_method'   => ['required', 'in:tunai,transfer,qris,kartu_kredit'],
             'amount'           => ['required', 'numeric', 'min:1'],
             'note'             => ['nullable', 'string', 'max:500'],
