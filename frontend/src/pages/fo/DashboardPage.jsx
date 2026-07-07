@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   CalendarCheck,
   CalendarX,
@@ -21,10 +21,9 @@ import {
 import toast from "react-hot-toast";
 import dashboardService from "../../services/dashboardService";
 import authStore from "../../store/authStore";
-import api from "../../utils/axios";
 import { formatTime } from "../../utils/dateFormatter";
 import { QUERY_KEYS } from "../../utils/queryKeys";
-import { useActiveShift } from "../../hooks/useActiveShift";
+import { useShiftContext } from "../../context/ShiftContext";
 
 // ─── Helper: Format Rupiah ──────────────────────────────────────────────────
 const formatRp = (val) =>
@@ -82,11 +81,27 @@ const NotifIcon = ({ type }) => {
 const DashboardPage = () => {
   const user        = authStore.getUser();
   const queryClient = useQueryClient();
-  const { hasActiveShift, activeShift } = useActiveShift();
+  const { markShiftStarted } = useShiftContext();
 
-  // ── DATA KRITIS: polling 2 menit ──────────────────────────────────────────
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  // Fetch shift summary
+  // Mutation: mulai shift langsung dari dashboard
+  const startShiftMutation = useMutation({
+    mutationFn: shiftService.startShift,
+    onSuccess: () => {
+      markShiftStarted();
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
+      toast.success("✅ Shift berhasil dimulai!");
+      setShowConfirmModal(false);
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Gagal memulai shift");
+      setShowConfirmModal(false);
+    },
+  });
+
+  // ── DATA: 1 request ke /dashboard/fo ────────────────────────────────────
+
   const {
     data: summaryData,
     isLoading: summaryLoading,
@@ -95,51 +110,25 @@ const DashboardPage = () => {
   } = useQuery({
     queryKey: QUERY_KEYS.foDashboard,
     queryFn:  dashboardService.getFoDashboard,
-    staleTime:       1 * 60 * 1000, // kritis: fresh 1 menit
+    staleTime:       1 * 60 * 1000, // fresh 1 menit
     refetchInterval: 2 * 60 * 1000, // polling setiap 2 menit
     retry: 1,
-  });
-
-  // Fetch notifications
-  const { data: notifData, isLoading: notifLoading, refetch: refetchNotif } = useQuery({
-    queryKey: ["notifications"],
-    queryFn:  dashboardService.getNotifications,
-    staleTime:       1 * 60 * 1000, // kritis: fresh 1 menit
-    refetchInterval: 2 * 60 * 1000, // polling setiap 2 menit
-  });
-
-  // ── DATA TIDAK KRITIS: polling 10 menit ───────────────────────────────────
-
-  // Fetch KAS & Expenses HANYA jika ada shift aktif (hindari 403 Forbidden)
-  const today = new Date().toISOString().split("T")[0];
-
-  const { data: kasData, isLoading: kasLoading } = useQuery({
-    queryKey: ["kas-today", today],
-    queryFn:  () => api.get(`/kas?date=${today}`).then((r) => r.data),
-    staleTime:       5 * 60 * 1000,  // tidak kritis: fresh 5 menit
-    refetchInterval: 10 * 60 * 1000, // polling setiap 10 menit
-    enabled: hasActiveShift,
-  });
-
-  const { data: expenseData, isLoading: expenseLoading } = useQuery({
-    queryKey: ["expense-today", today],
-    queryFn:  () => api.get(`/expenses?date=${today}`).then((r) => r.data),
-    staleTime:       5 * 60 * 1000,
-    refetchInterval: 10 * 60 * 1000,
-    enabled: hasActiveShift,
   });
 
   // Mark notification as read
   const markReadMutation = useMutation({
     mutationFn: dashboardService.markNotificationRead,
-    onSuccess:  () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+    onSuccess:  () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard }),
   });
 
-  const summary  = summaryData?.data ?? {};
-  const notifs   = (notifData?.data ?? []).slice(0, 5);
-  const totalRev = kasData?.meta?.total_amount ?? 0;
-  const totalExp = expenseData?.meta?.totals?.total_valid ?? 0;
-  const balance  = totalRev - totalExp;
+  const dashboard      = summaryData?.data ?? {};
+  const hasActiveShift = !!dashboard.has_active_shift;
+  const activeShift    = dashboard.active_shift ?? null;
+  const summary        = dashboard.shift_summary ?? {};
+  const notifs         = (dashboard.notifications ?? []).slice(0, 5);
+  const totalRev       = summary.kas?.total ?? 0;
+  const totalExp       = summary.expenses?.total ?? 0;
+  const balance        = totalRev - totalExp;
 
   return (
     <div className="space-y-6">
@@ -159,10 +148,7 @@ const DashboardPage = () => {
           </p>
         </div>
         <button
-          onClick={() => {
-            refetchSummary();
-            refetchNotif();
-          }}
+          onClick={() => refetchSummary()}
           className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg transition-colors"
         >
           <RefreshCw size={14} />
@@ -177,14 +163,13 @@ const DashboardPage = () => {
             Belum Ada Shift Aktif
           </p>
           <p className="text-sm text-yellow-700 mb-4">
-            Lakukan absen masuk dengan tanda tangan digital terlebih dahulu untuk memulai shift.
+            Lakukan absen terlebih dahulu untuk memulai shift kamu.
           </p>
           <Link
-            to="/fo/absensi"
-            className="block w-full py-3 bg-blue-600 hover:bg-blue-700
-                       text-white font-semibold rounded-lg transition-all text-center"
+            to="/fo/absensi?action=start_shift"
+            className="flex items-center justify-center w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all"
           >
-            ✍️ Absen Masuk & Mulai Shift
+            ▶ Absen & Mulai Shift Sekarang
           </Link>
         </div>
       )}
@@ -203,6 +188,8 @@ const DashboardPage = () => {
         </div>
       )}
 
+      {/* Modal Konfirmasi dihapus — alur sekarang via halaman Attendance */}
+
       {/* ── Summary Cards ── */}
       {summaryLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -215,16 +202,16 @@ const DashboardPage = () => {
           <SummaryCard
             icon={CalendarCheck}
             label="Check-In Hari Ini"
-            value={summary.check_in_count ?? 0}
-            sublabel={`${summary.check_in_count ?? 0} tamu masuk`}
+            value={dashboard.check_in_count ?? 0}
+            sublabel={`${dashboard.check_in_count ?? 0} tamu masuk`}
             iconBg="bg-blue-50"
             iconColor="text-blue-600"
           />
           <SummaryCard
             icon={CalendarX}
             label="Check-Out Hari Ini"
-            value={summary.check_out_count ?? 0}
-            sublabel={`${summary.check_out_count ?? 0} tamu selesai`}
+            value={dashboard.check_out_count ?? 0}
+            sublabel={`${dashboard.check_out_count ?? 0} tamu selesai`}
             iconBg="bg-purple-50"
             iconColor="text-purple-600"
           />
@@ -239,7 +226,7 @@ const DashboardPage = () => {
           <SummaryCard
             icon={BookOpen}
             label="Reservasi Baru"
-            value={summary.reservation_count ?? 0}
+            value={dashboard.reservation_count ?? 0}
             sublabel="Hari ini"
             iconBg="bg-emerald-50"
             iconColor="text-emerald-600"
@@ -383,7 +370,7 @@ const DashboardPage = () => {
             </div>
           </div>
 
-          {notifLoading ? (
+          {summaryLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
                 <Skeleton key={i} className="h-14" />
@@ -439,7 +426,7 @@ const DashboardPage = () => {
               <Wallet size={32} className="mx-auto mb-2 opacity-30" />
               <p className="text-sm">Data kas tersedia setelah shift dimulai</p>
             </div>
-          ) : kasLoading || expenseLoading ? (
+          ) : summaryLoading ? (
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
                 <Skeleton key={i} className="h-10" />
