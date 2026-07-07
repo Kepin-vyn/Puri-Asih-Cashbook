@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect, useRef } from "react";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import {
   FileText,
   Search,
@@ -64,12 +64,24 @@ export default function ActivityLogPage() {
     user_id: "",
     page: 1,
   });
+  const [searchInput, setSearchInput] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+  const [metaCache, setMetaCache] = useState({}); // id -> meta
+  const debounceRef = useRef(null);
+
+  // Debounce search input (400ms)
+  useEffect(() => {
+    debounceRef.current = setTimeout(() => {
+      setFilters((f) => ({ ...f, search: searchInput, page: 1 }));
+    }, 400);
+    return () => clearTimeout(debounceRef.current);
+  }, [searchInput]);
 
   const {
     data: logsData,
     isLoading,
     isRefetching,
+    isPlaceholderData,
     refetch,
   } = useQuery({
     queryKey: ["activity-logs", filters],
@@ -84,7 +96,7 @@ export default function ActivityLogPage() {
       const res = await activityLogService.getLogs(params);
       return res;
     },
-    keepPreviousData: true,
+    placeholderData: keepPreviousData,
   });
 
   const logs = logsData?.data || [];
@@ -96,6 +108,18 @@ export default function ActivityLogPage() {
 
   const handleReset = () => {
     setFilters({ date: "", module: "", search: "", user_id: "", page: 1 });
+    setSearchInput("");
+  };
+
+  // Lazy load meta for a specific log
+  const loadMeta = async (logId) => {
+    if (metaCache[logId] !== undefined) return; // already loaded
+    try {
+      const res = await activityLogService.getLogDetail(logId);
+      setMetaCache((c) => ({ ...c, [logId]: res?.data?.meta ?? null }));
+    } catch {
+      setMetaCache((c) => ({ ...c, [logId]: null }));
+    }
   };
 
   return (
@@ -162,10 +186,8 @@ export default function ActivityLogPage() {
               <input
                 type="text"
                 placeholder="Cari aktivitas..."
-                value={filters.search}
-                onChange={(e) =>
-                  setFilters((f) => ({ ...f, search: e.target.value, page: 1 }))
-                }
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
                 className="w-full pl-9 pr-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
@@ -257,16 +279,30 @@ export default function ActivityLogPage() {
                             {log.description}
                           </td>
                           <td className="px-4 py-3 text-xs text-gray-500">
-                            {log.meta && (
-                              <details className="cursor-pointer">
-                                <summary className="text-blue-500 hover:text-blue-700">
-                                  Lihat detail
-                                </summary>
-                                <pre className="mt-1 p-2 bg-gray-50 rounded text-xs overflow-x-auto max-w-xs">
-                                  {JSON.stringify(log.meta, null, 2)}
-                                </pre>
-                              </details>
-                            )}
+                            {(() => {
+                              const cached = metaCache[log.id];
+                              if (cached === undefined) {
+                                return (
+                                  <button
+                                    onClick={() => loadMeta(log.id)}
+                                    className="text-blue-500 hover:text-blue-700 text-xs"
+                                  >
+                                    Lihat detail
+                                  </button>
+                                );
+                              }
+                              if (cached === null) return <span className="text-gray-400">-</span>;
+                              return (
+                                <details className="cursor-pointer">
+                                  <summary className="text-blue-500 hover:text-blue-700">
+                                    Lihat detail
+                                  </summary>
+                                  <pre className="mt-1 p-2 bg-gray-50 rounded text-xs overflow-x-auto max-w-xs">
+                                    {JSON.stringify(cached, null, 2)}
+                                  </pre>
+                                </details>
+                              );
+                            })()}
                           </td>
                         </tr>
                       );

@@ -26,4 +26,12 @@ export const activityLogService = {
     const response = await api.get(`${BASE}/shifts`);
     return response.data;
   },
+
+  /**
+   * Get detail of a single log (includes meta)
+   */
+  getLogDetail: async (id) => {
+    const response = await api.get(`${BASE}/${id}`);
+    return response.data;
+  },
 };

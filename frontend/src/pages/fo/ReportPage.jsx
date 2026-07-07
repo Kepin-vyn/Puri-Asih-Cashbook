@@ -51,6 +51,7 @@ const ReportPage = () => {
         user_id: user?.id,
         month: filterMonth,
         year: filterYear,
+        all: true,
       }),
     retry: false,
   });

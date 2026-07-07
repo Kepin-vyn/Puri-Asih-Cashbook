@@ -47,6 +47,7 @@ class AttendanceController extends BaseApiController
             'shift_hours'      => $shiftHours,
             'is_off'           => $isOff,
             'is_within_window' => $isWithinWindow,
+            'server_date'      => $now->toDateString(),
         ], 'Shift hari ini');
     }
 

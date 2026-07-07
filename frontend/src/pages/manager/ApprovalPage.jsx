@@ -310,18 +310,20 @@ const ApprovalPage = () => {
               )}
 
               {/* Foto Struk */}
-              {detailItem.receipt_photo ? (
+              {detailItem.receipt_photo_url ? (
                 <div className="mt-2">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Bukti Struk</p>
-                  {detailItem.receipt_photo.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
-                    <img
-                      src={detailItem.receipt_photo}
-                      alt="Bukti struk"
-                      className="w-full rounded-xl border border-gray-200 object-contain max-h-64"
-                    />
+                  {detailItem.receipt_photo_url.match(/\.(jpg|jpeg|png|gif|webp)$/i) ? (
+                    <a href={detailItem.receipt_photo_url} target="_blank" rel="noopener noreferrer">
+                      <img
+                        src={detailItem.receipt_photo_url}
+                        alt="Bukti struk"
+                        className="w-full rounded-xl border border-gray-200 object-contain max-h-64 cursor-zoom-in hover:opacity-90 transition-opacity"
+                      />
+                    </a>
                   ) : (
                     <a
-                      href={detailItem.receipt_photo}
+                      href={detailItem.receipt_photo_url}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-blue-600 hover:bg-blue-50 transition-colors"

@@ -409,9 +409,9 @@ const ExpensesPage = () => {
                             </button>
                           )}
                           {/* Upload / Lihat Struk */}
-                          {exp.receipt_photo ? (
+                          {exp.receipt_photo_url ? (
                             <a
-                              href={exp.receipt_photo}
+                              href={exp.receipt_photo_url}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors"

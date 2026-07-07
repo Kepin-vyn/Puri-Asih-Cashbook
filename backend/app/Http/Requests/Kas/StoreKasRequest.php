@@ -16,7 +16,7 @@ class StoreKasRequest extends FormRequest
         return [
             'guest_name'       => ['required', 'string', 'max:255'],
             'room_number'      => ['nullable', 'string', 'max:10'],
-            'transaction_type' => ['required', 'in:reservasi,checkin,pelunasan,deposit_hangus'],
+            'transaction_type' => ['required', 'in:reservasi,checkin,pelunasan,deposit_hangus,parkir,late_checkout,early_checkin'],
             'payment_method'   => ['required', 'in:tunai,transfer,qris,kartu_kredit'],
             'amount'           => ['required', 'numeric', 'min:1'],
             'note'             => ['nullable', 'string', 'max:500'],
@@ -30,7 +30,7 @@ class StoreKasRequest extends FormRequest
             'guest_name.max'            => 'Nama tamu maksimal 255 karakter.',
             'room_number.max'           => 'Nomor kamar maksimal 10 karakter.',
             'transaction_type.required' => 'Jenis transaksi wajib dipilih.',
-            'transaction_type.in'       => 'Jenis transaksi tidak valid. Pilih: reservasi, checkin, atau pelunasan.',
+            'transaction_type.in'       => 'Jenis transaksi tidak valid. Pilih: reservasi, checkin, pelunasan, deposit hangus, atau parkir.',
             'payment_method.required'   => 'Metode pembayaran wajib dipilih.',
             'payment_method.in'         => 'Metode pembayaran tidak valid. Pilih: tunai, transfer, qris, atau kartu_kredit.',
             'amount.required'           => 'Jumlah nominal wajib diisi.',

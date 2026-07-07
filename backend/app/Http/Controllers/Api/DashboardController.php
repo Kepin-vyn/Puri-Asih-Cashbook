@@ -8,6 +8,8 @@ use App\Models\KasTransaction;
 use App\Models\Notification;
 use App\Models\Reservation;
 use App\Models\Shift;
+use App\Models\ActivityLog;
+use App\Models\User;
 use App\Services\ReservationService;
 use App\Services\ShiftService;
 use App\Http\Resources\NotificationResource;
@@ -148,5 +150,46 @@ class DashboardController extends BaseApiController
             'active_fo' => $active_fo,
             'pending_expenses' => $pendingExpenses,
         ], 'Dashboard manager berhasil diambil.');
+    }
+
+    /**
+     * GET /api/v1/dashboard/fo-stats
+     * Statistik produktivitas FO per staff hari ini (dari activity_logs)
+     */
+    public function foStats(): JsonResponse
+    {
+        $today = Carbon::today();
+
+        // Ambil semua user FO
+        $foUsers = User::where('role', 'fo')->get(['id', 'name', 'shift']);
+
+        $stats = $foUsers->map(function ($user) use ($today) {
+            // Hitung aktivitas per modul hari ini
+            $activities = ActivityLog::where('user_id', $user->id)
+                ->whereDate('created_at', $today)
+                ->select('module', DB::raw('COUNT(*) as count'))
+                ->groupBy('module')
+                ->pluck('count', 'module')
+                ->toArray();
+
+            $totalActions = array_sum($activities);
+
+            return [
+                'user_id'    => $user->id,
+                'name'       => $user->name,
+                'shift'      => $user->shift,
+                'reservasi'  => $activities['reservation'] ?? 0,
+                'kas'        => $activities['kas'] ?? 0,
+                'deposit'    => $activities['deposit'] ?? 0,
+                'pengeluaran'=> $activities['expense'] ?? 0,
+                'absensi'    => $activities['attendance'] ?? 0,
+                'total'      => $totalActions,
+            ];
+        });
+
+        // Sort by total descending
+        $stats = $stats->sortByDesc('total')->values();
+
+        return $this->successResponse($stats->toArray(), 'Statistik FO hari ini berhasil diambil.');
     }
 }

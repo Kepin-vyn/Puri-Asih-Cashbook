@@ -16,7 +16,7 @@ class UpdateKasRequest extends FormRequest
         return [
             'guest_name'       => ['sometimes', 'string', 'max:255'],
             'room_number'      => ['sometimes', 'nullable', 'string', 'max:10'],
-            'transaction_type' => ['sometimes', 'in:reservasi,checkin,pelunasan,deposit_hangus'],
+            'transaction_type' => ['sometimes', 'in:reservasi,checkin,pelunasan,deposit_hangus,parkir,late_checkout,early_checkin'],
             'payment_method'   => ['sometimes', 'in:tunai,transfer,qris,kartu_kredit'],
             'amount'           => ['sometimes', 'numeric', 'min:1'],
             'note'             => ['sometimes', 'nullable', 'string', 'max:500'],
@@ -28,7 +28,7 @@ class UpdateKasRequest extends FormRequest
         return [
             'guest_name.max'            => 'Nama tamu maksimal 255 karakter.',
             'room_number.max'           => 'Nomor kamar maksimal 10 karakter.',
-            'transaction_type.in'       => 'Jenis transaksi tidak valid. Pilih: reservasi, checkin, atau pelunasan.',
+            'transaction_type.in'       => 'Jenis transaksi tidak valid. Pilih: reservasi, checkin, pelunasan, deposit hangus, atau parkir.',
             'payment_method.in'         => 'Metode pembayaran tidak valid. Pilih: tunai, transfer, qris, atau kartu_kredit.',
             'amount.numeric'            => 'Jumlah nominal harus berupa angka.',
             'amount.min'                => 'Jumlah nominal minimal Rp 1.',

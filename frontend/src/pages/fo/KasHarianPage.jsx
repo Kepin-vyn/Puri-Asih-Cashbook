@@ -24,13 +24,21 @@ const ROOM_NUMBERS = [
   ...Array.from({ length: 10 }, (_, i) => `${301 + i}`),
 ];
 
-// Nilai sesuai DB enum: reservasi | checkin | pelunasan | deposit_hangus
+// Nilai sesuai DB enum: reservasi | checkin | pelunasan | deposit_hangus | parkir
 const TRANSACTION_TYPES = [
   { value: "reservasi",       label: "Reservasi" },
   { value: "checkin",         label: "Check-In" },
   { value: "pelunasan",       label: "Pelunasan Reservasi" },
   { value: "deposit_hangus",  label: "Deposit Hangus" },
+  { value: "parkir",          label: "Parkir" },
+  { value: "late_checkout",   label: "Late Checkout" },
+  { value: "early_checkin",   label: "Early Check-In" },
 ];
+
+// Tipe yang bisa diinput manual (reservasi & checkin otomatis dari sistem)
+const MANUAL_TRANSACTION_TYPES = TRANSACTION_TYPES.filter(
+  t => !["reservasi", "checkin"].includes(t.value)
+);
 const PAYMENT_METHODS   = [
   { value: "tunai",        label: "Cash" },
   { value: "transfer",     label: "Transfer Bank" },
@@ -484,7 +492,7 @@ const KasHarianPage = () => {
                     onChange={(e) => setField("transaction_type", e.target.value)}
                     className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    {TRANSACTION_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
+                    {MANUAL_TRANSACTION_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>
                 </div>
               </div>

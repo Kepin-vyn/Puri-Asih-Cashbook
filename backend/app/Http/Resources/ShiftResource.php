@@ -35,8 +35,8 @@ class ShiftResource extends JsonResource
             ],
             'type'         => $this->type,
             'type_label'   => $typeLabels[$this->type] ?? $this->type,
-            'started_at'   => $this->started_at?->format('d/m/Y H:i'),
-            'ended_at'     => $this->ended_at?->format('d/m/Y H:i'),
+            'started_at'   => $this->started_at?->toIso8601String(),
+            'ended_at'     => $this->ended_at?->toIso8601String(),
             'handover_to'  => $this->handoverUser ? [
                 'id'   => $this->handoverUser->id,
                 'name' => $this->handoverUser->name,
@@ -44,8 +44,9 @@ class ShiftResource extends JsonResource
             'handover_note' => $this->handover_note,
             'status'        => $this->status,
             'status_label'  => $statusLabels[$this->status] ?? $this->status,
+            'balance'       => (float) ($this->balance ?? 0),
             'duration'      => $duration,
-            'created_at'    => $this->created_at?->format('d/m/Y H:i'),
+            'created_at'    => $this->created_at?->toIso8601String(),
         ];
 
         // Include summary jika sudah di-load (via additional)

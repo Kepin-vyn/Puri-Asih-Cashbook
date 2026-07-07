@@ -15,7 +15,11 @@ class ActivityLogController extends BaseApiController
      */
     public function index(Request $request): JsonResponse
     {
-        $query = ActivityLog::with(['user:id,name,role,shift'])
+        // Exclude meta (JSON) from list for performance — load on demand
+        $columns = ['id', 'user_id', 'shift_id', 'module', 'action', 'description', 'created_at'];
+
+        $query = ActivityLog::select($columns)
+            ->with(['user:id,name,role,shift'])
             ->orderBy('created_at', 'desc');
 
         // Filter by date range
@@ -69,6 +73,22 @@ class ActivityLogController extends BaseApiController
                 'total'        => $logs->total(),
             ]
         );
+    }
+
+    /**
+     * GET /api/v1/activity-logs/{id}
+     * Detail dengan meta (lazy load)
+     */
+    public function show(string $id): JsonResponse
+    {
+        $log = ActivityLog::with(['user:id,name,role,shift', 'shift:id,type,started_at,status'])
+            ->find($id);
+
+        if (! $log) {
+            return $this->notFoundResponse('Activity log tidak ditemukan.');
+        }
+
+        return $this->successResponse($log->toArray(), 'Detail activity log berhasil diambil.');
     }
 
     /**
