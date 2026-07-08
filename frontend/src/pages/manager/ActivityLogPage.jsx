@@ -3,10 +3,10 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import {
   FileText,
   Search,
-  Filter,
+ 
   Calendar,
-  User,
-  Box,
+ 
+ 
   RefreshCw,
   ChevronLeft,
   ChevronRight,
@@ -65,7 +65,6 @@ export default function ActivityLogPage() {
     page: 1,
   });
   const [searchInput, setSearchInput] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
   const [metaCache, setMetaCache] = useState({}); // id -> meta
   const debounceRef = useRef(null);
 
@@ -81,10 +80,9 @@ export default function ActivityLogPage() {
     data: logsData,
     isLoading,
     isRefetching,
-    isPlaceholderData,
     refetch,
   } = useQuery({
-    queryKey: ["activity-logs", filters],
+    queryKey: ["activity-logs"],
     queryFn: async () => {
       const params = {};
       if (filters.date) params.date = filters.date;

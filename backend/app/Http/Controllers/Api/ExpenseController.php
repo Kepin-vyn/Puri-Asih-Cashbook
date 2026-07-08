@@ -2,22 +2,23 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Requests\Expense\StoreExpenseRequest;
 use App\Http\Requests\Expense\RejectExpenseRequest;
+use App\Http\Requests\Expense\StoreExpenseRequest;
 use App\Http\Resources\ExpenseResource;
 use App\Models\Expense;
 use App\Models\Shift;
-use App\Services\ExpenseService;
 use App\Services\ActivityLogService;
+use App\Services\ExpenseService;
+use Barryvdh\Snappy\Facades\SnappyPdf as PDF;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Barryvdh\Snappy\Facades\SnappyPdf as PDF;
 
 class ExpenseController extends BaseApiController
 {
     private ExpenseService $expenseService;
+
     private ActivityLogService $activityLog;
 
     public function __construct(ExpenseService $expenseService, ActivityLogService $activityLog)
@@ -31,13 +32,13 @@ class ExpenseController extends BaseApiController
      */
     public function index(Request $request): JsonResponse
     {
-        $user  = Auth::user();
+        $user = Auth::user();
         $query = Expense::with(['user', 'approvedBy']);
 
         if ($user->role === 'fo') {
             $activeShift = Shift::where('user_id', $user->id)
-                                ->where('status', 'active')
-                                ->first();
+                ->where('status', 'active')
+                ->first();
 
             if (! $activeShift) {
                 return $this->forbiddenResponse('Anda tidak memiliki shift aktif saat ini.');
@@ -63,9 +64,9 @@ class ExpenseController extends BaseApiController
 
         // Kalkulasi Total (hanya yang sudah diapprove / auto_approved)
         $totalAutoApproved = (clone $query)->where('status', 'auto_approved')->sum('total_price');
-        $totalApproved     = (clone $query)->where('status', 'approved')->sum('total_price');
-        $totalPending      = (clone $query)->where('status', 'pending')->sum('total_price');
-        $totalRejected     = (clone $query)->where('status', 'rejected')->sum('total_price');
+        $totalApproved = (clone $query)->where('status', 'approved')->sum('total_price');
+        $totalPending = (clone $query)->where('status', 'pending')->sum('total_price');
+        $totalRejected = (clone $query)->where('status', 'rejected')->sum('total_price');
 
         $expenses = $query->paginate(20);
 
@@ -76,16 +77,16 @@ class ExpenseController extends BaseApiController
             [
                 'totals' => [
                     'auto_approved' => (int) $totalAutoApproved,
-                    'approved'      => (int) $totalApproved,
-                    'pending'       => (int) $totalPending,
-                    'rejected'      => (int) $totalRejected,
-                    'total_valid'   => (int) ($totalAutoApproved + $totalApproved), // Hanya yang valid mengurangi KAS
+                    'approved' => (int) $totalApproved,
+                    'pending' => (int) $totalPending,
+                    'rejected' => (int) $totalRejected,
+                    'total_valid' => (int) ($totalAutoApproved + $totalApproved), // Hanya yang valid mengurangi KAS
                 ],
                 'pagination' => [
                     'current_page' => $expenses->currentPage(),
-                    'last_page'    => $expenses->lastPage(),
-                    'per_page'     => $expenses->perPage(),
-                    'total'        => $expenses->total(),
+                    'last_page' => $expenses->lastPage(),
+                    'per_page' => $expenses->perPage(),
+                    'total' => $expenses->total(),
                 ],
             ]
         );
@@ -100,8 +101,8 @@ class ExpenseController extends BaseApiController
 
         // Cek shift aktif
         $activeShift = Shift::where('user_id', $user->id)
-                            ->where('status', 'active')
-                            ->first();
+            ->where('status', 'active')
+            ->first();
 
         if (! $activeShift) {
             return $this->forbiddenResponse('Tidak ada shift aktif. Mulai shift terlebih dahulu.');
@@ -115,14 +116,14 @@ class ExpenseController extends BaseApiController
         $status = $this->expenseService->determineStatus($totalPrice);
 
         $expense = Expense::create([
-            'shift_id'       => $activeShift->id,
-            'user_id'        => $user->id,
-            'description'    => $request->description,
+            'shift_id' => $activeShift->id,
+            'user_id' => $user->id,
+            'description' => $request->description,
             'price_per_item' => $request->price_per_item,
-            'quantity'       => $request->quantity,
-            'total_price'    => $totalPrice,
+            'quantity' => $request->quantity,
+            'total_price' => $totalPrice,
             'payment_method' => $request->payment_method,
-            'status'         => $status,
+            'status' => $status,
         ]);
 
         $expense->load(['user', 'approvedBy']);
@@ -131,11 +132,11 @@ class ExpenseController extends BaseApiController
             $this->expenseService->sendPendingNotification($expense);
         }
 
-        $message = $status === 'pending' 
-            ? 'Pengeluaran berhasil dicatat. Menunggu persetujuan Manager.' 
+        $message = $status === 'pending'
+            ? 'Pengeluaran berhasil dicatat. Menunggu persetujuan Manager.'
             : 'Pengeluaran berhasil dicatat dan disetujui otomatis.';
 
-        $this->activityLog->log('expense', 'create', 'Mencatat pengeluaran "' . $request->description . '" sebesar Rp ' . number_format($totalPrice, 0, ',', '.'), ['description' => $request->description, 'amount' => (float)$totalPrice, 'status' => $status]);
+        $this->activityLog->log('expense', 'create', 'Mencatat pengeluaran "'.$request->description.'" sebesar Rp '.number_format($totalPrice, 0, ',', '.'), ['description' => $request->description, 'amount' => (float) $totalPrice, 'status' => $status]);
 
         return $this->successResponse(
             new ExpenseResource($expense),
@@ -149,7 +150,7 @@ class ExpenseController extends BaseApiController
      */
     public function show(string $id): JsonResponse
     {
-        $user    = Auth::user();
+        $user = Auth::user();
         $expense = Expense::with(['user', 'approvedBy'])->find($id);
 
         if (! $expense) {
@@ -158,8 +159,8 @@ class ExpenseController extends BaseApiController
 
         if ($user->role === 'fo') {
             $activeShift = Shift::where('user_id', $user->id)
-                                ->where('status', 'active')
-                                ->first();
+                ->where('status', 'active')
+                ->first();
 
             if (! $activeShift || $expense->shift_id !== $activeShift->id) {
                 return $this->forbiddenResponse('Anda tidak memiliki akses ke pengeluaran ini.');
@@ -179,7 +180,7 @@ class ExpenseController extends BaseApiController
     {
         // Edit hanya diperbolehkan jika status masih pending
         $expense = Expense::find($id);
-        
+
         if (! $expense) {
             return $this->notFoundResponse('Data pengeluaran tidak ditemukan.');
         }
@@ -191,8 +192,8 @@ class ExpenseController extends BaseApiController
         $user = Auth::user();
         if ($user->role === 'fo') {
             $activeShift = Shift::where('user_id', $user->id)
-                                ->where('status', 'active')
-                                ->first();
+                ->where('status', 'active')
+                ->first();
 
             if (! $activeShift || $expense->shift_id !== $activeShift->id) {
                 return $this->forbiddenResponse('Anda tidak dapat mengubah pengeluaran ini.');
@@ -200,20 +201,20 @@ class ExpenseController extends BaseApiController
         }
 
         $validated = $request->validate([
-            'description'    => ['sometimes', 'string', 'max:255'],
+            'description' => ['sometimes', 'string', 'max:255'],
             'price_per_item' => ['sometimes', 'numeric', 'min:1'],
-            'quantity'       => ['sometimes', 'integer', 'min:1'],
+            'quantity' => ['sometimes', 'integer', 'min:1'],
             'payment_method' => ['sometimes', 'in:tunai,transfer,qris,kartu_kredit'],
         ]);
 
         // Jika mengubah harga/quantity, hitung ulang dan pastikan tetap pending
         if (isset($validated['price_per_item']) || isset($validated['quantity'])) {
             $pricePerItem = $validated['price_per_item'] ?? $expense->price_per_item;
-            $quantity     = $validated['quantity'] ?? $expense->quantity;
-            $totalPrice   = $this->expenseService->calculateTotal($pricePerItem, $quantity);
-            
+            $quantity = $validated['quantity'] ?? $expense->quantity;
+            $totalPrice = $this->expenseService->calculateTotal($pricePerItem, $quantity);
+
             $validated['total_price'] = $totalPrice;
-            $validated['status']      = $this->expenseService->determineStatus($totalPrice);
+            $validated['status'] = $this->expenseService->determineStatus($totalPrice);
         }
 
         $expense->update($validated);
@@ -230,7 +231,7 @@ class ExpenseController extends BaseApiController
      */
     public function destroy(string $id): JsonResponse
     {
-        $user    = Auth::user();
+        $user = Auth::user();
         $expense = Expense::find($id);
 
         if (! $expense) {
@@ -239,8 +240,8 @@ class ExpenseController extends BaseApiController
 
         if ($user->role === 'fo') {
             $activeShift = Shift::where('user_id', $user->id)
-                                ->where('status', 'active')
-                                ->first();
+                ->where('status', 'active')
+                ->first();
 
             if (! $activeShift || $expense->shift_id !== $activeShift->id) {
                 return $this->forbiddenResponse('Anda tidak dapat menghapus pengeluaran ini.');
@@ -249,7 +250,7 @@ class ExpenseController extends BaseApiController
 
         $expense->delete();
 
-        $this->activityLog->log('expense', 'delete', 'Menghapus pengeluaran "' . $expense->description . '" sebesar Rp ' . number_format($expense->total_price, 0, ',', '.'), ['description' => $expense->description, 'amount' => (float)$expense->total_price]);
+        $this->activityLog->log('expense', 'delete', 'Menghapus pengeluaran "'.$expense->description.'" sebesar Rp '.number_format($expense->total_price, 0, ',', '.'), ['description' => $expense->description, 'amount' => (float) $expense->total_price]);
 
         return $this->successResponse(null, 'Pengeluaran berhasil dihapus.');
     }
@@ -281,7 +282,7 @@ class ExpenseController extends BaseApiController
         return $this->successResponse(
             [
                 'receipt_photo_url' => Storage::disk('public')->url($path),
-                'receipt_photo'     => $path,
+                'receipt_photo' => $path,
             ],
             'Bukti struk pengeluaran berhasil diupload.'
         );
@@ -303,14 +304,14 @@ class ExpenseController extends BaseApiController
         }
 
         $expense->update([
-            'status'      => 'approved',
+            'status' => 'approved',
             'approved_by' => Auth::id(),
             'approved_at' => now(),
         ]);
 
         $expense->load(['user', 'approvedBy']);
 
-        $this->activityLog->log('expense', 'approve', 'Menyetujui pengeluaran "' . $expense->description . '" sebesar Rp ' . number_format($expense->total_price, 0, ',', '.'), ['description' => $expense->description, 'amount' => (float)$expense->total_price]);
+        $this->activityLog->log('expense', 'approve', 'Menyetujui pengeluaran "'.$expense->description.'" sebesar Rp '.number_format($expense->total_price, 0, ',', '.'), ['description' => $expense->description, 'amount' => (float) $expense->total_price]);
 
         return $this->successResponse(
             new ExpenseResource($expense),
@@ -334,13 +335,13 @@ class ExpenseController extends BaseApiController
         }
 
         $expense->update([
-            'status'           => 'rejected',
+            'status' => 'rejected',
             'rejection_reason' => $request->rejection_reason,
         ]);
 
         $expense->load(['user', 'approvedBy']);
 
-        $this->activityLog->log('expense', 'reject', 'Menolak pengeluaran "' . $expense->description . '" dengan alasan: ' . $request->rejection_reason, ['description' => $expense->description, 'amount' => (float)$expense->total_price, 'reason' => $request->rejection_reason]);
+        $this->activityLog->log('expense', 'reject', 'Menolak pengeluaran "'.$expense->description.'" dengan alasan: '.$request->rejection_reason, ['description' => $expense->description, 'amount' => (float) $expense->total_price, 'reason' => $request->rejection_reason]);
 
         return $this->successResponse(
             new ExpenseResource($expense),
@@ -379,17 +380,17 @@ class ExpenseController extends BaseApiController
         }
 
         $expenses = $query->orderBy('created_at', 'asc')->get();
-        
+
         $totalValidAmount = $expenses->whereIn('status', ['auto_approved', 'approved'])->sum('total_price');
 
         $data = [
-            'expenses'     => $expenses,
+            'expenses' => $expenses,
             'total_amount' => $totalValidAmount,
-            'date_from'    => $request->date_from,
-            'date_to'      => $request->date_to,
+            'date_from' => $request->date_from,
+            'date_to' => $request->date_to,
         ];
 
         return PDF::loadView('pdf.laporan-pengeluaran', $data)
-                  ->download('laporan-pengeluaran-' . now()->format('Ymd-His') . '.pdf');
+            ->download('laporan-pengeluaran-'.now()->format('Ymd-His').'.pdf');
     }
 }

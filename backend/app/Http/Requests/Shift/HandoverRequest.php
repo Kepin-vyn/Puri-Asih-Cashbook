@@ -2,9 +2,9 @@
 
 namespace App\Http\Requests\Shift;
 
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
-use App\Models\User;
 
 class HandoverRequest extends FormRequest
 {
@@ -16,7 +16,7 @@ class HandoverRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'handover_to'   => ['required', 'integer', 'exists:users,id'],
+            'handover_to' => ['required', 'integer', 'exists:users,id'],
             'handover_note' => ['nullable', 'string', 'max:500'],
         ];
     }
@@ -25,10 +25,10 @@ class HandoverRequest extends FormRequest
     {
         return [
             'handover_to.required' => 'Penerima shift wajib diisi.',
-            'handover_to.integer'  => 'ID penerima shift harus berupa angka.',
-            'handover_to.exists'   => 'Penerima shift tidak ditemukan dalam sistem.',
+            'handover_to.integer' => 'ID penerima shift harus berupa angka.',
+            'handover_to.exists' => 'Penerima shift tidak ditemukan dalam sistem.',
             'handover_note.string' => 'Catatan serah terima harus berupa teks.',
-            'handover_note.max'    => 'Catatan serah terima maksimal 500 karakter.',
+            'handover_note.max' => 'Catatan serah terima maksimal 500 karakter.',
         ];
     }
 

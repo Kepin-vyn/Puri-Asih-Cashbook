@@ -14,11 +14,11 @@ class UserSeeder extends Seeder
         User::firstOrCreate(
             ['email' => 'manager@puriasih.com'],
             [
-                'name'     => 'Manager',
+                'name' => 'Manager',
                 'password' => Hash::make('manager123'),
-                'role'     => 'manager',
-                'shift'    => null,
-                'status'   => 'active',
+                'role' => 'manager',
+                'shift' => null,
+                'status' => 'active',
             ]
         );
 
@@ -26,11 +26,11 @@ class UserSeeder extends Seeder
         User::firstOrCreate(
             ['email' => 'kevin@puriasih.com'],
             [
-                'name'     => 'Kevin',
+                'name' => 'Kevin',
                 'password' => Hash::make('fo123456'),
-                'role'     => 'fo',
-                'shift'    => 'pagi',
-                'status'   => 'active',
+                'role' => 'fo',
+                'shift' => 'pagi',
+                'status' => 'active',
             ]
         );
 
@@ -38,11 +38,11 @@ class UserSeeder extends Seeder
         User::firstOrCreate(
             ['email' => 'awan@puriasih.com'],
             [
-                'name'     => 'Awan',
+                'name' => 'Awan',
                 'password' => Hash::make('fo123456'),
-                'role'     => 'fo',
-                'shift'    => 'siang',
-                'status'   => 'active',
+                'role' => 'fo',
+                'shift' => 'siang',
+                'status' => 'active',
             ]
         );
     }

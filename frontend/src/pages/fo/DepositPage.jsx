@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  Plus, Download, Trash2, FileText, X, AlertTriangle, Eye,
+  Download, FileText, X, AlertTriangle, Eye,
   CheckCircle, Ban,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import depositService from "../../services/depositService";
 import authStore from "../../store/authStore";
-import api from "../../utils/axios";
 import RupiahInput from "../../components/ui/RupiahInput";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import StatusBadge from "../../components/ui/StatusBadge";
@@ -191,7 +190,7 @@ const DepositPage = () => {
       room_number:    item.room_number ?? "101",
       check_in_date:  item.check_in_date ?? today,
       check_out_date: item.check_out_date ?? "",
-      amount:         Number(item.amount) ?? 0,
+      amount:         Number(item.amount) || 0,
       payment_method: item.payment_method ?? "tunai",
       payment_status: item.payment_status ?? "dp",
       note:           item.note ?? "",

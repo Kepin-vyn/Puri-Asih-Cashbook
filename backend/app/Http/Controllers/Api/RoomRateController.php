@@ -38,7 +38,7 @@ class RoomRateController extends BaseApiController
 
         $rate->update([
             'price_per_night' => $request->price_per_night,
-            'updated_by'      => Auth::id(),
+            'updated_by' => Auth::id(),
         ]);
 
         return $this->successResponse($rate->fresh(), "Tarif kamar {$roomNumber} berhasil diperbarui.");
@@ -51,8 +51,8 @@ class RoomRateController extends BaseApiController
     public function bulkUpdate(Request $request): JsonResponse
     {
         $request->validate([
-            'rates'   => 'required|array',
-            'rates.*.room_number'     => 'required|string',
+            'rates' => 'required|array',
+            'rates.*.room_number' => 'required|string',
             'rates.*.price_per_night' => 'required|numeric|min:0',
         ]);
 
@@ -77,32 +77,32 @@ class RoomRateController extends BaseApiController
     public function calculate(Request $request): JsonResponse
     {
         $request->validate([
-            'room_number'    => 'required|string',
-            'check_in_date'  => 'required|date',
+            'room_number' => 'required|string',
+            'check_in_date' => 'required|date',
             'check_out_date' => 'required|date|after:check_in_date',
         ]);
 
         $rate = RoomRate::where('room_number', $request->room_number)->first();
 
-        if (!$rate) {
+        if (! $rate) {
             return $this->successResponse([
                 'price_per_night' => 0,
-                'nights'          => 0,
-                'total_price'     => 0,
-                'has_rate'        => false,
+                'nights' => 0,
+                'total_price' => 0,
+                'has_rate' => false,
             ], 'Tarif kamar belum diatur.');
         }
 
-        $checkIn  = Carbon::parse($request->check_in_date);
+        $checkIn = Carbon::parse($request->check_in_date);
         $checkOut = Carbon::parse($request->check_out_date);
-        $nights   = $checkIn->diffInDays($checkOut);
-        $total    = (float) $rate->price_per_night * $nights;
+        $nights = $checkIn->diffInDays($checkOut);
+        $total = (float) $rate->price_per_night * $nights;
 
         return $this->successResponse([
             'price_per_night' => (float) $rate->price_per_night,
-            'nights'          => $nights,
-            'total_price'     => $total,
-            'has_rate'        => true,
+            'nights' => $nights,
+            'total_price' => $total,
+            'has_rate' => true,
         ], 'Harga berhasil dihitung.');
     }
 }

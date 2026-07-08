@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Download, Pencil, Trash2, FileText, X, Upload } from "lucide-react";
+import { Download, Pencil, Trash2, FileText, X, Upload } from "lucide-react";
 import toast from "react-hot-toast";
 import kasService from "../../services/kasService";
 import authStore from "../../store/authStore";
-import api from "../../utils/axios";
 import RupiahInput from "../../components/ui/RupiahInput";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import { formatDateShort } from "../../utils/dateFormatter";
@@ -144,7 +143,7 @@ const KasHarianPage = () => {
       guest_name:       item.guest_name ?? "",
       room_number:      item.room_number ?? "101",
       transaction_type: item.transaction_type ?? "reservasi",
-      amount:           Number(item.amount) ?? 0,
+      amount:           Number(item.amount) || 0,
       payment_method:   item.payment_method ?? "tunai",
       note:             item.note ?? "",
     });

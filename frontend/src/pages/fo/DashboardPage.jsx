@@ -1,14 +1,12 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link, useNavigate } from "react-router-dom";
-import { RefreshCw, Bell, Wallet, TrendingUp, TrendingDown, Plus, FileText, AlertTriangle, Clock, CalendarCheck, CalendarX, BookOpen } from "lucide-react";
+import { Link } from "react-router-dom";
+import { RefreshCw, Bell, Wallet, FileText, CalendarCheck, CalendarX, BookOpen } from "lucide-react";
 import toast from "react-hot-toast";
 import dashboardService from "../../services/dashboardService";
-import shiftService from "../../services/shiftService";
 import authStore from "../../store/authStore";
 import api from "../../utils/axios";
 import { QUERY_KEYS } from "../../utils/queryKeys";
-import { useShiftContext } from "../../context/ShiftContext";
 import { useActiveShift } from "../../hooks/useActiveShift";
 
 const formatRp = (val) =>
@@ -35,26 +33,8 @@ const Skeleton = ({ className = "" }) => (
 const DashboardPage = () => {
   const user        = authStore.getUser();
   const queryClient = useQueryClient();
-  const navigate    = useNavigate();
-  const { markShiftStarted } = useShiftContext();
   const { hasActiveShift, activeShift } = useActiveShift();
 
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-
-  const startShiftMutation = useMutation({
-    mutationFn: shiftService.startShift,
-    onSuccess: () => {
-      markShiftStarted();
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.activeShift, exact: false, refetchType: "all" });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
-      toast.success("Shift berhasil dimulai!");
-      setShowConfirmModal(false);
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || "Gagal memulai shift");
-      setShowConfirmModal(false);
-    },
-  });
 
   const { data: summaryData, isLoading: summaryLoading, isError: summaryError, refetch: refetchSummary } = useQuery({
     queryKey: QUERY_KEYS.foDashboard,
@@ -164,7 +144,7 @@ const DashboardPage = () => {
             { icon: CalendarCheck, label: "Check-In Hari Ini", value: summary.check_in_count ?? 0 },
             { icon: CalendarX,     label: "Check-Out Hari Ini", value: summary.check_out_count ?? 0 },
             { icon: BookOpen,      label: "Reservasi Baru", value: summary.reservation_count ?? 0 },
-          ].map(({ icon: Icon, label, value }) => (
+          ].map(({ icon: _Icon, label, value }) => (
             <div key={label} className="border border-[#e5e5e5] rounded-xl p-5">
               <p className="text-[12px] font-[500] text-[#737373] uppercase tracking-wide mb-2">{label}</p>
               <p className="text-[30px] font-[500] text-black" style={{ fontFamily: "var(--font-display)" }}>{value}</p>

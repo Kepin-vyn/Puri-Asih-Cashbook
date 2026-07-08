@@ -14,7 +14,7 @@ class CheckinRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'shift_type'        => ['required', 'in:pagi,siang,malam'],
+            'shift_type' => ['required', 'in:pagi,siang,malam'],
             'digital_signature' => ['required', 'string'],
         ];
     }
@@ -22,10 +22,10 @@ class CheckinRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'shift_type.required'        => 'Jenis shift wajib dipilih.',
-            'shift_type.in'              => 'Jenis shift tidak valid. Pilih: pagi, siang, atau malam.',
+            'shift_type.required' => 'Jenis shift wajib dipilih.',
+            'shift_type.in' => 'Jenis shift tidak valid. Pilih: pagi, siang, atau malam.',
             'digital_signature.required' => 'Tanda tangan digital wajib diisi.',
-            'digital_signature.string'   => 'Tanda tangan digital harus berupa string.',
+            'digital_signature.string' => 'Tanda tangan digital harus berupa string.',
         ];
     }
 }

@@ -131,7 +131,7 @@ const WeeklyScheduleTab = () => {
     let successCount = 0;
     let errorCount   = 0;
 
-    for (const [userId, changes] of Object.entries(localSchedule)) {
+    for (const [userId, _changes] of Object.entries(localSchedule)) {
       const row = schedules.find((s) => String(s.user_id) === String(userId));
       if (!row) continue;
 

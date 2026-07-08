@@ -46,6 +46,7 @@ class ShiftSchedule extends Model
     public function getTodayShiftAttribute(): string
     {
         $dayName = strtolower(Carbon::now()->englishDayOfWeek); // monday, tuesday, ...
+
         return $this->{$dayName} ?? 'off';
     }
 }

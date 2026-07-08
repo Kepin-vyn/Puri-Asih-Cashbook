@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Services\MonthlyReportService;
+use Barryvdh\Snappy\Facades\SnappyPdf as PDF;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Barryvdh\Snappy\Facades\SnappyPdf as PDF;
 
 class ReportController extends BaseApiController
 {
@@ -23,7 +23,7 @@ class ReportController extends BaseApiController
     public function monthly(Request $request): JsonResponse
     {
         $month = (int) $request->input('month', now()->month);
-        $year  = (int) $request->input('year', now()->year);
+        $year = (int) $request->input('year', now()->year);
 
         $filters = [];
         if ($request->filled('staff_id')) {
@@ -36,9 +36,9 @@ class ReportController extends BaseApiController
         if ($request->filled('type')) {
             $type = $request->type;
             $filtered = [
-                'period'  => $data['period'],
-                'month'   => $data['month'],
-                'year'    => $data['year'],
+                'period' => $data['period'],
+                'month' => $data['month'],
+                'year' => $data['year'],
                 'summary' => $data['summary'],
             ];
 
@@ -63,7 +63,7 @@ class ReportController extends BaseApiController
     public function summary(Request $request): JsonResponse
     {
         $month = (int) $request->input('month', now()->month);
-        $year  = (int) $request->input('year', now()->year);
+        $year = (int) $request->input('year', now()->year);
 
         $filters = [];
         if ($request->filled('staff_id')) {
@@ -82,9 +82,9 @@ class ReportController extends BaseApiController
     public function detail(Request $request): JsonResponse
     {
         $month = (int) $request->input('month', now()->month);
-        $year  = (int) $request->input('year', now()->year);
+        $year = (int) $request->input('year', now()->year);
 
-        if (!$request->filled('date')) {
+        if (! $request->filled('date')) {
             return $this->errorResponse('Parameter date wajib diisi.', null, 422);
         }
 
@@ -100,7 +100,7 @@ class ReportController extends BaseApiController
     public function exportPdf(Request $request): mixed
     {
         $month = (int) $request->input('month', now()->month);
-        $year  = (int) $request->input('year', now()->year);
+        $year = (int) $request->input('year', now()->year);
 
         $filters = [];
         if ($request->filled('staff_id')) {
@@ -112,6 +112,6 @@ class ReportController extends BaseApiController
         $filename = "monthly-report-{$month}-{$year}.pdf";
 
         return PDF::loadView('pdf.monthly-report', $data)
-                  ->download($filename);
+            ->download($filename);
     }
 }

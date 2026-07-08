@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Models\ActivityLog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 
 class ActivityLogController extends BaseApiController
 {
@@ -57,7 +56,7 @@ class ActivityLogController extends BaseApiController
 
         // Search in description
         if ($request->filled('search')) {
-            $query->where('description', 'like', '%' . $request->search . '%');
+            $query->where('description', 'like', '%'.$request->search.'%');
         }
 
         $logs = $query->paginate($request->get('per_page', 50));
@@ -68,9 +67,9 @@ class ActivityLogController extends BaseApiController
             200,
             [
                 'current_page' => $logs->currentPage(),
-                'last_page'    => $logs->lastPage(),
-                'per_page'     => $logs->perPage(),
-                'total'        => $logs->total(),
+                'last_page' => $logs->lastPage(),
+                'per_page' => $logs->perPage(),
+                'total' => $logs->total(),
             ]
         );
     }
@@ -117,7 +116,7 @@ class ActivityLogController extends BaseApiController
             ->distinct()
             ->with('shift:id,started_at,type,status,user_id')
             ->get()
-            ->map(fn($log) => $log->shift)
+            ->map(fn ($log) => $log->shift)
             ->filter()
             ->unique('id')
             ->values()

@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  Plus, Download, Pencil, Trash2, FileText, X, RefreshCw,
+  Download, Pencil, Trash2, FileText, X, RefreshCw,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import reservationService from "../../services/reservationService";
 import roomRateService from "../../services/roomRateService";
 import authStore from "../../store/authStore";
-import api from "../../utils/axios";
 import RupiahInput from "../../components/ui/RupiahInput";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import StatusBadge from "../../components/ui/StatusBadge";
@@ -116,14 +115,21 @@ const ReservationPage = () => {
   // ── Derived: remaining balance ────────────────────────────────────────────
   const remainingBalance = Math.max(0, (form.room_price ?? 0) - (form.down_payment ?? 0));
 
+  // setField didefinisikan di sini agar bisa dipakai di useEffect di bawah
+  const setField = (key, val) => {
+    setForm(p => ({ ...p, [key]: val }));
+    if (errors[key]) setErrors(p => ({ ...p, [key]: "" }));
+  };
+
   // ── Auto-calculate room price from rate ──────────────────────────────────
-  const [autoPriceInfo, setAutoPriceInfo] = useState(null);
+  const [autoPriceInfo,   setAutoPriceInfo]   = useState(null);
   const [priceAutoFilled, setPriceAutoFilled] = useState(false);
 
   useEffect(() => {
     if (!form.room_number || !form.check_in_date || !form.check_out_date || form.check_out_date <= form.check_in_date) {
-      setAutoPriceInfo(null);
-      return;
+      // Gunakan callback di luar effect body untuk menghindari cascading render
+      const timer = setTimeout(() => setAutoPriceInfo(null), 0);
+      return () => clearTimeout(timer);
     }
     let cancelled = false;
     roomRateService.calculate(form.room_number, form.check_in_date, form.check_out_date)
@@ -136,9 +142,9 @@ const ReservationPage = () => {
           setPriceAutoFilled(true);
         }
       })
-      .catch(() => setAutoPriceInfo(null));
+      .catch(() => { if (!cancelled) setAutoPriceInfo(null); });
     return () => { cancelled = true; };
-  }, [form.room_number, form.check_in_date, form.check_out_date]);
+  }, [form.room_number, form.check_in_date, form.check_out_date]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // When user manually edits price, clear auto-filled flag
   const handlePriceChange = (v) => {
@@ -242,8 +248,8 @@ const ReservationPage = () => {
       room_number:      item.room_number ?? "",
       check_in_date:    item.check_in_date ?? today,
       check_out_date:   item.check_out_date ?? "",
-      room_price:       Number(item.room_price) ?? 0,
-      down_payment:     Number(item.down_payment) ?? 0,
+      room_price:       Number(item.room_price) || 0,
+      down_payment:     Number(item.down_payment) || 0,
       source:           item.source ?? "walk_in",
       payment_method:   item.payment_method ?? "tunai",
       payment_status:   item.payment_status ?? "dp",
@@ -260,10 +266,7 @@ const ReservationPage = () => {
     setErrors({});
   };
 
-  const setField = (key, val) => {
-    setForm(p => ({ ...p, [key]: val }));
-    if (errors[key]) setErrors(p => ({ ...p, [key]: "" }));
-  };
+  // setField sudah dideklarasikan di atas (sebelum useEffect)
 
   const openStatusModal = (item) => {
     setStatusTarget(item);

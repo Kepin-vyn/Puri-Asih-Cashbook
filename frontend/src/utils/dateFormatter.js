@@ -169,7 +169,7 @@ export const formatRupiah = (amount) => {
     return "Rp 0";
   }
   return (
-    "Rp " +
-    Number(amount).toLocaleString("id-ID", { maximumFractionDigits: 0 })
+    `Rp ${ 
+    Number(amount).toLocaleString("id-ID", { maximumFractionDigits: 0 })}`
   );
 };

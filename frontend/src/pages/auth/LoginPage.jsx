@@ -9,26 +9,11 @@ import authStore from "../../store/authStore";
 const LoginPage = () => {
   const navigate = useNavigate();
 
-  const isLoggedIn = authStore.isLoggedIn();
-  const currentRole = authStore.getRole();
-  if (isLoggedIn) {
-    return <Navigate to={currentRole === "manager" ? "/manager/dashboard" : "/fo/dashboard"} replace />;
-  }
-
-  const [email,       setEmail]       = useState("");
-  const [password,    setPassword]    = useState("");
-  const [showPass,    setShowPass]    = useState(false);
-  const [errors,      setErrors]      = useState({ email: "", password: "" });
-
-  const validate = () => {
-    const e = { email: "", password: "" };
-    let ok = true;
-    if (!email.trim()) { e.email = "Email tidak boleh kosong."; ok = false; }
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { e.email = "Format email tidak valid."; ok = false; }
-    if (!password.trim()) { e.password = "Password tidak boleh kosong."; ok = false; }
-    setErrors(e);
-    return ok;
-  };
+  // ── Hooks harus dipanggil SEBELUM early return ──
+  const [email,    setEmail]    = useState("");
+  const [password, setPassword] = useState("");
+  const [showPass, setShowPass] = useState(false);
+  const [errors,   setErrors]   = useState({ email: "", password: "" });
 
   const loginMutation = useMutation({
     mutationFn: () => authService.login(email, password),
@@ -42,6 +27,23 @@ const LoginPage = () => {
       toast.error(error?.response?.data?.message || "Login gagal. Periksa email dan password Anda.");
     },
   });
+
+  // Early return SETELAH semua hooks
+  const isLoggedIn = authStore.isLoggedIn();
+  const currentRole = authStore.getRole();
+  if (isLoggedIn) {
+    return <Navigate to={currentRole === "manager" ? "/manager/dashboard" : "/fo/dashboard"} replace />;
+  }
+
+  const validate = () => {
+    const e = { email: "", password: "" };
+    let ok = true;
+    if (!email.trim()) { e.email = "Email tidak boleh kosong."; ok = false; }
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { e.email = "Format email tidak valid."; ok = false; }
+    if (!password.trim()) { e.password = "Password tidak boleh kosong."; ok = false; }
+    setErrors(e);
+    return ok;
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();

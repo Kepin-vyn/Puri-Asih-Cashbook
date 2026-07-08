@@ -22,7 +22,7 @@ class UpdateRoleRequest extends FormRequest
     {
         return [
             'role.required' => 'Role wajib dipilih.',
-            'role.in'       => 'Role harus fo atau manager.',
+            'role.in' => 'Role harus fo atau manager.',
         ];
     }
 }

@@ -21,12 +21,12 @@ class AuthController extends BaseApiController
         $user = User::where('email', $request->email)->first();
 
         // Jika user tidak ditemukan
-        if (!$user) {
+        if (! $user) {
             return $this->errorResponse('Email atau password salah', null, 401);
         }
 
         // Cek password
-        if (!Hash::check($request->password, $user->password)) {
+        if (! Hash::check($request->password, $user->password)) {
             return $this->errorResponse('Email atau password salah', null, 401);
         }
 
@@ -43,8 +43,8 @@ class AuthController extends BaseApiController
 
         return $this->successResponse(
             [
-                'user'       => new UserResource($user),
-                'token'      => $token,
+                'user' => new UserResource($user),
+                'token' => $token,
                 'token_type' => 'Bearer',
             ],
             'Login berhasil'

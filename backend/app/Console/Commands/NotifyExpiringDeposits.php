@@ -32,23 +32,25 @@ class NotifyExpiringDeposits extends Command
 
         if ($expiringDeposits->isEmpty()) {
             $this->info('Tidak ada deposit yang akan jatuh tempo besok.');
+
             return self::SUCCESS;
         }
 
         // Ambil semua akun FO yang aktif
         $foUsers = User::where('role', 'fo')
-                       ->where('status', 'active')
-                       ->get();
+            ->where('status', 'active')
+            ->get();
 
         if ($foUsers->isEmpty()) {
             $this->warn('Tidak ada staff FO aktif yang dapat menerima notifikasi.');
+
             return self::SUCCESS;
         }
 
         $notificationsSent = 0;
 
         foreach ($expiringDeposits as $deposit) {
-            $amountFormatted = 'Rp ' . number_format($deposit->amount, 0, ',', '.');
+            $amountFormatted = 'Rp '.number_format($deposit->amount, 0, ',', '.');
 
             foreach ($foUsers as $fo) {
                 // Cek apakah notifikasi untuk deposit ini sudah dikirim hari ini
@@ -64,17 +66,17 @@ class NotifyExpiringDeposits extends Command
 
                 Notification::create([
                     'user_id' => $fo->id,
-                    'type'    => 'deposit_expiring',
-                    'title'   => 'Pengingat: Deposit Tamu Mendekati Jatuh Tempo',
+                    'type' => 'deposit_expiring',
+                    'title' => 'Pengingat: Deposit Tamu Mendekati Jatuh Tempo',
                     'message' => "Deposit tamu {$deposit->guest_name} kamar {$deposit->room_number} "
-                               . "sebesar {$amountFormatted} akan jatuh tempo besok "
-                               . "({$deposit->check_out_date}). Harap segera diproses.",
-                    'data'    => [
-                        'deposit_id'     => $deposit->id,
-                        'guest_name'     => $deposit->guest_name,
-                        'room_number'    => $deposit->room_number,
+                               ."sebesar {$amountFormatted} akan jatuh tempo besok "
+                               ."({$deposit->check_out_date}). Harap segera diproses.",
+                    'data' => [
+                        'deposit_id' => $deposit->id,
+                        'guest_name' => $deposit->guest_name,
+                        'room_number' => $deposit->room_number,
                         'check_out_date' => $deposit->check_out_date,
-                        'amount'         => $deposit->amount,
+                        'amount' => $deposit->amount,
                     ],
                 ]);
 

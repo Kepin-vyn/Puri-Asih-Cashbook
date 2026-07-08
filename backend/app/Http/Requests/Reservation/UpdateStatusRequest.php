@@ -22,7 +22,7 @@ class UpdateStatusRequest extends FormRequest
     {
         return [
             'status.required' => 'Status reservasi wajib diisi.',
-            'status.in'       => 'Status tidak valid. Pilih: reserved, checkin, checkout, cancel, atau noshow.',
+            'status.in' => 'Status tidak valid. Pilih: reserved, checkin, checkout, cancel, atau noshow.',
         ];
     }
 }

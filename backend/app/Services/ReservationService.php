@@ -36,13 +36,13 @@ class ReservationService
      */
     public function generateInvoiceNumber(): string
     {
-        $today  = Carbon::today()->format('Ymd');
+        $today = Carbon::today()->format('Ymd');
         $prefix = "INV-{$today}-";
 
         // Cari nomor invoice terakhir hari ini
-        $last = Reservation::where('invoice_number', 'like', $prefix . '%')
-                           ->orderBy('invoice_number', 'desc')
-                           ->value('invoice_number');
+        $last = Reservation::where('invoice_number', 'like', $prefix.'%')
+            ->orderBy('invoice_number', 'desc')
+            ->value('invoice_number');
 
         if ($last) {
             // Ambil 4 digit terakhir dan increment
@@ -52,7 +52,7 @@ class ReservationService
             $nextNumber = 1;
         }
 
-        return $prefix . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+        return $prefix.str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -75,7 +75,7 @@ class ReservationService
                 // Overlap: reservasi yang check-in sebelum tanggal checkout kita
                 // DAN check-out setelah tanggal check-in kita
                 $query->where('check_in_date', '<', $checkOut)
-                      ->where('check_out_date', '>', $checkIn);
+                    ->where('check_out_date', '>', $checkIn);
             })
             ->pluck('room_number')
             ->toArray();

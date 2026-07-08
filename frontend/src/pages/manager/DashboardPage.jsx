@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
-import { TrendingUp, TrendingDown, Users, CheckCircle, Eye, RefreshCw, AlertTriangle, Building2, BarChart2 } from "lucide-react";
+import { TrendingUp, Users, Eye, RefreshCw, AlertTriangle, BarChart2 } from "lucide-react";
 import api from "../../utils/axios";
 import toast from "react-hot-toast";
 

@@ -7,7 +7,7 @@ import reportService from "../../services/reportService";
 import userService from "../../services/userService";
 import MonthYearPicker from "../../components/ui/MonthYearPicker";
 import DataTable from "../../components/ui/DataTable";
-import { formatDateShort, formatTime } from "../../utils/dateFormatter";
+import { formatDateShort } from "../../utils/dateFormatter";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const formatRp = (v) =>
@@ -174,6 +174,18 @@ const DrillDownModal = ({ date, params, onClose }) => {
     </div>
   );
 };
+
+// ── Subtotal Row (defined outside component to avoid re-creation on render) ──
+const SubtotalRow = ({ label, value, color }) => (
+  <tr className={`${color} font-bold text-sm`}>
+    <td colSpan={99} className="px-4 py-2.5">
+      <div className="flex justify-between">
+        <span>{label}</span>
+        <span>{new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(value ?? 0).replace("IDR", "Rp")}</span>
+      </div>
+    </td>
+  </tr>
+);
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 const MonthlyReportPage = () => {
@@ -386,17 +398,6 @@ const MonthlyReportPage = () => {
   const kasSubtotal         = kasItems.reduce((s, t) => s + Number(t.amount ?? 0), 0);
   const reservationSubtotal = reservationItems.reduce((s, r) => s + Number(r.down_payment ?? r.room_price ?? 0), 0);
   const expenseSubtotal     = expenseItems.reduce((s, e) => s + Number(e.total_price ?? 0), 0);
-
-  const SubtotalRow = ({ label, value, color }) => (
-    <tr className={`${color} font-bold text-sm`}>
-      <td colSpan={99} className="px-4 py-2.5">
-        <div className="flex justify-between">
-          <span>{label}</span>
-          <span>{formatRp(value)}</span>
-        </div>
-      </td>
-    </tr>
-  );
 
   const TABS = [
     { key: "kas",          label: "KAS Harian",    count: kasItems.length },

@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Clock, CheckCircle, LogOut, Calendar } from "lucide-react";
+import { CheckCircle, LogOut, Calendar } from "lucide-react";
 import toast from "react-hot-toast";
 import attendanceService from "../../services/attendanceService";
 import authStore from "../../store/authStore";

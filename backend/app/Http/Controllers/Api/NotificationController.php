@@ -38,7 +38,7 @@ class NotificationController extends BaseApiController
     {
         $notification = Notification::find($id);
 
-        if (!$notification) {
+        if (! $notification) {
             return $this->notFoundResponse('Notifikasi tidak ditemukan.');
         }
 

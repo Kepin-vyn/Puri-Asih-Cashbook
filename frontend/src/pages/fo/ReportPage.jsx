@@ -4,7 +4,7 @@ import { Download, FileText, Calendar } from "lucide-react";
 import toast from "react-hot-toast";
 import shiftService from "../../services/shiftService";
 import authStore from "../../store/authStore";
-import { formatDateShort, formatTime, formatDuration } from "../../utils/dateFormatter";
+import { formatDateShort, formatTime } from "../../utils/dateFormatter";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 const formatRp = (v) =>

@@ -40,7 +40,7 @@ class ExpenseService
             'Pengeluaran Membutuhkan Persetujuan',
             "{$foName} mengajukan pengeluaran {$expense->description} sebesar Rp{$totalFormatted}",
             [
-                'expense_id'  => $expense->id,
+                'expense_id' => $expense->id,
                 'total_price' => $expense->total_price,
             ]
         );

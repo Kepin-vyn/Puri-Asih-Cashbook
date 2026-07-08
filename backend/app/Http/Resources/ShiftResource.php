@@ -10,7 +10,7 @@ class ShiftResource extends JsonResource
     public function toArray(Request $request): array
     {
         $typeLabels = [
-            'pagi'  => 'Pagi',
+            'pagi' => 'Pagi',
             'siang' => 'Siang',
             'malam' => 'Malam',
         ];
@@ -27,26 +27,26 @@ class ShiftResource extends JsonResource
         }
 
         $data = [
-            'id'   => $this->id,
+            'id' => $this->id,
             'user' => [
-                'id'    => $this->user?->id,
-                'name'  => $this->user?->name,
+                'id' => $this->user?->id,
+                'name' => $this->user?->name,
                 'email' => $this->user?->email,
             ],
-            'type'         => $this->type,
-            'type_label'   => $typeLabels[$this->type] ?? $this->type,
-            'started_at'   => $this->started_at?->toIso8601String(),
-            'ended_at'     => $this->ended_at?->toIso8601String(),
-            'handover_to'  => $this->handoverUser ? [
-                'id'   => $this->handoverUser->id,
+            'type' => $this->type,
+            'type_label' => $typeLabels[$this->type] ?? $this->type,
+            'started_at' => $this->started_at?->toIso8601String(),
+            'ended_at' => $this->ended_at?->toIso8601String(),
+            'handover_to' => $this->handoverUser ? [
+                'id' => $this->handoverUser->id,
                 'name' => $this->handoverUser->name,
             ] : null,
             'handover_note' => $this->handover_note,
-            'status'        => $this->status,
-            'status_label'  => $statusLabels[$this->status] ?? $this->status,
-            'balance'       => (float) ($this->balance ?? 0),
-            'duration'      => $duration,
-            'created_at'    => $this->created_at?->toIso8601String(),
+            'status' => $this->status,
+            'status_label' => $statusLabels[$this->status] ?? $this->status,
+            'balance' => (float) ($this->balance ?? 0),
+            'duration' => $duration,
+            'created_at' => $this->created_at?->toIso8601String(),
         ];
 
         // Include summary jika sudah di-load (via additional)

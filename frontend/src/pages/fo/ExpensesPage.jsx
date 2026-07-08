@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  Plus, Download, Pencil, Trash2, FileText, X, Upload, Image,
+  Download, Pencil, Trash2, FileText, X, Upload, Image,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import expenseService from "../../services/expenseService";
@@ -189,8 +189,8 @@ const ExpensesPage = () => {
     setEditItem(item);
     setForm({
       description:    item.description ?? "",
-      price_per_item: Number(item.price_per_item) ?? 0,
-      quantity:       Number(item.quantity) ?? 1,
+      price_per_item: Number(item.price_per_item) || 0,
+      quantity:       Number(item.quantity) || 1,
       payment_method: item.payment_method ?? "tunai",
     });
     setReceiptFile(null);

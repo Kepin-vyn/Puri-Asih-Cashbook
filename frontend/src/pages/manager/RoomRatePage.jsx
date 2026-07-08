@@ -4,11 +4,6 @@ import { Save, RotateCcw, Building2 } from "lucide-react";
 import toast from "react-hot-toast";
 import roomRateService from "../../services/roomRateService";
 
-const formatRp = (v) =>
-  new Intl.NumberFormat("id-ID", {
-    style: "currency", currency: "IDR", maximumFractionDigits: 0,
-  }).format(v ?? 0).replace("IDR", "Rp");
-
 const RoomRatePage = () => {
   const queryClient = useQueryClient();
   const [rates, setRates] = useState({});
@@ -32,7 +27,7 @@ const RoomRatePage = () => {
   // Bulk update mutation
   const bulkMutation = useMutation({
     mutationFn: roomRateService.bulkUpdate,
-    onSuccess: (res) => {
+    onSuccess: (_res) => {
       toast.success("Tarif kamar berhasil disimpan!");
       queryClient.invalidateQueries({ queryKey: ["room-rates"] });
       setHasChanges(false);

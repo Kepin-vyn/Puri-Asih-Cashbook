@@ -22,8 +22,8 @@ class SetDailyRateRequest extends FormRequest
     {
         return [
             'daily_rate.required' => 'Tarif harian wajib diisi.',
-            'daily_rate.numeric'  => 'Tarif harian harus berupa angka.',
-            'daily_rate.min'      => 'Tarif harian minimal Rp 1.',
+            'daily_rate.numeric' => 'Tarif harian harus berupa angka.',
+            'daily_rate.min' => 'Tarif harian minimal Rp 1.',
         ];
     }
 }

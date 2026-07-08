@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\User\StoreUserRequest;
-use App\Http\Requests\User\UpdateUserRequest;
 use App\Http\Requests\User\UpdateRoleRequest;
 use App\Http\Requests\User\UpdateShiftRequest;
+use App\Http\Requests\User\UpdateUserRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -37,8 +37,8 @@ class UserController extends BaseApiController
         $users = $query->orderBy('name', 'asc')->paginate(20);
 
         // Summary counts
-        $totalFo       = User::where('role', 'fo')->count();
-        $totalActive   = User::where('status', 'active')->count();
+        $totalFo = User::where('role', 'fo')->count();
+        $totalActive = User::where('status', 'active')->count();
         $totalInactive = User::where('status', 'inactive')->count();
 
         return $this->successResponse(
@@ -47,15 +47,15 @@ class UserController extends BaseApiController
             200,
             [
                 'summary' => [
-                    'total_fo'       => $totalFo,
-                    'total_active'   => $totalActive,
+                    'total_fo' => $totalFo,
+                    'total_active' => $totalActive,
                     'total_inactive' => $totalInactive,
                 ],
                 'pagination' => [
                     'current_page' => $users->currentPage(),
-                    'last_page'    => $users->lastPage(),
-                    'per_page'     => $users->perPage(),
-                    'total'        => $users->total(),
+                    'last_page' => $users->lastPage(),
+                    'per_page' => $users->perPage(),
+                    'total' => $users->total(),
                 ],
             ]
         );
@@ -83,12 +83,12 @@ class UserController extends BaseApiController
     public function store(StoreUserRequest $request): JsonResponse
     {
         $user = User::create([
-            'name'     => $request->name,
-            'email'    => $request->email,
+            'name' => $request->name,
+            'email' => $request->email,
             'password' => $request->password, // auto-hashed via cast
-            'role'     => $request->role,
-            'shift'    => $request->shift,
-            'status'   => 'active',
+            'role' => $request->role,
+            'shift' => $request->shift,
+            'status' => 'active',
         ]);
 
         return $this->successResponse(
@@ -106,20 +106,20 @@ class UserController extends BaseApiController
     {
         $user = User::find($id);
 
-        if (!$user) {
+        if (! $user) {
             return $this->notFoundResponse('User tidak ditemukan.');
         }
 
         $stats = [
-            'total_shift'       => $user->shifts()->count(),
-            'total_kas'         => $user->kasTransactions()->count(),
-            'total_expenses'    => $user->expenses()->count(),
+            'total_shift' => $user->shifts()->count(),
+            'total_kas' => $user->kasTransactions()->count(),
+            'total_expenses' => $user->expenses()->count(),
             'total_reservations' => $user->reservations()->count(),
-            'total_deposits'    => $user->deposits()->count(),
+            'total_deposits' => $user->deposits()->count(),
         ];
 
         return $this->successResponse([
-            'user'  => new UserResource($user),
+            'user' => new UserResource($user),
             'stats' => $stats,
         ], 'Detail user berhasil diambil.');
     }
@@ -132,7 +132,7 @@ class UserController extends BaseApiController
     {
         $user = User::find($id);
 
-        if (!$user) {
+        if (! $user) {
             return $this->notFoundResponse('User tidak ditemukan.');
         }
 
@@ -159,7 +159,7 @@ class UserController extends BaseApiController
     {
         $user = User::find($id);
 
-        if (!$user) {
+        if (! $user) {
             return $this->notFoundResponse('User tidak ditemukan.');
         }
 
@@ -184,7 +184,7 @@ class UserController extends BaseApiController
     {
         $user = User::find($id);
 
-        if (!$user) {
+        if (! $user) {
             return $this->notFoundResponse('User tidak ditemukan.');
         }
 
@@ -209,7 +209,7 @@ class UserController extends BaseApiController
     {
         $user = User::find($id);
 
-        if (!$user) {
+        if (! $user) {
             return $this->notFoundResponse('User tidak ditemukan.');
         }
 
