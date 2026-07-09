@@ -8,16 +8,15 @@ use App\Models\PayrollSetting;
 use App\Models\User;
 use App\Services\AttendanceService;
 use App\Services\PayrollService;
+use Barryvdh\Snappy\Facades\SnappyPdf as PDF;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Barryvdh\Snappy\Facades\SnappyPdf as PDF;
 
 class PayrollController extends BaseApiController
 {
     public function __construct(
-        private PayrollService    $payrollService,
+        private PayrollService $payrollService,
         private AttendanceService $attendanceService
     ) {}
 
@@ -28,7 +27,7 @@ class PayrollController extends BaseApiController
     public function index(): JsonResponse
     {
         $request = request();
-        $query   = Payroll::with('user')->orderBy('year', 'desc')->orderBy('month', 'desc');
+        $query = Payroll::with('user')->orderBy('year', 'desc')->orderBy('month', 'desc');
 
         if ($request->filled('month')) {
             try {
@@ -51,9 +50,9 @@ class PayrollController extends BaseApiController
             200,
             [
                 'current_page' => $payrolls->currentPage(),
-                'last_page'    => $payrolls->lastPage(),
-                'per_page'     => $payrolls->perPage(),
-                'total'        => $payrolls->total(),
+                'last_page' => $payrolls->lastPage(),
+                'per_page' => $payrolls->perPage(),
+                'total' => $payrolls->total(),
             ]
         );
     }
@@ -83,12 +82,12 @@ class PayrollController extends BaseApiController
             'Data payroll bulanan berhasil diambil.',
             200,
             [
-                'period'      => $date->translatedFormat('F Y'),
-                'month'       => $date->month,
-                'year'        => $date->year,
+                'period' => $date->translatedFormat('F Y'),
+                'month' => $date->month,
+                'year' => $date->year,
                 'staff_count' => $payrolls->count(),
-                'total_gaji'  => (float) $totalGaji,
-                'total_gaji_formatted' => 'Rp ' . number_format($totalGaji, 0, ',', '.'),
+                'total_gaji' => (float) $totalGaji,
+                'total_gaji_formatted' => 'Rp '.number_format($totalGaji, 0, ',', '.'),
             ]
         );
     }
@@ -129,21 +128,21 @@ class PayrollController extends BaseApiController
 
         return $this->successResponse(
             [
-                'payroll'    => $payroll,
+                'payroll' => $payroll,
                 'attendance' => [
-                    'total_hadir'   => $attendance['total_hadir'],
-                    'total_libur'   => $attendance['total_libur'],
-                    'total_sakit'   => $attendance['total_sakit'],
-                    'total_izin'    => $attendance['total_izin'],
-                    'total_alpha'   => $attendance['total_alpha'],
+                    'total_hadir' => $attendance['total_hadir'],
+                    'total_libur' => $attendance['total_libur'],
+                    'total_sakit' => $attendance['total_sakit'],
+                    'total_izin' => $attendance['total_izin'],
+                    'total_alpha' => $attendance['total_alpha'],
                     'libur_dibayar' => $attendance['libur_dibayar'],
-                    'hari_bayar'    => $attendance['hari_bayar'],
+                    'hari_bayar' => $attendance['hari_bayar'],
                 ],
                 'staff' => [
-                    'id'    => $staff->id,
-                    'name'  => $staff->name,
+                    'id' => $staff->id,
+                    'name' => $staff->name,
                     'shift' => $staff->shift,
-                    'role'  => $staff->role,
+                    'role' => $staff->role,
                 ],
             ],
             'Detail payroll berhasil diambil.'
@@ -171,10 +170,10 @@ class PayrollController extends BaseApiController
             'Kalkulasi payroll berhasil.',
             200,
             [
-                'period'      => $date->month . '/' . $date->year,
+                'period' => $date->month.'/'.$date->year,
                 'staff_count' => $payrolls->count(),
-                'total_gaji'  => (float) $totalGaji,
-                'total_gaji_formatted' => 'Rp ' . number_format($totalGaji, 0, ',', '.'),
+                'total_gaji' => (float) $totalGaji,
+                'total_gaji_formatted' => 'Rp '.number_format($totalGaji, 0, ',', '.'),
             ]
         );
     }
@@ -207,19 +206,19 @@ class PayrollController extends BaseApiController
         ];
 
         $viewData = [
-            'payrolls'     => $payrolls,
-            'total_gaji'   => $totalGaji,
-            'period'       => ($months[$date->month] ?? $date->month) . ' ' . $date->year,
-            'month'        => $date->month,
-            'year'         => $date->year,
+            'payrolls' => $payrolls,
+            'total_gaji' => $totalGaji,
+            'period' => ($months[$date->month] ?? $date->month).' '.$date->year,
+            'month' => $date->month,
+            'year' => $date->year,
             'generated_at' => now()->format('d/m/Y H:i:s'),
         ];
 
-        $filename = 'rekap-gaji-' . str_pad($date->month, 2, '0', STR_PAD_LEFT) . '-' . $date->year . '.pdf';
+        $filename = 'rekap-gaji-'.str_pad($date->month, 2, '0', STR_PAD_LEFT).'-'.$date->year.'.pdf';
 
         return PDF::loadView('pdf.rekap-penggajian', $viewData)
-                  ->setPaper('a4', 'portrait')
-                  ->download($filename);
+            ->setPaper('a4', 'portrait')
+            ->download($filename);
     }
 
     /**
@@ -262,21 +261,21 @@ class PayrollController extends BaseApiController
         ];
 
         $viewData = [
-            'staff'        => $staff,
-            'payroll'      => $payroll,
-            'attendance'   => $attendance,
-            'period'       => ($months[$date->month] ?? $date->month) . ' ' . $date->year,
-            'month'        => $date->month,
-            'year'         => $date->year,
+            'staff' => $staff,
+            'payroll' => $payroll,
+            'attendance' => $attendance,
+            'period' => ($months[$date->month] ?? $date->month).' '.$date->year,
+            'month' => $date->month,
+            'year' => $date->year,
             'generated_at' => now()->format('d/m/Y H:i:s'),
         ];
 
         $safeName = str_replace(' ', '-', strtolower($staff->name));
-        $filename = 'slip-gaji-' . $safeName . '-' . str_pad($date->month, 2, '0', STR_PAD_LEFT) . '-' . $date->year . '.pdf';
+        $filename = 'slip-gaji-'.$safeName.'-'.str_pad($date->month, 2, '0', STR_PAD_LEFT).'-'.$date->year.'.pdf';
 
         return PDF::loadView('pdf.slip-gaji', $viewData)
-                  ->setPaper('a4', 'portrait')
-                  ->download($filename);
+            ->setPaper('a4', 'portrait')
+            ->download($filename);
     }
 
     /**
@@ -286,9 +285,9 @@ class PayrollController extends BaseApiController
     public function setDailyRate(SetDailyRateRequest $request): JsonResponse
     {
         $setting = PayrollSetting::create([
-            'daily_rate'     => $request->daily_rate,
+            'daily_rate' => $request->daily_rate,
             'effective_date' => Carbon::today(),
-            'set_by'         => Auth::id(),
+            'set_by' => Auth::id(),
         ]);
 
         $setting->load('setter');

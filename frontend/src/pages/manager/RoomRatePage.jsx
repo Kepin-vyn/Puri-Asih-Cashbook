@@ -4,11 +4,6 @@ import { Save, RotateCcw, Building2 } from "lucide-react";
 import toast from "react-hot-toast";
 import roomRateService from "../../services/roomRateService";
 
-const formatRp = (v) =>
-  new Intl.NumberFormat("id-ID", {
-    style: "currency", currency: "IDR", maximumFractionDigits: 0,
-  }).format(v ?? 0).replace("IDR", "Rp");
-
 const RoomRatePage = () => {
   const queryClient = useQueryClient();
   const [rates, setRates] = useState({});
@@ -32,7 +27,7 @@ const RoomRatePage = () => {
   // Bulk update mutation
   const bulkMutation = useMutation({
     mutationFn: roomRateService.bulkUpdate,
-    onSuccess: (res) => {
+    onSuccess: (_res) => {
       toast.success("Tarif kamar berhasil disimpan!");
       queryClient.invalidateQueries({ queryKey: ["room-rates"] });
       setHasChanges(false);
@@ -91,8 +86,8 @@ const RoomRatePage = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Tarif Kamar</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-2xl font-bold text-black">Tarif Kamar</h1>
+          <p className="text-sm text-[#737373] mt-0.5">
             Atur harga per malam untuk setiap kamar. Harga ini akan otomatis digunakan saat staff membuat reservasi.
           </p>
         </div>
@@ -100,7 +95,7 @@ const RoomRatePage = () => {
           {hasChanges && (
             <button
               onClick={handleReset}
-              className="flex items-center gap-2 text-sm text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 px-3 py-2.5 rounded-xl transition-colors shadow-sm"
+              className="flex items-center gap-2 text-sm text-[#525252] bg-white border border-[#e5e5e5] hover:bg-[#fafafa] px-3 py-2.5 rounded-xl transition-colors "
             >
               <RotateCcw size={15} />
               Reset
@@ -109,7 +104,7 @@ const RoomRatePage = () => {
           <button
             onClick={handleSave}
             disabled={!hasChanges || bulkMutation.isPending}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all shadow-sm"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-lg font-medium text-white bg-black hover:bg-[#090909] disabled:bg-gray-300 disabled:cursor-not-allowed transition-all "
           >
             <Save size={15} />
             {bulkMutation.isPending ? "Menyimpan..." : "Simpan Semua"}
@@ -118,11 +113,11 @@ const RoomRatePage = () => {
       </div>
 
       {/* Bulk apply */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+      <div className="bg-[#fafafa] border border-[#e5e5e5] rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
         <Building2 size={20} className="text-blue-500 mt-0.5 shrink-0" />
         <div className="flex-1">
           <p className="text-sm font-semibold text-blue-800">Terapkan Harga Seragam</p>
-          <p className="text-xs text-blue-600">Masukkan harga dan terapkan ke semua kamar sekaligus.</p>
+          <p className="text-xs text-black">Masukkan harga dan terapkan ke semua kamar sekaligus.</p>
         </div>
         <div className="flex items-center gap-2">
           <input
@@ -130,11 +125,11 @@ const RoomRatePage = () => {
             value={bulkPrice ? `Rp ${Number(bulkPrice).toLocaleString("id-ID")}` : ""}
             onChange={(e) => setBulkPrice(e.target.value.replace(/\D/g, ""))}
             placeholder="Rp 350.000"
-            className="w-44 px-3 py-2 border border-blue-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+            className="w-44 px-3 py-2 border border-[#e5e5e5] rounded-xl text-sm focus:outline-none  focus:ring-blue-400 bg-white"
           />
           <button
             onClick={handleBulkApply}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors"
+            className="px-4 py-2 text-sm font-medium text-white bg-black hover:bg-[#090909] rounded-xl transition-colors"
           >
             Terapkan
           </button>
@@ -143,29 +138,29 @@ const RoomRatePage = () => {
 
       {/* Room rate grid */}
       {isLoading ? (
-        <div className="text-center py-16 text-gray-400">
+        <div className="text-center py-16 text-[#a3a3a3]">
           <div className="w-8 h-8 border-4 border-gray-300 border-t-blue-600 rounded-full animate-spin mx-auto mb-3" />
           <p className="text-sm">Memuat tarif kamar...</p>
         </div>
       ) : (
         Object.entries(floors).map(([floorName, rooms]) => (
-          <div key={floorName} className="bg-white rounded-2xl shadow-sm border border-gray-100">
-            <div className="p-5 border-b border-gray-100">
-              <h2 className="font-semibold text-gray-800">{floorName}</h2>
-              <p className="text-xs text-gray-500 mt-0.5">{rooms.length} kamar</p>
+          <div key={floorName} className="bg-white rounded-xl  border border-[#e5e5e5]">
+            <div className="p-5 border-b border-[#e5e5e5]">
+              <h2 className="font-semibold text-black">{floorName}</h2>
+              <p className="text-xs text-[#737373] mt-0.5">{rooms.length} kamar</p>
             </div>
             <div className="p-5">
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
                 {rooms.map((room) => (
-                  <div key={room} className="border border-gray-200 rounded-xl p-3 hover:border-blue-300 transition-colors">
-                    <p className="text-xs font-bold text-gray-500 mb-2 text-center">Kamar {room}</p>
+                  <div key={room} className="border border-[#e5e5e5] rounded-xl p-3 hover:border-blue-300 transition-colors">
+                    <p className="text-xs font-bold text-[#737373] mb-2 text-center">Kamar {room}</p>
                     <input
                       type="text"
                       value={rates[room] ? rates[room].toLocaleString("id-ID") : "0"}
                       onChange={(e) => handleRateChange(room, e.target.value)}
-                      className="w-full px-2 py-1.5 border border-gray-200 rounded-lg text-sm text-center font-semibold focus:outline-none focus:ring-2 focus:ring-blue-400"
+                      className="w-full px-2 py-1.5 border border-[#e5e5e5] rounded-lg text-sm text-center font-semibold focus:outline-none  focus:ring-blue-400"
                     />
-                    <p className="text-[10px] text-gray-400 text-center mt-1">/ malam</p>
+                    <p className="text-[10px] text-[#a3a3a3] text-center mt-1">/ malam</p>
                   </div>
                 ))}
               </div>
@@ -183,14 +178,14 @@ const RoomRatePage = () => {
           <div className="flex gap-2">
             <button
               onClick={handleReset}
-              className="px-4 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 rounded-xl transition-colors"
+              className="px-4 py-2 text-sm font-medium text-[#525252] bg-white border border-[#e5e5e5] hover:bg-[#fafafa] rounded-xl transition-colors"
             >
               Reset
             </button>
             <button
               onClick={handleSave}
               disabled={bulkMutation.isPending}
-              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors flex items-center gap-2"
+              className="px-4 py-2 text-sm font-medium text-white bg-black hover:bg-[#090909] rounded-xl transition-colors flex items-center gap-2"
             >
               <Save size={14} />
               {bulkMutation.isPending ? "Menyimpan..." : "Simpan"}

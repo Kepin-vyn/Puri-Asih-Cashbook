@@ -2,11 +2,11 @@
 
 namespace App\Services;
 
-use App\Models\Shift;
-use App\Models\KasTransaction;
-use App\Models\Expense;
-use App\Models\Reservation;
 use App\Models\Deposit;
+use App\Models\Expense;
+use App\Models\KasTransaction;
+use App\Models\Reservation;
+use App\Models\Shift;
 use Illuminate\Support\Facades\DB;
 
 class ShiftService
@@ -69,50 +69,50 @@ class ShiftService
             )
             ->first();
 
-        $totalKas       = (float) $kas->total_kas;
-        $totalExpenses  = (float) $expenses->total_expenses;
+        $totalKas = (float) $kas->total_kas;
+        $totalExpenses = (float) $expenses->total_expenses;
         $totalReservasi = (float) $reservations->total_reservasi;
-        $totalDepositMasuk  = (float) $depositMasuk->total_deposit_masuk;
+        $totalDepositMasuk = (float) $depositMasuk->total_deposit_masuk;
         $totalDepositKeluar = (float) $depositKeluar->total_deposit_keluar;
 
-        $totalPemasukan   = $totalKas + $totalReservasi;
+        $totalPemasukan = $totalKas + $totalReservasi;
         $totalPengeluaran = $totalExpenses;
-        $saldoAkhir       = $totalPemasukan - $totalPengeluaran;
+        $saldoAkhir = $totalPemasukan - $totalPengeluaran;
 
         return [
             'kas' => [
-                'total'  => (int) $totalKas,
-                'count'  => (int) $kas->kas_count,
-                'total_formatted' => 'Rp ' . number_format($totalKas, 0, ',', '.'),
+                'total' => (int) $totalKas,
+                'count' => (int) $kas->kas_count,
+                'total_formatted' => 'Rp '.number_format($totalKas, 0, ',', '.'),
             ],
             'expenses' => [
-                'total'  => (int) $totalExpenses,
-                'count'  => (int) $expenses->expense_count,
-                'total_formatted' => 'Rp ' . number_format($totalExpenses, 0, ',', '.'),
+                'total' => (int) $totalExpenses,
+                'count' => (int) $expenses->expense_count,
+                'total_formatted' => 'Rp '.number_format($totalExpenses, 0, ',', '.'),
             ],
             'reservations' => [
-                'total'  => (int) $totalReservasi,
-                'count'  => (int) $reservations->reservation_count,
-                'total_formatted' => 'Rp ' . number_format($totalReservasi, 0, ',', '.'),
+                'total' => (int) $totalReservasi,
+                'count' => (int) $reservations->reservation_count,
+                'total_formatted' => 'Rp '.number_format($totalReservasi, 0, ',', '.'),
             ],
             'deposits' => [
                 'masuk' => [
-                    'total'  => (int) $totalDepositMasuk,
-                    'count'  => (int) $depositMasuk->deposit_masuk_count,
-                    'total_formatted' => 'Rp ' . number_format($totalDepositMasuk, 0, ',', '.'),
+                    'total' => (int) $totalDepositMasuk,
+                    'count' => (int) $depositMasuk->deposit_masuk_count,
+                    'total_formatted' => 'Rp '.number_format($totalDepositMasuk, 0, ',', '.'),
                 ],
                 'keluar' => [
-                    'total'  => (int) $totalDepositKeluar,
-                    'count'  => (int) $depositKeluar->deposit_keluar_count,
-                    'total_formatted' => 'Rp ' . number_format($totalDepositKeluar, 0, ',', '.'),
+                    'total' => (int) $totalDepositKeluar,
+                    'count' => (int) $depositKeluar->deposit_keluar_count,
+                    'total_formatted' => 'Rp '.number_format($totalDepositKeluar, 0, ',', '.'),
                 ],
             ],
-            'total_pemasukan'  => (int) $totalPemasukan,
-            'total_pemasukan_formatted'  => 'Rp ' . number_format($totalPemasukan, 0, ',', '.'),
+            'total_pemasukan' => (int) $totalPemasukan,
+            'total_pemasukan_formatted' => 'Rp '.number_format($totalPemasukan, 0, ',', '.'),
             'total_pengeluaran' => (int) $totalPengeluaran,
-            'total_pengeluaran_formatted' => 'Rp ' . number_format($totalPengeluaran, 0, ',', '.'),
-            'saldo_akhir'      => (int) $saldoAkhir,
-            'saldo_akhir_formatted' => 'Rp ' . number_format($saldoAkhir, 0, ',', '.'),
+            'total_pengeluaran_formatted' => 'Rp '.number_format($totalPengeluaran, 0, ',', '.'),
+            'saldo_akhir' => (int) $saldoAkhir,
+            'saldo_akhir_formatted' => 'Rp '.number_format($saldoAkhir, 0, ',', '.'),
         ];
     }
 
@@ -129,14 +129,14 @@ class ShiftService
         if ($pendingCount > 0) {
             return [
                 'can_handover' => false,
-                'message'      => "Masih ada {$pendingCount} pengeluaran menunggu persetujuan.",
+                'message' => "Masih ada {$pendingCount} pengeluaran menunggu persetujuan.",
                 'pending_count' => $pendingCount,
             ];
         }
 
         return [
-            'can_handover'  => true,
-            'message'       => 'Shift siap untuk diserahterimakan.',
+            'can_handover' => true,
+            'message' => 'Shift siap untuk diserahterimakan.',
             'pending_count' => 0,
         ];
     }
@@ -176,29 +176,29 @@ class ShiftService
         $shift->load(['user', 'handoverUser']);
 
         $typeLabels = [
-            'pagi'   => 'Pagi',
-            'siang'  => 'Siang',
-            'malam'  => 'Malam',
+            'pagi' => 'Pagi',
+            'siang' => 'Siang',
+            'malam' => 'Malam',
         ];
 
         return [
             'shift' => [
-                'id'         => $shift->id,
+                'id' => $shift->id,
                 'staff_name' => $shift->user->name ?? '-',
-                'type'       => $shift->type,
+                'type' => $shift->type,
                 'type_label' => $typeLabels[$shift->type] ?? $shift->type,
                 'started_at' => $shift->started_at?->format('d/m/Y H:i'),
-                'ended_at'   => $shift->ended_at?->format('d/m/Y H:i'),
-                'tanggal'    => $shift->started_at?->format('d/m/Y'),
-                'status'     => $shift->status,
+                'ended_at' => $shift->ended_at?->format('d/m/Y H:i'),
+                'tanggal' => $shift->started_at?->format('d/m/Y'),
+                'status' => $shift->status,
                 'handover_to_name' => $shift->handoverUser->name ?? null,
-                'handover_note'    => $shift->handover_note,
+                'handover_note' => $shift->handover_note,
             ],
-            'summary'      => $summary,
-            'kas'          => $kasTransactions,
-            'expenses'     => $expenses,
+            'summary' => $summary,
+            'kas' => $kasTransactions,
+            'expenses' => $expenses,
             'reservations' => $reservations,
-            'deposits'     => $deposits,
+            'deposits' => $deposits,
         ];
     }
 }

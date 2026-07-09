@@ -2,20 +2,19 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Resources\NotificationResource;
+use App\Models\ActivityLog;
 use App\Models\Deposit;
 use App\Models\Expense;
 use App\Models\KasTransaction;
 use App\Models\Notification;
 use App\Models\Reservation;
 use App\Models\Shift;
-use App\Models\ActivityLog;
 use App\Models\User;
 use App\Services\ReservationService;
 use App\Services\ShiftService;
-use App\Http\Resources\NotificationResource;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -101,7 +100,7 @@ class DashboardController extends BaseApiController
             ->whereNotIn('status', ['cancel', 'noshow'])
             ->value(DB::raw('COALESCE(SUM(room_price), 0)'));
 
-        $today_revenue = (int)$kasRevenue + (int)$reservationRevenue;
+        $today_revenue = (int) $kasRevenue + (int) $reservationRevenue;
 
         // 3. Today Expenses (approved / auto_approved)
         $today_expenses = Expense::whereDate('created_at', $today)
@@ -178,15 +177,15 @@ class DashboardController extends BaseApiController
             $totalActions = array_sum($activities);
 
             return [
-                'user_id'    => $user->id,
-                'name'       => $user->name,
-                'shift'      => $user->shift,
-                'reservasi'  => $activities['reservation'] ?? 0,
-                'kas'        => $activities['kas'] ?? 0,
-                'deposit'    => $activities['deposit'] ?? 0,
-                'pengeluaran'=> $activities['expense'] ?? 0,
-                'absensi'    => $activities['attendance'] ?? 0,
-                'total'      => $totalActions,
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'shift' => $user->shift,
+                'reservasi' => $activities['reservation'] ?? 0,
+                'kas' => $activities['kas'] ?? 0,
+                'deposit' => $activities['deposit'] ?? 0,
+                'pengeluaran' => $activities['expense'] ?? 0,
+                'absensi' => $activities['attendance'] ?? 0,
+                'total' => $totalActions,
             ];
         });
 

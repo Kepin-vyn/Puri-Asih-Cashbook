@@ -18,15 +18,15 @@ const SkeletonRow = ({ colCount }) => (
   <tr>
     {Array.from({ length: colCount }).map((_, i) => (
       <td key={i} className="px-4 py-3">
-        <div className="h-4 bg-gray-200 rounded animate-pulse" />
+        <div className="h-4 bg-[#e5e5e5] rounded animate-pulse" />
       </td>
     ))}
   </tr>
 );
 
 const SortIcon = ({ direction }) => {
-  if (direction === "asc")  return <ChevronUp size={13} className="text-blue-600" />;
-  if (direction === "desc") return <ChevronDown size={13} className="text-blue-600" />;
+  if (direction === "asc")  return <ChevronUp size={13} className="text-black" />;
+  if (direction === "desc") return <ChevronDown size={13} className="text-black" />;
   return <ChevronsUpDown size={13} className="text-gray-300" />;
 };
 
@@ -80,12 +80,12 @@ const DataTable = ({
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-50 text-left">
+            <tr className="bg-[#fafafa] text-left">
               {columns.map((col) => (
                 <th
                   key={col.key}
-                  className={`px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap select-none ${
-                    col.sortable ? "cursor-pointer hover:text-gray-700" : ""
+                  className={`px-4 py-3 text-xs font-semibold text-[#737373] uppercase tracking-wide whitespace-nowrap select-none ${
+                    col.sortable ? "cursor-pointer hover:text-[#525252]" : ""
                   } ${col.headerClassName ?? ""}`}
                   onClick={col.sortable ? () => handleSort(col.key) : undefined}
                 >
@@ -100,14 +100,14 @@ const DataTable = ({
             </tr>
           </thead>
 
-          <tbody className="divide-y divide-gray-50">
+          <tbody className="divide-y divide-[#e5e5e5]">
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <SkeletonRow key={i} colCount={columns.length} />
               ))
             ) : paginated.length === 0 ? (
               <tr>
-                <td colSpan={columns.length} className="text-center py-14 text-gray-400">
+                <td colSpan={columns.length} className="text-center py-14 text-[#a3a3a3]">
                   <FileText size={36} className="mx-auto mb-3 opacity-20" />
                   <p className="text-sm">{emptyMessage}</p>
                 </td>
@@ -117,14 +117,14 @@ const DataTable = ({
                 <tr
                   key={row.id ?? idx}
                   onClick={onRowClick ? () => onRowClick(row) : undefined}
-                  className={`hover:bg-gray-50 transition-colors ${
+                  className={`hover:bg-[#fafafa] transition-colors ${
                     onRowClick ? "cursor-pointer" : ""
                   }`}
                 >
                   {columns.map((col) => (
                     <td
                       key={col.key}
-                      className={`px-4 py-3 text-gray-700 ${col.className ?? ""}`}
+                      className={`px-4 py-3 text-[#525252] ${col.className ?? ""}`}
                     >
                       {col.render
                         ? col.render(row, (page - 1) * pageSize + idx)
@@ -145,8 +145,8 @@ const DataTable = ({
 
       {/* ── Pagination ── */}
       {!isLoading && totalPages > 1 && (
-        <div className="flex items-center justify-between px-4 py-3 border-t border-gray-100">
-          <p className="text-xs text-gray-500">
+        <div className="flex items-center justify-between px-4 py-3 border-t border-[#e5e5e5]">
+          <p className="text-xs text-[#737373]">
             {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, sorted.length)} dari{" "}
             {sorted.length} data
           </p>
@@ -154,7 +154,7 @@ const DataTable = ({
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="px-3 py-1.5 text-xs text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg disabled:opacity-40 transition-colors"
+              className="px-3 py-1.5 text-xs text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-lg disabled:opacity-40 transition-colors"
             >
               ← Prev
             </button>
@@ -164,15 +164,15 @@ const DataTable = ({
               return acc;
             }, []).map((p, i) =>
               p === "..." ? (
-                <span key={`e-${i}`} className="px-2 text-gray-400 text-xs">…</span>
+                <span key={`e-${i}`} className="px-2 text-[#a3a3a3] text-xs">…</span>
               ) : (
                 <button
                   key={p}
                   onClick={() => setPage(p)}
                   className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
                     page === p
-                      ? "bg-blue-600 text-white"
-                      : "text-gray-600 bg-gray-100 hover:bg-gray-200"
+                      ? "bg-black text-white"
+                      : "text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5]"
                   }`}
                 >
                   {p}
@@ -182,7 +182,7 @@ const DataTable = ({
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="px-3 py-1.5 text-xs text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg disabled:opacity-40 transition-colors"
+              className="px-3 py-1.5 text-xs text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-lg disabled:opacity-40 transition-colors"
             >
               Next →
             </button>

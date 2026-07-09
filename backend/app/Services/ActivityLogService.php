@@ -29,13 +29,13 @@ class ActivityLogService
         }
 
         return ActivityLog::create([
-            'user_id'     => $userId ?? Auth::id(),
-            'shift_id'    => $shiftId,
-            'module'      => $module,
-            'action'      => $action,
+            'user_id' => $userId ?? Auth::id(),
+            'shift_id' => $shiftId,
+            'module' => $module,
+            'action' => $action,
             'description' => $description,
-            'meta'        => $meta,
-            'created_at'  => now(),
+            'meta' => $meta,
+            'created_at' => now(),
         ]);
     }
 }

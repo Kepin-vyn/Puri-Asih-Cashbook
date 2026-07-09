@@ -6,8 +6,9 @@ use App\Http\Requests\Attendance\CheckinRequest;
 use App\Http\Requests\Attendance\UpdateStatusRequest;
 use App\Models\Attendance;
 use App\Models\Shift;
-use App\Services\AttendanceService;
+use App\Models\User;
 use App\Services\ActivityLogService;
+use App\Services\AttendanceService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -33,21 +34,21 @@ class AttendanceController extends BaseApiController
         $user = Auth::user();
 
         // Resolve shift dari jadwal mingguan atau shift statis
-        $shiftType  = $this->attendanceService->resolveShift($user->id, $user->shift);
+        $shiftType = $this->attendanceService->resolveShift($user->id, $user->shift);
         $shiftHours = $this->attendanceService->getShiftHours($shiftType);
-        $isOff      = $shiftType === 'off';
+        $isOff = $shiftType === 'off';
 
         // Cek apakah saat ini dalam window shift
-        $now           = Carbon::now();
+        $now = Carbon::now();
         $isWithinWindow = $isOff ? false : $this->attendanceService->isWithinShiftWindow($shiftType, $now);
 
         return $this->successResponse([
-            'shift_type'       => $shiftType,
-            'shift_label'      => ucfirst($shiftType ?? '-'),
-            'shift_hours'      => $shiftHours,
-            'is_off'           => $isOff,
+            'shift_type' => $shiftType,
+            'shift_label' => ucfirst($shiftType ?? '-'),
+            'shift_hours' => $shiftHours,
+            'is_off' => $isOff,
             'is_within_window' => $isWithinWindow,
-            'server_date'      => $now->toDateString(),
+            'server_date' => $now->toDateString(),
         ], 'Shift hari ini');
     }
 
@@ -60,7 +61,7 @@ class AttendanceController extends BaseApiController
      */
     public function index(Request $request): JsonResponse
     {
-        $user  = Auth::user();
+        $user = Auth::user();
         $query = Attendance::with('user');
 
         if ($user->role === 'fo') {
@@ -82,21 +83,21 @@ class AttendanceController extends BaseApiController
                 try {
                     $date = Carbon::createFromFormat('Y-m', $monthParam);
                     $query->whereMonth('attendance_date', $date->month)
-                          ->whereYear('attendance_date', $date->year);
+                        ->whereYear('attendance_date', $date->year);
                 } catch (\Exception $e) {
                     return $this->errorResponse('Format bulan tidak valid. Gunakan format Y-m (contoh: 2026-05).', null, 422);
                 }
             } else {
                 // Format numerik: month=06, year=2026
                 $month = (int) $monthParam;
-                $year  = $request->filled('year') ? (int) $request->year : Carbon::now()->year;
+                $year = $request->filled('year') ? (int) $request->year : Carbon::now()->year;
 
                 if ($month < 1 || $month > 12) {
                     return $this->errorResponse('Bulan tidak valid. Gunakan angka 1-12.', null, 422);
                 }
 
                 $query->whereMonth('attendance_date', $month)
-                      ->whereYear('attendance_date', $year);
+                    ->whereYear('attendance_date', $year);
             }
         }
 
@@ -113,9 +114,9 @@ class AttendanceController extends BaseApiController
             200,
             [
                 'current_page' => $attendances->currentPage(),
-                'last_page'    => $attendances->lastPage(),
-                'per_page'     => $attendances->perPage(),
-                'total'        => $attendances->total(),
+                'last_page' => $attendances->lastPage(),
+                'per_page' => $attendances->perPage(),
+                'total' => $attendances->total(),
             ]
         );
     }
@@ -125,9 +126,9 @@ class AttendanceController extends BaseApiController
      */
     public function checkin(CheckinRequest $request): JsonResponse
     {
-        $user  = Auth::user();
+        $user = Auth::user();
         $today = Carbon::today();
-        $now   = Carbon::now();
+        $now = Carbon::now();
 
         // Cek sudah absen hari ini
         $alreadyCheckedIn = Attendance::where('user_id', $user->id)
@@ -151,8 +152,9 @@ class AttendanceController extends BaseApiController
         }
 
         // Tolak jika di luar jam shift (toleransi 30 menit sebelum shift)
-        if (!$this->attendanceService->isWithinShiftWindow($resolvedShift, $now)) {
+        if (! $this->attendanceService->isWithinShiftWindow($resolvedShift, $now)) {
             $shiftHours = $this->attendanceService->getShiftHours($resolvedShift);
+
             return $this->errorResponse(
                 "Check-in ditolak. Shift Anda hari ini adalah {$resolvedShift} ({$shiftHours}). Silakan check-in pada jam shift Anda.",
                 null,
@@ -168,29 +170,29 @@ class AttendanceController extends BaseApiController
             ->where('status', 'active')
             ->first();
 
-        if (!$activeShift) {
+        if (! $activeShift) {
             $activeShift = Shift::create([
-                'user_id'    => $user->id,
-                'type'       => $resolvedShift,
+                'user_id' => $user->id,
+                'type' => $resolvedShift,
                 'started_at' => $now,
-                'status'     => 'active',
+                'status' => 'active',
             ]);
         }
 
         $attendance = Attendance::create([
-            'user_id'           => $user->id,
-            'shift_id'          => $activeShift->id,
-            'shift_type'        => $resolvedShift,
-            'actual_start'      => $now,
-            'status'            => 'hadir',
-            'is_late'           => $isLate,
+            'user_id' => $user->id,
+            'shift_id' => $activeShift->id,
+            'shift_type' => $resolvedShift,
+            'actual_start' => $now,
+            'status' => 'hadir',
+            'is_late' => $isLate,
             'digital_signature' => $request->digital_signature,
-            'attendance_date'   => $today,
+            'attendance_date' => $today,
         ]);
 
         $attendance->load(['user', 'shift']);
 
-        $this->activityLog->log('attendance', 'checkin', 'Check-in absensi' . ($isLate ? ' (terlambat)' : '') . '. Shift ' . $resolvedShift . ' dimulai.', ['shift_type' => $resolvedShift, 'is_late' => $isLate], $user->id, $activeShift->id);
+        $this->activityLog->log('attendance', 'checkin', 'Check-in absensi'.($isLate ? ' (terlambat)' : '').'. Shift '.$resolvedShift.' dimulai.', ['shift_type' => $resolvedShift, 'is_late' => $isLate], $user->id, $activeShift->id);
 
         return $this->successResponse(
             $attendance,
@@ -206,7 +208,7 @@ class AttendanceController extends BaseApiController
      */
     public function checkout(Request $request): JsonResponse
     {
-        $user  = Auth::user();
+        $user = Auth::user();
         $today = Carbon::today();
 
         $attendance = Attendance::where('user_id', $user->id)
@@ -255,8 +257,8 @@ class AttendanceController extends BaseApiController
     public function monthly(string $staffId): JsonResponse
     {
         $request = request();
-        $month   = (int) $request->get('month', now()->month);
-        $year    = (int) $request->get('year',  now()->year);
+        $month = (int) $request->get('month', now()->month);
+        $year = (int) $request->get('year', now()->year);
 
         if ($month < 1 || $month > 12) {
             return $this->errorResponse('Bulan tidak valid. Gunakan angka 1-12.', null, 422);
@@ -265,16 +267,16 @@ class AttendanceController extends BaseApiController
         $summary = $this->attendanceService->getMonthlyAttendance((int) $staffId, $month, $year);
 
         // Tambahkan info user
-        $user = \App\Models\User::find($staffId);
+        $user = User::find($staffId);
         if (! $user) {
             return $this->notFoundResponse('Staff tidak ditemukan.');
         }
 
         return $this->successResponse(
             array_merge($summary, [
-                'staff_name'  => $user->name,
+                'staff_name' => $user->name,
                 'staff_shift' => $user->shift,
-                'staff_role'  => $user->role,
+                'staff_role' => $user->role,
             ]),
             'Ringkasan kehadiran bulanan berhasil diambil.'
         );

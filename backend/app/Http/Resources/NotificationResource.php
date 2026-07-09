@@ -2,9 +2,9 @@
 
 namespace App\Http\Resources;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Carbon\Carbon;
 
 class NotificationResource extends JsonResource
 {
@@ -14,15 +14,15 @@ class NotificationResource extends JsonResource
         Carbon::setLocale('id');
 
         return [
-            'id'         => $this->id,
-            'type'       => $this->type,
-            'title'      => $this->title,
-            'message'    => $this->message,
-            'data'       => $this->data,
-            'is_read'    => $this->read_at !== null,
-            'read_at'    => $this->read_at?->format('d/m/Y H:i'),
+            'id' => $this->id,
+            'type' => $this->type,
+            'title' => $this->title,
+            'message' => $this->message,
+            'data' => $this->data,
+            'is_read' => $this->read_at !== null,
+            'read_at' => $this->read_at?->format('d/m/Y H:i'),
             'created_at' => $this->created_at?->format('d/m/Y H:i'),
-            'time_ago'   => $this->created_at
+            'time_ago' => $this->created_at
                 ? Carbon::parse($this->created_at)->diffForHumans()
                 : null,
         ];

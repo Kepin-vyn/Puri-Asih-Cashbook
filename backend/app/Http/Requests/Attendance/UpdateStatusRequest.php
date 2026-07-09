@@ -23,7 +23,7 @@ class UpdateStatusRequest extends FormRequest
     {
         return [
             'status.required' => 'Status absensi wajib dipilih.',
-            'status.in'       => 'Status tidak valid. Pilih: hadir, libur, sakit, izin, atau alpha.',
+            'status.in' => 'Status tidak valid. Pilih: hadir, libur, sakit, izin, atau alpha.',
         ];
     }
 
@@ -48,7 +48,7 @@ class UpdateStatusRequest extends FormRequest
             $month = $attendance->attendance_date
                 ? $attendance->attendance_date->month
                 : now()->month;
-            $year  = $attendance->attendance_date
+            $year = $attendance->attendance_date
                 ? $attendance->attendance_date->year
                 : now()->year;
 

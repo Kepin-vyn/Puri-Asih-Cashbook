@@ -113,7 +113,7 @@ const SignatureCanvas = ({ onSignatureChange, disabled = false, height = 160 }) 
       <div
         className={`relative rounded-xl border-2 transition-colors overflow-hidden bg-white ${
           disabled
-            ? "border-gray-200 bg-gray-50 cursor-not-allowed"
+            ? "border-[#e5e5e5] bg-[#fafafa] cursor-not-allowed"
             : isEmpty
             ? "border-dashed border-gray-300 cursor-crosshair"
             : "border-solid border-blue-400 cursor-crosshair"
@@ -142,8 +142,8 @@ const SignatureCanvas = ({ onSignatureChange, disabled = false, height = 160 }) 
 
         {/* Disabled overlay */}
         {disabled && (
-          <div className="absolute inset-0 bg-gray-100/60 flex items-center justify-center">
-            <p className="text-xs text-gray-400">Tanda tangan tidak tersedia</p>
+          <div className="absolute inset-0 bg-[#fafafa]/60 flex items-center justify-center">
+            <p className="text-xs text-[#a3a3a3]">Tanda tangan tidak tersedia</p>
           </div>
         )}
       </div>

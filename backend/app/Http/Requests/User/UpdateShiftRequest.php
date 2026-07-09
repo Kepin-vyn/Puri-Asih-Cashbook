@@ -22,7 +22,7 @@ class UpdateShiftRequest extends FormRequest
     {
         return [
             'shift.required' => 'Shift wajib dipilih.',
-            'shift.in'       => 'Shift harus pagi, siang, atau malam.',
+            'shift.in' => 'Shift harus pagi, siang, atau malam.',
         ];
     }
 }

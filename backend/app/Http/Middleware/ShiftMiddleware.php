@@ -13,7 +13,7 @@ class ShiftMiddleware
      * Handle an incoming request.
      * Memastikan staff FO memiliki shift aktif sebelum mencatat transaksi.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -26,7 +26,7 @@ class ShiftMiddleware
                 ->where('status', 'active')
                 ->first();
 
-            if (!$activeShift) {
+            if (! $activeShift) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Tidak ada shift aktif',

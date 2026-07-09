@@ -22,8 +22,8 @@ class RejectExpenseRequest extends FormRequest
     {
         return [
             'rejection_reason.required' => 'Alasan penolakan wajib diisi.',
-            'rejection_reason.min'      => 'Alasan penolakan minimal 10 karakter.',
-            'rejection_reason.max'      => 'Alasan penolakan maksimal 500 karakter.',
+            'rejection_reason.min' => 'Alasan penolakan minimal 10 karakter.',
+            'rejection_reason.max' => 'Alasan penolakan maksimal 500 karakter.',
         ];
     }
 }

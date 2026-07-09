@@ -18,10 +18,10 @@ class NotificationHelper
         foreach ($managers as $manager) {
             Notification::create([
                 'user_id' => $manager->id,
-                'type'    => $type,
-                'title'   => $title,
+                'type' => $type,
+                'title' => $title,
                 'message' => $message,
-                'data'    => $data,
+                'data' => $data,
             ]);
             $count++;
         }
@@ -42,10 +42,10 @@ class NotificationHelper
         foreach ($foUsers as $fo) {
             Notification::create([
                 'user_id' => $fo->id,
-                'type'    => $type,
-                'title'   => $title,
+                'type' => $type,
+                'title' => $title,
                 'message' => $message,
-                'data'    => $data,
+                'data' => $data,
             ]);
             $count++;
         }
@@ -60,10 +60,10 @@ class NotificationHelper
     {
         return Notification::create([
             'user_id' => $userId,
-            'type'    => $type,
-            'title'   => $title,
+            'type' => $type,
+            'title' => $title,
             'message' => $message,
-            'data'    => $data,
+            'data' => $data,
         ]);
     }
 }

@@ -3,10 +3,10 @@ import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import {
   FileText,
   Search,
-  Filter,
+ 
   Calendar,
-  User,
-  Box,
+ 
+ 
   RefreshCw,
   ChevronLeft,
   ChevronRight,
@@ -15,12 +15,12 @@ import { activityLogService } from "../../services/activityLogService";
 
 // ─── Module Labels & Colors ─────────────────────────────────────────────────
 const moduleConfig = {
-  reservation: { label: "Reservasi", color: "bg-blue-100 text-blue-700" },
+  reservation: { label: "Reservasi", color: "bg-blue-100 text-black" },
   kas:         { label: "KAS", color: "bg-emerald-100 text-emerald-700" },
   deposit:     { label: "Deposit", color: "bg-amber-100 text-amber-700" },
   expense:     { label: "Pengeluaran", color: "bg-red-100 text-red-700" },
   shift:       { label: "Shift", color: "bg-purple-100 text-purple-700" },
-  attendance:  { label: "Absensi", color: "bg-indigo-100 text-indigo-700" },
+  attendance:  { label: "Absensi", color: "bg-indigo-100 text-black" },
 };
 
 const actionLabels = {
@@ -52,7 +52,7 @@ const formatTime = (isoStr) => {
 
 // ─── Skeleton ───────────────────────────────────────────────────────────────
 const Skeleton = ({ className = "" }) => (
-  <div className={`animate-pulse bg-gray-200 rounded-lg ${className}`} />
+  <div className={`animate-pulse bg-[#e5e5e5] rounded-lg ${className}`} />
 );
 
 // ─── Component ──────────────────────────────────────────────────────────────
@@ -65,7 +65,6 @@ export default function ActivityLogPage() {
     page: 1,
   });
   const [searchInput, setSearchInput] = useState("");
-  const [showFilters, setShowFilters] = useState(false);
   const [metaCache, setMetaCache] = useState({}); // id -> meta
   const debounceRef = useRef(null);
 
@@ -81,10 +80,9 @@ export default function ActivityLogPage() {
     data: logsData,
     isLoading,
     isRefetching,
-    isPlaceholderData,
     refetch,
   } = useQuery({
-    queryKey: ["activity-logs", filters],
+    queryKey: ["activity-logs"],
     queryFn: async () => {
       const params = {};
       if (filters.date) params.date = filters.date;
@@ -123,17 +121,17 @@ export default function ActivityLogPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+    <div className="min-h-screen bg-[#fafafa] p-4 md:p-8">
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-blue-100 rounded-xl">
-              <FileText className="w-6 h-6 text-blue-600" />
+              <FileText className="w-6 h-6 text-black" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Activity Log</h1>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-[#737373]">
                 Log aktivitas staff untuk audit trail dan akuntabilitas
               </p>
             </div>
@@ -141,7 +139,7 @@ export default function ActivityLogPage() {
           <button
             onClick={() => refetch()}
             disabled={isRefetching}
-            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-[#e5e5e5] rounded-lg hover:bg-[#fafafa] transition-colors disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${isRefetching ? "animate-spin" : ""}`} />
             Refresh
@@ -149,18 +147,18 @@ export default function ActivityLogPage() {
         </div>
 
         {/* Filters */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-6">
+        <div className="bg-white rounded-xl  border border-[#e5e5e5] mb-6">
           <div className="p-4 flex flex-wrap items-center gap-3">
             {/* Date filter */}
             <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-gray-400" />
+              <Calendar className="w-4 h-4 text-[#a3a3a3]" />
               <input
                 type="date"
                 value={filters.date}
                 onChange={(e) =>
                   setFilters((f) => ({ ...f, date: e.target.value, page: 1 }))
                 }
-                className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-1.5 border border-[#e5e5e5] rounded-lg text-sm focus:outline-none  focus:ring-0"
               />
             </div>
 
@@ -170,7 +168,7 @@ export default function ActivityLogPage() {
               onChange={(e) =>
                 setFilters((f) => ({ ...f, module: e.target.value, page: 1 }))
               }
-              className="px-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-1.5 border border-[#e5e5e5] rounded-lg text-sm focus:outline-none  focus:ring-0"
             >
               <option value="">Semua Modul</option>
               {Object.entries(moduleConfig).map(([key, { label }]) => (
@@ -182,20 +180,20 @@ export default function ActivityLogPage() {
 
             {/* Search */}
             <div className="flex-1 min-w-[200px] relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a3a3a3]" />
               <input
                 type="text"
                 placeholder="Cari aktivitas..."
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-9 pr-3 py-1.5 border border-[#e5e5e5] rounded-lg text-sm focus:outline-none  focus:ring-0"
               />
             </div>
 
             {/* Reset */}
             <button
               onClick={handleReset}
-              className="px-3 py-1.5 text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className="px-3 py-1.5 text-sm text-[#737373] hover:text-[#525252] hover:bg-[#fafafa] rounded-lg transition-colors"
             >
               Reset
             </button>
@@ -203,7 +201,7 @@ export default function ActivityLogPage() {
         </div>
 
         {/* Table */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl  border border-[#e5e5e5] overflow-hidden">
           {isLoading ? (
             <div className="p-6 space-y-3">
               {[...Array(8)].map((_, i) => (
@@ -213,8 +211,8 @@ export default function ActivityLogPage() {
           ) : logs.length === 0 ? (
             <div className="p-12 text-center">
               <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-              <p className="text-gray-500">Belum ada aktivitas tercatat.</p>
-              <p className="text-sm text-gray-400 mt-1">
+              <p className="text-[#737373]">Belum ada aktivitas tercatat.</p>
+              <p className="text-sm text-[#a3a3a3] mt-1">
                 Log akan muncul setelah staff melakukan aksi.
               </p>
             </div>
@@ -222,45 +220,45 @@ export default function ActivityLogPage() {
             <>
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-50 border-b border-gray-100">
+                  <thead className="bg-[#fafafa] border-b border-[#e5e5e5]">
                     <tr>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-[#737373] uppercase">
                         Waktu
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-[#737373] uppercase">
                         Staff
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-[#737373] uppercase">
                         Modul
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-[#737373] uppercase">
                         Aksi
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-[#737373] uppercase">
                         Deskripsi
                       </th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                      <th className="px-4 py-3 text-left text-xs font-semibold text-[#737373] uppercase">
                         Detail
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-50">
+                  <tbody className="divide-y divide-[#e5e5e5]">
                     {logs.map((log) => {
                       const modCfg = moduleConfig[log.module] || {
                         label: log.module,
-                        color: "bg-gray-100 text-gray-600",
+                        color: "bg-[#fafafa] text-[#525252]",
                       };
                       return (
-                        <tr key={log.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
+                        <tr key={log.id} className="hover:bg-[#fafafa] transition-colors">
+                          <td className="px-4 py-3 text-sm text-[#525252] whitespace-nowrap">
                             {formatTime(log.created_at)}
                           </td>
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
-                              <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center text-xs font-semibold text-gray-600">
+                              <div className="w-7 h-7 rounded-full bg-[#e5e5e5] flex items-center justify-center text-xs font-semibold text-[#525252]">
                                 {log.user?.name?.[0]?.toUpperCase() || "?"}
                               </div>
-                              <span className="text-sm font-medium text-gray-800">
+                              <span className="text-sm font-medium text-black">
                                 {log.user?.name || "-"}
                               </span>
                             </div>
@@ -272,32 +270,32 @@ export default function ActivityLogPage() {
                               {modCfg.label}
                             </span>
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-600">
+                          <td className="px-4 py-3 text-sm text-[#525252]">
                             {actionLabels[log.action] || log.action}
                           </td>
-                          <td className="px-4 py-3 text-sm text-gray-700 max-w-md">
+                          <td className="px-4 py-3 text-sm text-[#525252] max-w-md">
                             {log.description}
                           </td>
-                          <td className="px-4 py-3 text-xs text-gray-500">
+                          <td className="px-4 py-3 text-xs text-[#737373]">
                             {(() => {
                               const cached = metaCache[log.id];
                               if (cached === undefined) {
                                 return (
                                   <button
                                     onClick={() => loadMeta(log.id)}
-                                    className="text-blue-500 hover:text-blue-700 text-xs"
+                                    className="text-blue-500 hover:text-black text-xs"
                                   >
                                     Lihat detail
                                   </button>
                                 );
                               }
-                              if (cached === null) return <span className="text-gray-400">-</span>;
+                              if (cached === null) return <span className="text-[#a3a3a3]">-</span>;
                               return (
                                 <details className="cursor-pointer">
-                                  <summary className="text-blue-500 hover:text-blue-700">
+                                  <summary className="text-blue-500 hover:text-black">
                                     Lihat detail
                                   </summary>
-                                  <pre className="mt-1 p-2 bg-gray-50 rounded text-xs overflow-x-auto max-w-xs">
+                                  <pre className="mt-1 p-2 bg-[#fafafa] rounded text-xs overflow-x-auto max-w-xs">
                                     {JSON.stringify(cached, null, 2)}
                                   </pre>
                                 </details>
@@ -313,8 +311,8 @@ export default function ActivityLogPage() {
 
               {/* Pagination */}
               {pagination.last_page > 1 && (
-                <div className="p-4 border-t border-gray-100 flex items-center justify-between">
-                  <p className="text-sm text-gray-500">
+                <div className="p-4 border-t border-[#e5e5e5] flex items-center justify-between">
+                  <p className="text-sm text-[#737373]">
                     Halaman {pagination.current_page} dari {pagination.last_page} (
                     {pagination.total} total)
                   </p>
@@ -322,14 +320,14 @@ export default function ActivityLogPage() {
                     <button
                       onClick={() => handlePageChange(filters.page - 1)}
                       disabled={filters.page <= 1}
-                      className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="p-2 rounded-lg hover:bg-[#fafafa] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <ChevronLeft className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handlePageChange(filters.page + 1)}
                       disabled={filters.page >= pagination.last_page}
-                      className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="p-2 rounded-lg hover:bg-[#fafafa] disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <ChevronRight className="w-4 h-4" />
                     </button>

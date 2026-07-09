@@ -6,18 +6,19 @@ use App\Http\Requests\Shift\HandoverRequest;
 use App\Http\Resources\ShiftResource;
 use App\Models\Attendance;
 use App\Models\Shift;
-use App\Services\ShiftService;
 use App\Services\ActivityLogService;
+use App\Services\ShiftService;
+use Barryvdh\Snappy\Facades\SnappyPdf as PDF;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Barryvdh\Snappy\Facades\SnappyPdf as PDF;
 
 class ShiftController extends BaseApiController
 {
     protected ShiftService $shiftService;
+
     private ActivityLogService $activityLog;
 
     public function __construct(ShiftService $shiftService, ActivityLogService $activityLog)
@@ -28,7 +29,7 @@ class ShiftController extends BaseApiController
 
     public function index(Request $request): JsonResponse
     {
-        $user  = Auth::user();
+        $user = Auth::user();
         $query = Shift::with(['user', 'handoverUser']);
 
         if ($user->role === 'fo') {
@@ -65,9 +66,9 @@ class ShiftController extends BaseApiController
             [
                 'pagination' => [
                     'current_page' => $shifts->currentPage(),
-                    'last_page'    => $shifts->lastPage(),
-                    'per_page'     => $shifts->perPage(),
-                    'total'        => $shifts->total(),
+                    'last_page' => $shifts->lastPage(),
+                    'per_page' => $shifts->perPage(),
+                    'total' => $shifts->total(),
                 ],
             ]
         );
@@ -77,7 +78,7 @@ class ShiftController extends BaseApiController
     {
         $activeShift = $this->shiftService->getActiveShift(Auth::id());
 
-        if (!$activeShift) {
+        if (! $activeShift) {
             return $this->notFoundResponse('Tidak ada shift aktif saat ini.');
         }
 
@@ -94,7 +95,7 @@ class ShiftController extends BaseApiController
     {
         $activeShift = $this->shiftService->getActiveShift(Auth::id());
 
-        if (!$activeShift) {
+        if (! $activeShift) {
             return $this->notFoundResponse('Tidak ada shift aktif saat ini.');
         }
 
@@ -117,7 +118,7 @@ class ShiftController extends BaseApiController
             ->whereDate('attendance_date', Carbon::today())
             ->first();
 
-        if (!$todayAttendance) {
+        if (! $todayAttendance) {
             return $this->errorResponse(
                 'Anda harus melakukan absen masuk (check-in) dengan tanda tangan terlebih dahulu sebelum memulai shift.',
                 null,
@@ -127,14 +128,14 @@ class ShiftController extends BaseApiController
 
         // Buat shift baru berdasarkan attendance
         $shift = Shift::create([
-            'user_id'    => $user->id,
-            'type'       => $todayAttendance->shift_type ?? $user->shift ?? 'pagi',
+            'user_id' => $user->id,
+            'type' => $todayAttendance->shift_type ?? $user->shift ?? 'pagi',
             'started_at' => Carbon::now(),
-            'status'     => 'active',
+            'status' => 'active',
         ]);
 
         // Update attendance shift_id
-        if (!$todayAttendance->shift_id) {
+        if (! $todayAttendance->shift_id) {
             $todayAttendance->update(['shift_id' => $shift->id]);
         }
 
@@ -147,7 +148,7 @@ class ShiftController extends BaseApiController
     {
         $shift = Shift::find($id);
 
-        if (!$shift) {
+        if (! $shift) {
             return $this->notFoundResponse('Shift tidak ditemukan.');
         }
 
@@ -165,7 +166,7 @@ class ShiftController extends BaseApiController
     {
         $shift = Shift::find($id);
 
-        if (!$shift) {
+        if (! $shift) {
             return $this->notFoundResponse('Shift tidak ditemukan.');
         }
 
@@ -179,7 +180,7 @@ class ShiftController extends BaseApiController
 
         $canHandover = $this->shiftService->canHandover($shift->id);
 
-        if (!$canHandover['can_handover']) {
+        if (! $canHandover['can_handover']) {
             return $this->errorResponse($canHandover['message'], [
                 'pending_count' => $canHandover['pending_count'],
             ], 422);
@@ -192,16 +193,16 @@ class ShiftController extends BaseApiController
             ->whereDate('attendance_date', Carbon::today())
             ->first();
 
-        if ($attendance && !$attendance->actual_end) {
+        if ($attendance && ! $attendance->actual_end) {
             $attendance->update(['actual_end' => $now]);
         }
 
         // Tutup shift & serah terima
         $shift->update([
-            'ended_at'      => $now,
-            'handover_to'   => $request->handover_to,
+            'ended_at' => $now,
+            'handover_to' => $request->handover_to,
             'handover_note' => $request->handover_note,
-            'status'        => 'closed',
+            'status' => 'closed',
         ]);
 
         $reportData = $this->shiftService->generateShiftReport($shift);
@@ -210,14 +211,14 @@ class ShiftController extends BaseApiController
         $this->activityLog->log(
             'shift',
             'handover',
-            'Handover shift ke user ID ' . $request->handover_to . '. Catatan: ' . ($request->handover_note ?? '-'),
+            'Handover shift ke user ID '.$request->handover_to.'. Catatan: '.($request->handover_note ?? '-'),
             ['handover_to' => $request->handover_to, 'note' => $request->handover_note, 'cash_balance' => $reportData['summary']['cash_balance'] ?? 0],
             Auth::id(),
             $shift->id
         );
 
         return $this->successResponse([
-            'shift'   => new ShiftResource($shift),
+            'shift' => new ShiftResource($shift),
             'summary' => $reportData['summary'],
         ], 'Shift berhasil diserahterimakan. Absen pulang otomatis tercatat.');
     }
@@ -226,7 +227,7 @@ class ShiftController extends BaseApiController
     {
         $shift = Shift::find($id);
 
-        if (!$shift) {
+        if (! $shift) {
             return $this->notFoundResponse('Shift tidak ditemukan.');
         }
 
@@ -244,7 +245,7 @@ class ShiftController extends BaseApiController
     {
         $shift = Shift::find($id);
 
-        if (!$shift) {
+        if (! $shift) {
             return $this->notFoundResponse('Shift tidak ditemukan.');
         }
 
@@ -253,8 +254,8 @@ class ShiftController extends BaseApiController
         }
 
         $reportData = $this->shiftService->generateShiftReport($shift);
-        $tanggal  = $shift->started_at?->format('Ymd') ?? now()->format('Ymd');
-        $namaFo   = str_replace(' ', '-', strtolower($shift->user->name ?? 'unknown'));
+        $tanggal = $shift->started_at?->format('Ymd') ?? now()->format('Ymd');
+        $namaFo = str_replace(' ', '-', strtolower($shift->user->name ?? 'unknown'));
         $filename = "shift-report-{$tanggal}-{$namaFo}.pdf";
 
         return PDF::loadView('pdf.shift-report', $reportData)->download($filename);
@@ -286,33 +287,33 @@ class ShiftController extends BaseApiController
             ->whereIn('shift_id', $shiftIds)->whereNull('deleted_at')
             ->select(DB::raw('COALESCE(SUM(room_price), 0) as total'))->value('total');
 
-        $totalPemasukan   = $totalKas + $totalReservasi;
+        $totalPemasukan = $totalKas + $totalReservasi;
         $totalPengeluaran = $totalExpenses;
-        $saldoHarian      = $totalPemasukan - $totalPengeluaran;
+        $saldoHarian = $totalPemasukan - $totalPengeluaran;
 
         $shiftSummaries = [];
         foreach ($shifts as $shift) {
             $shiftSummaries[] = [
-                'shift'   => new ShiftResource($shift),
+                'shift' => new ShiftResource($shift),
                 'summary' => $this->shiftService->getShiftSummary($shift->id),
             ];
         }
 
         return $this->successResponse([
-            'tanggal'     => Carbon::parse($date)->format('d/m/Y'),
+            'tanggal' => Carbon::parse($date)->format('d/m/Y'),
             'tanggal_raw' => $date,
             'total_shift' => $shifts->count(),
-            'ringkasan'   => [
-                'total_kas'              => (int) $totalKas,
-                'total_kas_formatted'    => 'Rp ' . number_format($totalKas, 0, ',', '.'),
-                'total_reservasi'            => (int) $totalReservasi,
-                'total_reservasi_formatted'  => 'Rp ' . number_format($totalReservasi, 0, ',', '.'),
-                'total_pemasukan'            => (int) $totalPemasukan,
-                'total_pemasukan_formatted'  => 'Rp ' . number_format($totalPemasukan, 0, ',', '.'),
-                'total_pengeluaran'          => (int) $totalPengeluaran,
-                'total_pengeluaran_formatted' => 'Rp ' . number_format($totalPengeluaran, 0, ',', '.'),
-                'saldo_harian'               => (int) $saldoHarian,
-                'saldo_harian_formatted'     => 'Rp ' . number_format($saldoHarian, 0, ',', '.'),
+            'ringkasan' => [
+                'total_kas' => (int) $totalKas,
+                'total_kas_formatted' => 'Rp '.number_format($totalKas, 0, ',', '.'),
+                'total_reservasi' => (int) $totalReservasi,
+                'total_reservasi_formatted' => 'Rp '.number_format($totalReservasi, 0, ',', '.'),
+                'total_pemasukan' => (int) $totalPemasukan,
+                'total_pemasukan_formatted' => 'Rp '.number_format($totalPemasukan, 0, ',', '.'),
+                'total_pengeluaran' => (int) $totalPengeluaran,
+                'total_pengeluaran_formatted' => 'Rp '.number_format($totalPengeluaran, 0, ',', '.'),
+                'saldo_harian' => (int) $saldoHarian,
+                'saldo_harian_formatted' => 'Rp '.number_format($saldoHarian, 0, ',', '.'),
             ],
             'shifts' => $shiftSummaries,
         ], 'Laporan harian berhasil diambil.');
@@ -344,30 +345,30 @@ class ShiftController extends BaseApiController
             ->whereIn('shift_id', $shiftIds)->whereNull('deleted_at')
             ->select(DB::raw('COALESCE(SUM(room_price), 0) as total'))->value('total');
 
-        $totalPemasukan   = $totalKas + $totalReservasi;
+        $totalPemasukan = $totalKas + $totalReservasi;
         $totalPengeluaran = $totalExpenses;
-        $saldoHarian      = $totalPemasukan - $totalPengeluaran;
+        $saldoHarian = $totalPemasukan - $totalPengeluaran;
 
         $shiftSummaries = [];
         foreach ($shifts as $shift) {
             $shiftSummaries[] = [
-                'shift'   => $shift,
+                'shift' => $shift,
                 'summary' => $this->shiftService->getShiftSummary($shift->id),
             ];
         }
 
         $data = [
-            'tanggal'           => Carbon::parse($date)->format('d/m/Y'),
-            'total_shift'       => $shifts->count(),
-            'total_kas'         => $totalKas,
-            'total_reservasi'   => $totalReservasi,
-            'total_pemasukan'   => $totalPemasukan,
+            'tanggal' => Carbon::parse($date)->format('d/m/Y'),
+            'total_shift' => $shifts->count(),
+            'total_kas' => $totalKas,
+            'total_reservasi' => $totalReservasi,
+            'total_pemasukan' => $totalPemasukan,
             'total_pengeluaran' => $totalPengeluaran,
-            'saldo_harian'      => $saldoHarian,
-            'shift_summaries'   => $shiftSummaries,
+            'saldo_harian' => $saldoHarian,
+            'shift_summaries' => $shiftSummaries,
         ];
 
         return PDF::loadView('pdf.daily-report', $data)
-                  ->download("daily-report-{$date}.pdf");
+            ->download("daily-report-{$date}.pdf");
     }
 }

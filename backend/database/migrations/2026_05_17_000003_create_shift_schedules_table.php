@@ -12,24 +12,24 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('user_id')
-                  ->constrained('users')
-                  ->onDelete('restrict');
+                ->constrained('users')
+                ->onDelete('restrict');
 
             // Selalu hari Senin dari minggu tersebut
             $table->date('week_start_date');
 
             // Jadwal per hari
-            $table->enum('monday',    ['pagi', 'siang', 'malam', 'off'])->default('off');
-            $table->enum('tuesday',   ['pagi', 'siang', 'malam', 'off'])->default('off');
+            $table->enum('monday', ['pagi', 'siang', 'malam', 'off'])->default('off');
+            $table->enum('tuesday', ['pagi', 'siang', 'malam', 'off'])->default('off');
             $table->enum('wednesday', ['pagi', 'siang', 'malam', 'off'])->default('off');
-            $table->enum('thursday',  ['pagi', 'siang', 'malam', 'off'])->default('off');
-            $table->enum('friday',    ['pagi', 'siang', 'malam', 'off'])->default('off');
-            $table->enum('saturday',  ['pagi', 'siang', 'malam', 'off'])->default('off');
-            $table->enum('sunday',    ['pagi', 'siang', 'malam', 'off'])->default('off');
+            $table->enum('thursday', ['pagi', 'siang', 'malam', 'off'])->default('off');
+            $table->enum('friday', ['pagi', 'siang', 'malam', 'off'])->default('off');
+            $table->enum('saturday', ['pagi', 'siang', 'malam', 'off'])->default('off');
+            $table->enum('sunday', ['pagi', 'siang', 'malam', 'off'])->default('off');
 
             $table->foreignId('created_by')
-                  ->constrained('users')
-                  ->onDelete('restrict');
+                ->constrained('users')
+                ->onDelete('restrict');
 
             $table->timestamps();
 

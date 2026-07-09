@@ -22,8 +22,8 @@ class ForfeitDepositRequest extends FormRequest
     {
         return [
             'note.required' => 'Alasan deposit hangus wajib diisi.',
-            'note.min'      => 'Alasan harus minimal 10 karakter (contoh: kerusakan fasilitas kamar).',
-            'note.max'      => 'Alasan maksimal 500 karakter.',
+            'note.min' => 'Alasan harus minimal 10 karakter (contoh: kerusakan fasilitas kamar).',
+            'note.max' => 'Alasan maksimal 500 karakter.',
         ];
     }
 }

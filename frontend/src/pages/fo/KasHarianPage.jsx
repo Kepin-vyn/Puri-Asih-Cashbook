@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Plus, Download, Pencil, Trash2, FileText, X, Upload } from "lucide-react";
+import { Download, Pencil, Trash2, FileText, X, Upload } from "lucide-react";
 import toast from "react-hot-toast";
 import kasService from "../../services/kasService";
 import authStore from "../../store/authStore";
-import api from "../../utils/axios";
 import RupiahInput from "../../components/ui/RupiahInput";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import { formatDateShort } from "../../utils/dateFormatter";
@@ -62,7 +61,7 @@ const SkeletonRow = () => (
   <tr>
     {[1,2,3,4,5,6,7,8].map(i => (
       <td key={i} className="px-4 py-3">
-        <div className="h-4 bg-gray-200 rounded animate-pulse" />
+        <div className="h-4 bg-[#e5e5e5] rounded animate-pulse" />
       </td>
     ))}
   </tr>
@@ -144,7 +143,7 @@ const KasHarianPage = () => {
       guest_name:       item.guest_name ?? "",
       room_number:      item.room_number ?? "101",
       transaction_type: item.transaction_type ?? "reservasi",
-      amount:           Number(item.amount) ?? 0,
+      amount:           Number(item.amount) || 0,
       payment_method:   item.payment_method ?? "tunai",
       note:             item.note ?? "",
     });
@@ -253,10 +252,10 @@ const KasHarianPage = () => {
       {/* ── Header ── */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Cash Income</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-2xl font-bold text-black">Cash Income</h1>
+          <p className="text-sm text-[#737373] mt-0.5">
             {new Date().toLocaleDateString("id-ID", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}
-            {activeShift && <span className="ml-2 text-blue-600">· Shift Aktif</span>}
+            {activeShift && <span className="ml-2 text-black">· Shift Aktif</span>}
           </p>
         </div>
         <button
@@ -267,8 +266,8 @@ const KasHarianPage = () => {
             : 'Tambah transaksi baru'}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
             hasNoShift
-              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              : 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
+              ? 'bg-[#e5e5e5] text-[#a3a3a3] cursor-not-allowed'
+              : 'bg-black text-white hover:bg-[#090909] cursor-pointer'
           }`}
           id="btn-tambah-kas"
         >
@@ -278,20 +277,20 @@ const KasHarianPage = () => {
       </div>
 
       {/* ── Summary bar ── */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-5 text-white shadow-lg">
+      <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl p-5 text-white ">
         <p className="text-sm font-medium opacity-80">Total Pemasukan Shift Ini</p>
         <p className="text-3xl font-extrabold mt-1">{formatRp(totalAmount)}</p>
         <p className="text-xs opacity-70 mt-1">{transactions.length} transaksi hari ini</p>
       </div>
 
       {/* ── Tabel ── */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-        <div className="flex items-center justify-between p-5 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-800">Daftar Transaksi</h2>
+      <div className="bg-white rounded-xl  border border-[#e5e5e5]">
+        <div className="flex items-center justify-between p-5 border-b border-[#e5e5e5]">
+          <h2 className="font-semibold text-black">Daftar Transaksi</h2>
           <button
             onClick={handleExport}
             disabled={exporting}
-            className="flex items-center gap-2 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 px-3 py-2 rounded-xl transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 text-sm text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] px-3 py-2 rounded-xl transition-colors disabled:opacity-50"
             id="btn-export-pdf"
           >
             <Download size={14} />
@@ -302,27 +301,27 @@ const KasHarianPage = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 text-left">
-                <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">No</th>
-                <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Tanggal</th>
-                <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Tamu</th>
-                <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Kamar</th>
-                <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Jenis</th>
-                <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Metode</th>
-                <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide text-right">Jumlah</th>
-                <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Sumber</th>
-                <th className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">Aksi</th>
+              <tr className="bg-[#fafafa] text-left">
+                <th className="px-4 py-3 text-xs font-semibold text-[#737373] uppercase tracking-wide">No</th>
+                <th className="px-4 py-3 text-xs font-semibold text-[#737373] uppercase tracking-wide">Tanggal</th>
+                <th className="px-4 py-3 text-xs font-semibold text-[#737373] uppercase tracking-wide">Tamu</th>
+                <th className="px-4 py-3 text-xs font-semibold text-[#737373] uppercase tracking-wide">Kamar</th>
+                <th className="px-4 py-3 text-xs font-semibold text-[#737373] uppercase tracking-wide">Jenis</th>
+                <th className="px-4 py-3 text-xs font-semibold text-[#737373] uppercase tracking-wide">Metode</th>
+                <th className="px-4 py-3 text-xs font-semibold text-[#737373] uppercase tracking-wide text-right">Jumlah</th>
+                <th className="px-4 py-3 text-xs font-semibold text-[#737373] uppercase tracking-wide">Sumber</th>
+                <th className="px-4 py-3 text-xs font-semibold text-[#737373] uppercase tracking-wide">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-[#e5e5e5]">
               {isLoading ? (
                 Array.from({ length: 4 }).map((_, i) => <SkeletonRow key={i} />)
               ) : transactions.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="text-center py-16 text-gray-400">
+                  <td colSpan={9} className="text-center py-16 text-[#a3a3a3]">
                     <FileText size={40} className="mx-auto mb-3 opacity-20" />
                     <p className="text-sm">Belum ada transaksi hari ini</p>
-                    <button onClick={openAdd} className="mt-3 text-xs text-blue-600 underline">
+                    <button onClick={openAdd} className="mt-3 text-xs text-black underline">
                       Tambah transaksi pertama
                     </button>
                   </td>
@@ -332,25 +331,25 @@ const KasHarianPage = () => {
                   const methodLabel = PAYMENT_METHODS.find(m => m.value === trx.payment_method)?.label ?? trx.payment_method;
                   const typeLabel   = TRANSACTION_TYPES.find(t => t.value === trx.transaction_type)?.label ?? trx.transaction_type;
                   return (
-                    <tr key={trx.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 text-gray-500">{idx + 1}</td>
-                      <td className="px-4 py-3 text-gray-600">
+                    <tr key={trx.id} className="hover:bg-[#fafafa] transition-colors">
+                      <td className="px-4 py-3 text-[#737373]">{idx + 1}</td>
+                      <td className="px-4 py-3 text-[#525252]">
                         {formatDateShort(trx.created_at)}
                       </td>
-                      <td className="px-4 py-3 font-medium text-gray-800">{trx.guest_name}</td>
-                      <td className="px-4 py-3 text-gray-600">{trx.room_number}</td>
-                      <td className="px-4 py-3 text-gray-600">{typeLabel}</td>
-                      <td className="px-4 py-3 text-gray-600">{methodLabel}</td>
-                      <td className="px-4 py-3 text-right font-semibold text-gray-800">
+                      <td className="px-4 py-3 font-medium text-black">{trx.guest_name}</td>
+                      <td className="px-4 py-3 text-[#525252]">{trx.room_number}</td>
+                      <td className="px-4 py-3 text-[#525252]">{typeLabel}</td>
+                      <td className="px-4 py-3 text-[#525252]">{methodLabel}</td>
+                      <td className="px-4 py-3 text-right font-semibold text-black">
                         {formatRp(trx.amount)}
                       </td>
                       <td className="px-4 py-3">
                         {trx.auto_generated ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full">
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-black text-xs font-semibold rounded-full">
                             🔄 Otomatis
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full">
+                          <span className="inline-flex items-center gap-1 px-2 py-1 bg-[#fafafa] text-[#525252] text-xs font-semibold rounded-full">
                             ✏️ Manual
                           </span>
                         )}
@@ -359,7 +358,7 @@ const KasHarianPage = () => {
                         <div className="flex items-center gap-1">
                           {/* Upload struk */}
                           <label
-                            className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                            className="p-1.5 text-[#737373] hover:text-black hover:bg-[#fafafa] rounded-lg transition-colors cursor-pointer"
                             title="Upload Struk"
                           >
                             <Upload size={14} />
@@ -389,7 +388,7 @@ const KasHarianPage = () => {
                             className={`p-1.5 rounded-lg transition-colors ${
                               trx.auto_generated
                                 ? 'text-gray-300 cursor-not-allowed'
-                                : 'text-gray-500 hover:text-amber-600 hover:bg-amber-50'
+                                : 'text-[#737373] hover:text-amber-600 hover:bg-amber-50'
                             }`}
                             title={trx.auto_generated ? 'Transaksi otomatis tidak bisa diedit' : 'Edit'}
                           >
@@ -402,7 +401,7 @@ const KasHarianPage = () => {
                             className={`p-1.5 rounded-lg transition-colors ${
                               trx.auto_generated
                                 ? 'text-gray-300 cursor-not-allowed'
-                                : 'text-gray-500 hover:text-red-600 hover:bg-red-50'
+                                : 'text-[#737373] hover:text-red-600 hover:bg-red-50'
                             }`}
                             title={trx.auto_generated ? 'Transaksi otomatis tidak bisa dihapus' : 'Hapus'}
                           >
@@ -423,13 +422,13 @@ const KasHarianPage = () => {
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={!isSaving ? closeModal : undefined} />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+          <div className="relative bg-white rounded-xl  w-full max-w-lg max-h-[90vh] overflow-y-auto">
             {/* Modal header */}
-            <div className="flex items-center justify-between p-5 border-b border-gray-100">
-              <h3 className="font-bold text-gray-800">
+            <div className="flex items-center justify-between p-5 border-b border-[#e5e5e5]">
+              <h3 className="font-bold text-black">
                 {editItem ? "Edit Transaksi" : "Tambah Transaksi KAS"}
               </h3>
-              <button onClick={closeModal} disabled={isSaving} className="p-1 text-gray-400 hover:text-gray-600 rounded-lg">
+              <button onClick={closeModal} disabled={isSaving} className="p-1 text-[#a3a3a3] hover:text-[#525252] rounded-lg">
                 <X size={18} />
               </button>
             </div>
@@ -438,27 +437,27 @@ const KasHarianPage = () => {
               {/* Read-only fields */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Tanggal</label>
+                  <label className="block text-xs font-semibold text-[#737373] mb-1 uppercase tracking-wide">Tanggal</label>
                   <input type="date" value={today} readOnly
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed" />
+                    className="w-full px-3 py-2 bg-[#fafafa] border border-[#e5e5e5] rounded-xl text-sm text-[#737373] cursor-not-allowed" />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Staff</label>
+                  <label className="block text-xs font-semibold text-[#737373] mb-1 uppercase tracking-wide">Staff</label>
                   <input type="text" value={user?.name ?? ""} readOnly
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed" />
+                    className="w-full px-3 py-2 bg-[#fafafa] border border-[#e5e5e5] rounded-xl text-sm text-[#737373] cursor-not-allowed" />
                 </div>
               </div>
 
               {/* Shift info */}
               <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">Shift</label>
+                <label className="block text-xs font-semibold text-[#737373] mb-1 uppercase tracking-wide">Shift</label>
                 <input type="text" value={activeShift ? `Shift #${activeShift.id}` : "Tidak ada shift aktif"} readOnly
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed" />
+                  className="w-full px-3 py-2 bg-[#fafafa] border border-[#e5e5e5] rounded-xl text-sm text-[#737373] cursor-not-allowed" />
               </div>
 
               {/* Guest Name */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
                   Nama Tamu <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -466,8 +465,8 @@ const KasHarianPage = () => {
                   value={form.guest_name}
                   onChange={(e) => setField("guest_name", e.target.value)}
                   placeholder="Masukkan nama tamu"
-                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.guest_name ? "border-red-400 bg-red-50" : "border-gray-200"
+                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none  focus:ring-0 ${
+                    errors.guest_name ? "border-red-400 bg-red-50" : "border-[#e5e5e5]"
                   }`}
                 />
                 {errors.guest_name && <p className="text-xs text-red-500 mt-1">{errors.guest_name}</p>}
@@ -476,21 +475,21 @@ const KasHarianPage = () => {
               {/* Room + Transaction Type */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">No. Kamar</label>
+                  <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">No. Kamar</label>
                   <select
                     value={form.room_number}
                     onChange={(e) => setField("room_number", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-[#e5e5e5] rounded-xl text-sm focus:outline-none  focus:ring-0"
                   >
                     {ROOM_NUMBERS.map(r => <option key={r} value={r}>{r}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">Jenis Transaksi</label>
+                  <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">Jenis Transaksi</label>
                   <select
                     value={form.transaction_type}
                     onChange={(e) => setField("transaction_type", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-[#e5e5e5] rounded-xl text-sm focus:outline-none  focus:ring-0"
                   >
                     {MANUAL_TRANSACTION_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
                   </select>
@@ -499,15 +498,15 @@ const KasHarianPage = () => {
 
               {/* Amount */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
                   Jumlah <span className="text-red-500">*</span>
                 </label>
                 <RupiahInput
                   id="kas-amount"
                   value={form.amount}
                   onChange={(v) => setField("amount", v)}
-                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.amount ? "border-red-400 bg-red-50" : "border-gray-200"
+                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none  focus:ring-0 ${
+                    errors.amount ? "border-red-400 bg-red-50" : "border-[#e5e5e5]"
                   }`}
                 />
                 {errors.amount && <p className="text-xs text-red-500 mt-1">{errors.amount}</p>}
@@ -516,11 +515,11 @@ const KasHarianPage = () => {
               {/* Payment method + status */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">Metode Bayar</label>
+                  <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">Metode Bayar</label>
                   <select
                     value={form.payment_method}
                     onChange={(e) => setField("payment_method", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-[#e5e5e5] rounded-xl text-sm focus:outline-none  focus:ring-0"
                   >
                     {PAYMENT_METHODS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
                   </select>
@@ -529,24 +528,24 @@ const KasHarianPage = () => {
 
               {/* Note */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">Keterangan</label>
+                <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">Keterangan</label>
                 <textarea
                   value={form.note}
                   onChange={(e) => setField("note", e.target.value)}
                   rows={2}
                   placeholder="Catatan tambahan (opsional)"
-                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full px-3 py-2 border border-[#e5e5e5] rounded-xl text-sm focus:outline-none  focus:ring-0 resize-none"
                 />
               </div>
 
               {/* Actions */}
               <div className="flex gap-3 pt-2">
                 <button type="button" onClick={closeModal} disabled={isSaving}
-                  className="flex-1 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors disabled:opacity-50">
+                  className="flex-1 py-2.5 text-sm font-medium text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-xl transition-colors disabled:opacity-50">
                   Batal
                 </button>
                 <button type="submit" disabled={isSaving}
-                  className="flex-1 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 text-sm font-medium text-white bg-black hover:bg-[#090909] rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                   id="btn-save-kas">
                   {isSaving ? (
                     <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Menyimpan...</>

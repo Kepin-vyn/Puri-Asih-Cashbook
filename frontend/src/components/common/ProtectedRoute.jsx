@@ -23,13 +23,13 @@ const ProtectedRoute = ({ children, role }) => {
   // Tampilkan loading spinner saat sedang validasi token
   if (isChecking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="min-h-screen flex items-center justify-center bg-[#fafafa]">
         <div className="flex flex-col items-center gap-4">
           <div
             className="w-10 h-10 border-4 border-t-transparent rounded-full animate-spin"
             style={{ borderColor: "#2E74B5", borderTopColor: "transparent" }}
           />
-          <p className="text-sm text-gray-500 font-medium">Memverifikasi akses...</p>
+          <p className="text-sm text-[#737373] font-medium">Memverifikasi akses...</p>
         </div>
       </div>
     );

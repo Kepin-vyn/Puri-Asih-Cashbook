@@ -32,7 +32,6 @@ class BaseApiController extends Controller
         return response()->json($response, $statusCode);
     }
 
-
     /**
      * Return a standard error response.
      */

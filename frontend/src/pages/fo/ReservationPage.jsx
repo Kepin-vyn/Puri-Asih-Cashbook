@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  Plus, Download, Pencil, Trash2, FileText, X, RefreshCw,
+  Download, Pencil, Trash2, FileText, X, RefreshCw,
 } from "lucide-react";
 import toast from "react-hot-toast";
 import reservationService from "../../services/reservationService";
 import roomRateService from "../../services/roomRateService";
 import authStore from "../../store/authStore";
-import api from "../../utils/axios";
 import RupiahInput from "../../components/ui/RupiahInput";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import StatusBadge from "../../components/ui/StatusBadge";
@@ -53,13 +52,13 @@ const PAYMENT_STATUSES = [
 // ── Source badge ──────────────────────────────────────────────────────────────
 const SourceBadge = ({ source }) => {
   const map = {
-    walk_in: { label: "Walk In",     cls: "bg-blue-100 text-blue-700 ring-blue-200" },
+    walk_in: { label: "Walk In",     cls: "bg-blue-100 text-black ring-[#e5e5e5]" },
     tiket:   { label: "Tiket.com",   cls: "bg-orange-100 text-orange-700 ring-orange-200" },
     booking: { label: "Booking.com", cls: "bg-purple-100 text-purple-700 ring-purple-200" },
   };
-  const cfg = map[source] ?? { label: source, cls: "bg-gray-100 text-gray-600 ring-gray-200" };
+  const cfg = map[source] ?? { label: source, cls: "bg-[#fafafa] text-[#525252] ring-gray-200" };
   return (
-    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ring-1 ${cfg.cls}`}>
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold  ${cfg.cls}`}>
       {cfg.label}
     </span>
   );
@@ -70,7 +69,7 @@ const SkeletonRow = () => (
   <tr>
     {Array.from({ length: 10 }).map((_, i) => (
       <td key={i} className="px-4 py-3">
-        <div className="h-4 bg-gray-200 rounded animate-pulse" />
+        <div className="h-4 bg-[#e5e5e5] rounded animate-pulse" />
       </td>
     ))}
   </tr>
@@ -116,14 +115,21 @@ const ReservationPage = () => {
   // ── Derived: remaining balance ────────────────────────────────────────────
   const remainingBalance = Math.max(0, (form.room_price ?? 0) - (form.down_payment ?? 0));
 
+  // setField didefinisikan di sini agar bisa dipakai di useEffect di bawah
+  const setField = (key, val) => {
+    setForm(p => ({ ...p, [key]: val }));
+    if (errors[key]) setErrors(p => ({ ...p, [key]: "" }));
+  };
+
   // ── Auto-calculate room price from rate ──────────────────────────────────
-  const [autoPriceInfo, setAutoPriceInfo] = useState(null);
+  const [autoPriceInfo,   setAutoPriceInfo]   = useState(null);
   const [priceAutoFilled, setPriceAutoFilled] = useState(false);
 
   useEffect(() => {
     if (!form.room_number || !form.check_in_date || !form.check_out_date || form.check_out_date <= form.check_in_date) {
-      setAutoPriceInfo(null);
-      return;
+      // Gunakan callback di luar effect body untuk menghindari cascading render
+      const timer = setTimeout(() => setAutoPriceInfo(null), 0);
+      return () => clearTimeout(timer);
     }
     let cancelled = false;
     roomRateService.calculate(form.room_number, form.check_in_date, form.check_out_date)
@@ -136,9 +142,9 @@ const ReservationPage = () => {
           setPriceAutoFilled(true);
         }
       })
-      .catch(() => setAutoPriceInfo(null));
+      .catch(() => { if (!cancelled) setAutoPriceInfo(null); });
     return () => { cancelled = true; };
-  }, [form.room_number, form.check_in_date, form.check_out_date]);
+  }, [form.room_number, form.check_in_date, form.check_out_date]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // When user manually edits price, clear auto-filled flag
   const handlePriceChange = (v) => {
@@ -242,8 +248,8 @@ const ReservationPage = () => {
       room_number:      item.room_number ?? "",
       check_in_date:    item.check_in_date ?? today,
       check_out_date:   item.check_out_date ?? "",
-      room_price:       Number(item.room_price) ?? 0,
-      down_payment:     Number(item.down_payment) ?? 0,
+      room_price:       Number(item.room_price) || 0,
+      down_payment:     Number(item.down_payment) || 0,
       source:           item.source ?? "walk_in",
       payment_method:   item.payment_method ?? "tunai",
       payment_status:   item.payment_status ?? "dp",
@@ -260,10 +266,7 @@ const ReservationPage = () => {
     setErrors({});
   };
 
-  const setField = (key, val) => {
-    setForm(p => ({ ...p, [key]: val }));
-    if (errors[key]) setErrors(p => ({ ...p, [key]: "" }));
-  };
+  // setField sudah dideklarasikan di atas (sebelum useEffect)
 
   const openStatusModal = (item) => {
     setStatusTarget(item);
@@ -378,19 +381,19 @@ const ReservationPage = () => {
       {/* ── Header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-800">Reservation</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-2xl font-bold text-black">Reservation</h1>
+          <p className="text-sm text-[#737373] mt-0.5">
             {new Date().toLocaleDateString("id-ID", {
               weekday: "long", year: "numeric", month: "long", day: "numeric",
             })}
-            {activeShift && <span className="ml-2 text-blue-600">· Shift Aktif</span>}
+            {activeShift && <span className="ml-2 text-black">· Shift Aktif</span>}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={handleExport}
             disabled={exporting}
-            className="flex items-center gap-2 text-sm text-gray-600 bg-white border border-gray-200 hover:bg-gray-50 px-3 py-2.5 rounded-xl transition-colors disabled:opacity-50 shadow-sm"
+            className="flex items-center gap-2 text-sm text-[#525252] bg-white border border-[#e5e5e5] hover:bg-[#fafafa] px-3 py-2.5 rounded-xl transition-colors disabled:opacity-50 "
             id="btn-export-reservasi"
           >
             <Download size={15} />
@@ -404,8 +407,8 @@ const ReservationPage = () => {
               : 'Tambah transaksi baru'}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
               hasNoShift
-                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                : 'bg-blue-600 text-white hover:bg-blue-700 cursor-pointer'
+                ? 'bg-[#e5e5e5] text-[#a3a3a3] cursor-not-allowed'
+                : 'bg-black text-white hover:bg-[#090909] cursor-pointer'
             }`}
             id="btn-tambah-reservasi"
           >
@@ -420,7 +423,7 @@ const ReservationPage = () => {
         <select
           value={filterStatus}
           onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
-          className="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-2 text-sm border border-[#e5e5e5] rounded-xl bg-white focus:outline-none  focus:ring-0"
         >
           <option value="">Semua Status</option>
           {STATUSES.map(s => (
@@ -430,7 +433,7 @@ const ReservationPage = () => {
         <select
           value={filterSource}
           onChange={(e) => { setFilterSource(e.target.value); setPage(1); }}
-          className="px-3 py-2 text-sm border border-gray-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-2 text-sm border border-[#e5e5e5] rounded-xl bg-white focus:outline-none  focus:ring-0"
         >
           <option value="">Semua Sumber</option>
           {SOURCES.map(s => (
@@ -440,7 +443,7 @@ const ReservationPage = () => {
         {(filterStatus || filterSource) && (
           <button
             onClick={() => { setFilterStatus(""); setFilterSource(""); setPage(1); }}
-            className="text-xs text-gray-500 hover:text-gray-700 underline"
+            className="text-xs text-[#737373] hover:text-[#525252] underline"
           >
             Reset filter
           </button>
@@ -448,55 +451,55 @@ const ReservationPage = () => {
       </div>
 
       {/* ── Tabel ── */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100">
-        <div className="p-5 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-800">Daftar Reservasi</h2>
+      <div className="bg-white rounded-xl  border border-[#e5e5e5]">
+        <div className="p-5 border-b border-[#e5e5e5]">
+          <h2 className="font-semibold text-black">Daftar Reservasi</h2>
         </div>
 
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 text-left">
+              <tr className="bg-[#fafafa] text-left">
                 {["No", "Invoice", "Tamu", "Kamar", "Check-In", "Check-Out", "Total", "Sumber", "Status", "Aksi"].map(h => (
-                  <th key={h} className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
+                  <th key={h} className="px-4 py-3 text-xs font-semibold text-[#737373] uppercase tracking-wide whitespace-nowrap">
                     {h}
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-[#e5e5e5]">
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
               ) : reservations.length === 0 ? (
                 <tr>
-                  <td colSpan={10} className="text-center py-16 text-gray-400">
+                  <td colSpan={10} className="text-center py-16 text-[#a3a3a3]">
                     <FileText size={40} className="mx-auto mb-3 opacity-20" />
                     <p className="text-sm">Belum ada data reservasi</p>
-                    <button onClick={openAdd} className="mt-3 text-xs text-blue-600 underline">
+                    <button onClick={openAdd} className="mt-3 text-xs text-black underline">
                       Tambah reservasi pertama
                     </button>
                   </td>
                 </tr>
               ) : (
                 reservations.map((res, idx) => (
-                  <tr key={res.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 text-gray-500">
+                  <tr key={res.id} className="hover:bg-[#fafafa] transition-colors">
+                    <td className="px-4 py-3 text-[#737373]">
                       {(page - 1) * (meta.per_page ?? 15) + idx + 1}
                     </td>
-                    <td className="px-4 py-3 font-mono text-xs text-gray-600 whitespace-nowrap">
+                    <td className="px-4 py-3 font-mono text-xs text-[#525252] whitespace-nowrap">
                       {res.invoice_number ?? "-"}
                     </td>
-                    <td className="px-4 py-3 font-medium text-gray-800 whitespace-nowrap">
+                    <td className="px-4 py-3 font-medium text-black whitespace-nowrap">
                       {res.guest_name}
                     </td>
-                    <td className="px-4 py-3 text-gray-600">{res.room_number}</td>
-                    <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                    <td className="px-4 py-3 text-[#525252]">{res.room_number}</td>
+                    <td className="px-4 py-3 text-[#525252] whitespace-nowrap">
                       {formatDateShort(res.check_in_date)}
                     </td>
-                    <td className="px-4 py-3 text-gray-600 whitespace-nowrap">
+                    <td className="px-4 py-3 text-[#525252] whitespace-nowrap">
                       {formatDateShort(res.check_out_date)}
                     </td>
-                    <td className="px-4 py-3 font-semibold text-gray-800 whitespace-nowrap">
+                    <td className="px-4 py-3 font-semibold text-black whitespace-nowrap">
                       {formatRp(res.room_price)}
                     </td>
                     <td className="px-4 py-3">
@@ -510,7 +513,7 @@ const ReservationPage = () => {
                         {/* Edit */}
                         <button
                           onClick={() => openEdit(res)}
-                          className="p-1.5 text-gray-500 hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                          className="p-1.5 text-[#737373] hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
                           title="Edit"
                         >
                           <Pencil size={14} />
@@ -518,7 +521,7 @@ const ReservationPage = () => {
                         {/* Update Status */}
                         <button
                           onClick={() => openStatusModal(res)}
-                          className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="p-1.5 text-[#737373] hover:text-black hover:bg-[#fafafa] rounded-lg transition-colors"
                           title="Update Status"
                         >
                           <RefreshCw size={14} />
@@ -527,7 +530,7 @@ const ReservationPage = () => {
                         <button
                           onClick={() => handleDownloadInvoice(res)}
                           disabled={downloadingId === res.id}
-                          className="p-1.5 text-gray-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors disabled:opacity-40"
+                          className="p-1.5 text-[#737373] hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors disabled:opacity-40"
                           title="Download Invoice"
                         >
                           {downloadingId === res.id
@@ -538,7 +541,7 @@ const ReservationPage = () => {
                         {/* Hapus */}
                         <button
                           onClick={() => setDeleteTarget(res)}
-                          className="p-1.5 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-1.5 text-[#737373] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           title="Hapus"
                         >
                           <Trash2 size={14} />
@@ -554,15 +557,15 @@ const ReservationPage = () => {
 
         {/* ── Pagination ── */}
         {meta.last_page > 1 && (
-          <div className="flex items-center justify-between px-5 py-4 border-t border-gray-100">
-            <p className="text-xs text-gray-500">
+          <div className="flex items-center justify-between px-5 py-4 border-t border-[#e5e5e5]">
+            <p className="text-xs text-[#737373]">
               Menampilkan {reservations.length} dari {meta.total} data
             </p>
             <div className="flex items-center gap-1">
               <button
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-3 py-1.5 text-xs text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg disabled:opacity-40 transition-colors"
+                className="px-3 py-1.5 text-xs text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-lg disabled:opacity-40 transition-colors"
               >
                 ← Prev
               </button>
@@ -575,15 +578,15 @@ const ReservationPage = () => {
                 }, [])
                 .map((p, i) =>
                   p === "..." ? (
-                    <span key={`ellipsis-${i}`} className="px-2 text-gray-400 text-xs">…</span>
+                    <span key={`ellipsis-${i}`} className="px-2 text-[#a3a3a3] text-xs">…</span>
                   ) : (
                     <button
                       key={p}
                       onClick={() => setPage(p)}
                       className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
                         page === p
-                          ? "bg-blue-600 text-white"
-                          : "text-gray-600 bg-gray-100 hover:bg-gray-200"
+                          ? "bg-black text-white"
+                          : "text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5]"
                       }`}
                     >
                       {p}
@@ -593,7 +596,7 @@ const ReservationPage = () => {
               <button
                 onClick={() => setPage(p => Math.min(meta.last_page, p + 1))}
                 disabled={page === meta.last_page}
-                className="px-3 py-1.5 text-xs text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg disabled:opacity-40 transition-colors"
+                className="px-3 py-1.5 text-xs text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-lg disabled:opacity-40 transition-colors"
               >
                 Next →
               </button>
@@ -610,16 +613,16 @@ const ReservationPage = () => {
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={!isSaving ? closeModal : undefined}
           />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="relative bg-white rounded-xl  w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             {/* Modal header */}
-            <div className="flex items-center justify-between p-5 border-b border-gray-100 sticky top-0 bg-white z-10">
-              <h3 className="font-bold text-gray-800">
+            <div className="flex items-center justify-between p-5 border-b border-[#e5e5e5] sticky top-0 bg-white z-10">
+              <h3 className="font-bold text-black">
                 {editItem ? "Edit Reservasi" : "Tambah Reservasi"}
               </h3>
               <button
                 onClick={closeModal}
                 disabled={isSaving}
-                className="p-1 text-gray-400 hover:text-gray-600 rounded-lg"
+                className="p-1 text-[#a3a3a3] hover:text-[#525252] rounded-lg"
               >
                 <X size={18} />
               </button>
@@ -630,45 +633,45 @@ const ReservationPage = () => {
               {/* Row 1: Date + Shift */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">
+                  <label className="block text-xs font-semibold text-[#737373] mb-1 uppercase tracking-wide">
                     Tanggal
                   </label>
                   <input
                     type="date"
                     value={form.reservation_date}
                     onChange={(e) => setField("reservation_date", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-[#e5e5e5] rounded-xl text-sm focus:outline-none  focus:ring-0"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">
+                  <label className="block text-xs font-semibold text-[#737373] mb-1 uppercase tracking-wide">
                     Shift
                   </label>
                   <input
                     type="text"
                     value={activeShift ? `Shift #${activeShift.id} (${activeShift.type ?? ""})` : "Tidak ada shift aktif"}
                     readOnly
-                    className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed"
+                    className="w-full px-3 py-2 bg-[#fafafa] border border-[#e5e5e5] rounded-xl text-sm text-[#737373] cursor-not-allowed"
                   />
                 </div>
               </div>
 
               {/* Row 2: Staff */}
               <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">
+                <label className="block text-xs font-semibold text-[#737373] mb-1 uppercase tracking-wide">
                   Staff
                 </label>
                 <input
                   type="text"
                   value={user?.name ?? ""}
                   readOnly
-                  className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-500 cursor-not-allowed"
+                  className="w-full px-3 py-2 bg-[#fafafa] border border-[#e5e5e5] rounded-xl text-sm text-[#737373] cursor-not-allowed"
                 />
               </div>
 
               {/* Row 3: Guest Name */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
                   Nama Tamu <span className="text-red-500">*</span>
                 </label>
                 <input
@@ -676,8 +679,8 @@ const ReservationPage = () => {
                   value={form.guest_name}
                   onChange={(e) => setField("guest_name", e.target.value)}
                   placeholder="Masukkan nama tamu"
-                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    errors.guest_name ? "border-red-400 bg-red-50" : "border-gray-200"
+                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none  focus:ring-0 ${
+                    errors.guest_name ? "border-red-400 bg-red-50" : "border-[#e5e5e5]"
                   }`}
                 />
                 {errors.guest_name && (
@@ -688,15 +691,15 @@ const ReservationPage = () => {
               {/* Row 4: Check-In + Check-Out */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                  <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
                     Check-In Date <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="date"
                     value={form.check_in_date}
                     onChange={(e) => setField("check_in_date", e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.check_in_date ? "border-red-400 bg-red-50" : "border-gray-200"
+                    className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none  focus:ring-0 ${
+                      errors.check_in_date ? "border-red-400 bg-red-50" : "border-[#e5e5e5]"
                     }`}
                   />
                   {errors.check_in_date && (
@@ -704,7 +707,7 @@ const ReservationPage = () => {
                   )}
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                  <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
                     Check-Out Date <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -712,8 +715,8 @@ const ReservationPage = () => {
                     value={form.check_out_date}
                     min={form.check_in_date || today}
                     onChange={(e) => setField("check_out_date", e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.check_out_date ? "border-red-400 bg-red-50" : "border-gray-200"
+                    className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none  focus:ring-0 ${
+                      errors.check_out_date ? "border-red-400 bg-red-50" : "border-[#e5e5e5]"
                     }`}
                   />
                   {errors.check_out_date && (
@@ -724,15 +727,15 @@ const ReservationPage = () => {
 
               {/* Row 5: Room Number */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
                   Nomor Kamar <span className="text-red-500">*</span>
                 </label>
                 {availableRooms.length > 0 ? (
                   <select
                     value={form.room_number}
                     onChange={(e) => setField("room_number", e.target.value)}
-                    className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.room_number ? "border-red-400 bg-red-50" : "border-gray-200"
+                    className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none  focus:ring-0 ${
+                      errors.room_number ? "border-red-400 bg-red-50" : "border-[#e5e5e5]"
                     }`}
                   >
                     <option value="">-- Pilih Kamar --</option>
@@ -746,8 +749,8 @@ const ReservationPage = () => {
                     value={form.room_number}
                     onChange={(e) => setField("room_number", e.target.value)}
                     placeholder="Contoh: 101"
-                    className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.room_number ? "border-red-400 bg-red-50" : "border-gray-200"
+                    className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none  focus:ring-0 ${
+                      errors.room_number ? "border-red-400 bg-red-50" : "border-[#e5e5e5]"
                     }`}
                   />
                 )}
@@ -759,15 +762,15 @@ const ReservationPage = () => {
               {/* Row 6: Room Price + Down Payment */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                  <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
                     Room Price <span className="text-red-500">*</span>
                   </label>
                   <RupiahInput
                     id="room-price"
                     value={form.room_price}
                     onChange={handlePriceChange}
-                    className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                      errors.room_price ? "border-red-400 bg-red-50" : "border-gray-200"
+                    className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none  focus:ring-0 ${
+                      errors.room_price ? "border-red-400 bg-red-50" : "border-[#e5e5e5]"
                     }`}
                   />
                   {errors.room_price && (
@@ -780,24 +783,24 @@ const ReservationPage = () => {
                   )}
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                  <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
                     Down Payment
                   </label>
                   <RupiahInput
                     id="down-payment"
                     value={form.down_payment}
                     onChange={(v) => setField("down_payment", v)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-[#e5e5e5] rounded-xl text-sm focus:outline-none  focus:ring-0"
                   />
                 </div>
               </div>
 
               {/* Row 7: Remaining Balance (readonly) */}
               <div>
-                <label className="block text-xs font-semibold text-gray-500 mb-1 uppercase tracking-wide">
+                <label className="block text-xs font-semibold text-[#737373] mb-1 uppercase tracking-wide">
                   Remaining Balance
                 </label>
-                <div className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm text-gray-700 font-semibold">
+                <div className="w-full px-3 py-2 bg-[#fafafa] border border-[#e5e5e5] rounded-xl text-sm text-[#525252] font-semibold">
                   {formatRp(remainingBalance)}
                 </div>
               </div>
@@ -805,13 +808,13 @@ const ReservationPage = () => {
               {/* Row 8: Source + Payment Method */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                  <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
                     Sumber
                   </label>
                   <select
                     value={form.source}
                     onChange={(e) => setField("source", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-[#e5e5e5] rounded-xl text-sm focus:outline-none  focus:ring-0"
                   >
                     {SOURCES.map(s => (
                       <option key={s.value} value={s.value}>{s.label}</option>
@@ -819,13 +822,13 @@ const ReservationPage = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                  <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
                     Payment Option
                   </label>
                   <select
                     value={form.payment_method}
                     onChange={(e) => setField("payment_method", e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-[#e5e5e5] rounded-xl text-sm focus:outline-none  focus:ring-0"
                   >
                     {PAYMENT_METHODS.map(m => (
                       <option key={m.value} value={m.value}>{m.label}</option>
@@ -836,13 +839,13 @@ const ReservationPage = () => {
 
               {/* Row 9: Payment Status */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
                   Payment Status
                 </label>
                 <select
                   value={form.payment_status}
                   onChange={(e) => setField("payment_status", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-[#e5e5e5] rounded-xl text-sm focus:outline-none  focus:ring-0"
                 >
                   {PAYMENT_STATUSES.map(p => (
                     <option key={p.value} value={p.value}>{p.label}</option>
@@ -852,7 +855,7 @@ const ReservationPage = () => {
 
               {/* Row 10: Remarks */}
               <div>
-                <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+                <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
                   Remarks
                 </label>
                 <textarea
@@ -860,7 +863,7 @@ const ReservationPage = () => {
                   onChange={(e) => setField("remarks", e.target.value)}
                   rows={2}
                   placeholder="Catatan tambahan (opsional)"
-                  className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full px-3 py-2 border border-[#e5e5e5] rounded-xl text-sm focus:outline-none  focus:ring-0 resize-none"
                 />
               </div>
 
@@ -870,14 +873,14 @@ const ReservationPage = () => {
                   type="button"
                   onClick={closeModal}
                   disabled={isSaving}
-                  className="flex-1 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors disabled:opacity-50"
+                  className="flex-1 py-2.5 text-sm font-medium text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-xl transition-colors disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="flex-1 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  className="flex-1 py-2.5 text-sm font-medium text-white bg-black hover:bg-[#090909] rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
                   id="btn-save-reservasi"
                 >
                   {isSaving ? (
@@ -902,33 +905,33 @@ const ReservationPage = () => {
             className="absolute inset-0 bg-black/50 backdrop-blur-sm"
             onClick={!statusMutation.isPending ? () => setStatusModalOpen(false) : undefined}
           />
-          <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+          <div className="relative bg-white rounded-xl  w-full max-w-sm p-6">
             <div className="flex items-center justify-between mb-5">
-              <h3 className="font-bold text-gray-800">Update Status</h3>
+              <h3 className="font-bold text-black">Update Status</h3>
               <button
                 onClick={() => setStatusModalOpen(false)}
                 disabled={statusMutation.isPending}
-                className="p-1 text-gray-400 hover:text-gray-600 rounded-lg"
+                className="p-1 text-[#a3a3a3] hover:text-[#525252] rounded-lg"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <p className="text-sm text-gray-500 mb-4">
-              Reservasi: <span className="font-semibold text-gray-700">{statusTarget.guest_name}</span>
+            <p className="text-sm text-[#737373] mb-4">
+              Reservasi: <span className="font-semibold text-[#525252]">{statusTarget.guest_name}</span>
               {statusTarget.invoice_number && (
-                <span className="ml-1 text-xs text-gray-400">({statusTarget.invoice_number})</span>
+                <span className="ml-1 text-xs text-[#a3a3a3]">({statusTarget.invoice_number})</span>
               )}
             </p>
 
             <div className="mb-5">
-              <label className="block text-xs font-semibold text-gray-700 mb-1 uppercase tracking-wide">
+              <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
                 Status Baru
               </label>
               <select
                 value={newStatus}
                 onChange={(e) => setNewStatus(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-[#e5e5e5] rounded-xl text-sm focus:outline-none  focus:ring-0"
               >
                 {STATUSES.map(s => (
                   <option key={s.value} value={s.value}>{s.label}</option>
@@ -940,14 +943,14 @@ const ReservationPage = () => {
               <button
                 onClick={() => setStatusModalOpen(false)}
                 disabled={statusMutation.isPending}
-                className="flex-1 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors disabled:opacity-50"
+                className="flex-1 py-2.5 text-sm font-medium text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-xl transition-colors disabled:opacity-50"
               >
                 Batal
               </button>
               <button
                 onClick={() => statusMutation.mutate({ id: statusTarget.id, status: newStatus })}
                 disabled={statusMutation.isPending || newStatus === statusTarget.status}
-                className="flex-1 py-2.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 py-2.5 text-sm font-medium text-white bg-black hover:bg-[#090909] rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {statusMutation.isPending ? (
                   <>

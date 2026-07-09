@@ -32,14 +32,14 @@ const SHIFT_LABEL = { pagi: "Pagi", siang: "Siang", malam: "Malam" };
 const AttStatusBadge = ({ status }) => {
   const map = {
     hadir: "bg-emerald-100 text-emerald-700",
-    libur: "bg-blue-100 text-blue-700",
+    libur: "bg-blue-100 text-black",
     sakit: "bg-amber-100 text-amber-700",
-    izin:  "bg-gray-100 text-gray-600",
+    izin:  "bg-[#fafafa] text-[#525252]",
     alpha: "bg-red-100 text-red-700",
   };
   const labels = { hadir: "Hadir", libur: "Libur", sakit: "Sakit", izin: "Izin", alpha: "Alpha" };
   return (
-    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${map[status] ?? "bg-gray-100 text-gray-500"}`}>
+    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${map[status] ?? "bg-[#fafafa] text-[#737373]"}`}>
       {labels[status] ?? status ?? "-"}
     </span>
   );
@@ -50,7 +50,7 @@ const SkeletonRow = ({ cols = 8 }) => (
   <tr>
     {Array.from({ length: cols }).map((_, i) => (
       <td key={i} className="px-4 py-3">
-        <div className="h-4 bg-gray-200 rounded animate-pulse" />
+        <div className="h-4 bg-[#e5e5e5] rounded animate-pulse" />
       </td>
     ))}
   </tr>
@@ -93,18 +93,18 @@ const StaffDetailModal = ({ staff, month, onClose }) => {
     <>
       <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
         <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-        <div className="relative bg-white w-full sm:max-w-2xl rounded-t-2xl sm:rounded-2xl shadow-2xl max-h-[85vh] flex flex-col">
+        <div className="relative bg-white w-full sm:max-w-2xl rounded-t-2xl sm:rounded-xl  max-h-[85vh] flex flex-col">
 
           {/* Header */}
-          <div className="flex items-center justify-between p-5 border-b border-gray-100 flex-shrink-0">
+          <div className="flex items-center justify-between p-5 border-b border-[#e5e5e5] flex-shrink-0">
             <div>
-              <h3 className="font-bold text-gray-800">Detail Absensi — {staff?.name}</h3>
-              <p className="text-sm text-gray-500 mt-0.5">
+              <h3 className="font-bold text-black">Detail Absensi — {staff?.name}</h3>
+              <p className="text-sm text-[#737373] mt-0.5">
                 Shift {SHIFT_LABEL[staff?.shift] ?? staff?.shift ?? "-"} ·{" "}
                 {month.split("-")[1]}/{month.split("-")[0]}
               </p>
             </div>
-            <button onClick={onClose} className="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg">
+            <button onClick={onClose} className="p-1.5 text-[#a3a3a3] hover:text-[#525252] rounded-lg">
               <X size={18} />
             </button>
           </div>
@@ -114,33 +114,33 @@ const StaffDetailModal = ({ staff, month, onClose }) => {
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="bg-gray-50 text-left">
+                  <tr className="bg-[#fafafa] text-left">
                     {["Tanggal", "Jam Masuk", "Jam Pulang", "Status", "Ubah Status"].map((h) => (
-                      <th key={h} className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
+                      <th key={h} className="px-4 py-3 text-xs font-semibold text-[#737373] uppercase tracking-wide whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-50">
+                <tbody className="divide-y divide-[#e5e5e5]">
                   {isLoading ? (
                     Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} cols={5} />)
                   ) : records.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="text-center py-10 text-gray-400 text-sm">
+                      <td colSpan={5} className="text-center py-10 text-[#a3a3a3] text-sm">
                         Tidak ada data absensi
                       </td>
                     </tr>
                   ) : (
                     records.map((rec) => (
-                      <tr key={rec.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3 text-gray-700 whitespace-nowrap">{formatDate(rec.actual_start ?? rec.created_at)}</td>
-                        <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{formatTime(rec.actual_start)}</td>
-                        <td className="px-4 py-3 text-gray-600 whitespace-nowrap">{formatTime(rec.actual_end)}</td>
+                      <tr key={rec.id} className="hover:bg-[#fafafa] transition-colors">
+                        <td className="px-4 py-3 text-[#525252] whitespace-nowrap">{formatDate(rec.actual_start ?? rec.created_at)}</td>
+                        <td className="px-4 py-3 text-[#525252] whitespace-nowrap">{formatTime(rec.actual_start)}</td>
+                        <td className="px-4 py-3 text-[#525252] whitespace-nowrap">{formatTime(rec.actual_end)}</td>
                         <td className="px-4 py-3"><AttStatusBadge status={rec.status} /></td>
                         <td className="px-4 py-3">
                           <select
                             value={rec.status ?? ""}
                             onChange={(e) => setConfirmTarget({ id: rec.id, newStatus: e.target.value, oldStatus: rec.status })}
-                            className="px-2 py-1 text-xs border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="px-2 py-1 text-xs border border-[#e5e5e5] rounded-lg bg-white focus:outline-none  focus:ring-0"
                           >
                             {STATUS_OPTIONS.map((s) => (
                               <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
@@ -156,12 +156,12 @@ const StaffDetailModal = ({ staff, month, onClose }) => {
 
             {/* Summary */}
             {!isLoading && records.length > 0 && (
-              <div className="px-5 py-4 border-t border-gray-100 flex flex-wrap gap-4 text-sm">
-                <span className="text-gray-500">Hadir: <strong className="text-emerald-700">{summary.hadir}</strong></span>
-                <span className="text-gray-500">Libur: <strong className="text-blue-700">{summary.libur}/6</strong></span>
-                <span className="text-gray-500">Sakit: <strong className="text-amber-700">{summary.sakit}</strong></span>
-                <span className="text-gray-500">Izin: <strong className="text-gray-700">{summary.izin}</strong></span>
-                <span className="text-gray-500">Alpha: <strong className="text-red-700">{summary.alpha}</strong></span>
+              <div className="px-5 py-4 border-t border-[#e5e5e5] flex flex-wrap gap-4 text-sm">
+                <span className="text-[#737373]">Hadir: <strong className="text-emerald-700">{summary.hadir}</strong></span>
+                <span className="text-[#737373]">Libur: <strong className="text-black">{summary.libur}/6</strong></span>
+                <span className="text-[#737373]">Sakit: <strong className="text-amber-700">{summary.sakit}</strong></span>
+                <span className="text-[#737373]">Izin: <strong className="text-[#525252]">{summary.izin}</strong></span>
+                <span className="text-[#737373]">Alpha: <strong className="text-red-700">{summary.alpha}</strong></span>
               </div>
             )}
           </div>
@@ -320,17 +320,17 @@ const PayrollPage = () => {
       )}
 
       {/* ── Section 1: Header & Filter ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+      <div className="bg-white rounded-xl border border-[#e5e5e5]  p-5">
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-800">Penggajian Staff</h1>
-            <p className="text-sm text-gray-500 mt-0.5">Rekap gaji bulanan seluruh staff FO</p>
+            <h1 className="text-2xl font-bold text-black">Penggajian Staff</h1>
+            <p className="text-sm text-[#737373] mt-0.5">Rekap gaji bulanan seluruh staff FO</p>
           </div>
 
           <div className="flex flex-wrap items-end gap-3">
             {/* Period picker */}
             <div>
-              <label className="block text-xs font-semibold text-gray-500 mb-1.5 uppercase tracking-wide">Periode</label>
+              <label className="block text-xs font-semibold text-[#737373] mb-1.5 uppercase tracking-wide">Periode</label>
               <MonthYearPicker value={period} onChange={setPeriod} />
             </div>
 
@@ -338,7 +338,7 @@ const PayrollPage = () => {
             <button
               onClick={() => calculateMutation.mutate()}
               disabled={calculateMutation.isPending}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-colors shadow-sm disabled:opacity-60"
+              className="flex items-center gap-2 px-4 py-2 bg-black hover:bg-[#090909] text-white text-sm font-semibold rounded-xl transition-colors  disabled:opacity-60"
               id="btn-hitung-gaji"
             >
               <Calculator size={14} />
@@ -347,7 +347,7 @@ const PayrollPage = () => {
             <button
               onClick={handleExport}
               disabled={exporting}
-              className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 text-sm font-semibold rounded-xl transition-colors shadow-sm disabled:opacity-50"
+              className="flex items-center gap-2 px-4 py-2 bg-white border border-[#e5e5e5] hover:bg-[#fafafa] text-[#525252] text-sm font-semibold rounded-xl transition-colors  disabled:opacity-50"
             >
               <Download size={14} />
               {exporting ? "Mengunduh..." : "Export Rekap PDF"}
@@ -357,16 +357,16 @@ const PayrollPage = () => {
       </div>
 
       {/* ── Section 2: Setting Gaji Harian ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5">
+      <div className="bg-white rounded-xl border border-[#e5e5e5]  p-5">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 bg-gray-100 rounded-xl flex items-center justify-center">
-              <Settings size={16} className="text-gray-600" />
+            <div className="w-9 h-9 bg-[#fafafa] rounded-xl flex items-center justify-center">
+              <Settings size={16} className="text-[#525252]" />
             </div>
             <div>
-              <p className="text-sm font-bold text-gray-700">Setting Gaji Harian</p>
-              <p className="text-xs text-gray-400 mt-0.5">
-                Saat ini: <span className="font-semibold text-gray-700">{formatRp(currentDailyRate)}</span>
+              <p className="text-sm font-bold text-[#525252]">Setting Gaji Harian</p>
+              <p className="text-xs text-[#a3a3a3] mt-0.5">
+                Saat ini: <span className="font-semibold text-[#525252]">{formatRp(currentDailyRate)}</span>
               </p>
             </div>
           </div>
@@ -380,7 +380,7 @@ const PayrollPage = () => {
                   setDailyRate(v);
                   setRateChanged(v !== currentDailyRate);
                 }}
-                className="w-full px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-[#e5e5e5] rounded-xl text-sm focus:outline-none  focus:ring-0"
               />
             </div>
             <button
@@ -472,7 +472,7 @@ const PayrollPage = () => {
           <h2 className="font-bold text-gray-800">
             Rekap Gaji — {periodLabel}
           </h2>
-          <div className="flex items-center gap-1.5 text-xs text-gray-500">
+          <div className="flex items-center gap-1.5 text-xs text-[#737373]">
             <Users size={13} />
             {payrolls.length} staff
           </div>
@@ -481,18 +481,18 @@ const PayrollPage = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 text-left">
+              <tr className="bg-[#fafafa] text-left">
                 {["No", "Nama", "Shift", "Hadir", "Libur", "Alpha", "Gaji", "Aksi"].map((h) => (
-                  <th key={h} className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
+                  <th key={h} className="px-4 py-3 text-xs font-semibold text-[#737373] uppercase tracking-wide whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-[#e5e5e5]">
               {isLoading ? (
                 Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} cols={8} />)
               ) : payrolls.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="text-center py-14 text-gray-400 text-sm">
+                  <td colSpan={8} className="text-center py-14 text-[#a3a3a3] text-sm">
                     Belum ada data gaji untuk {periodLabel}. Klik "Hitung Gaji" untuk memulai.
                   </td>
                 </tr>
@@ -506,35 +506,35 @@ const PayrollPage = () => {
                   const isDownloading = downloadingId === (p.user_id ?? p.id);
 
                   return (
-                    <tr key={p.id ?? p.user_id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 text-gray-500">{idx + 1}</td>
+                    <tr key={p.id ?? p.user_id} className="hover:bg-[#fafafa] transition-colors">
+                      <td className="px-4 py-3 text-[#737373]">{idx + 1}</td>
                       <td className="px-4 py-3">
                         <button
                           onClick={() => setSelectedStaff(p.user ?? { id: p.user_id, name: p.user_name, shift: p.shift })}
-                          className="font-semibold text-blue-600 hover:underline text-left"
+                          className="font-semibold text-black hover:underline text-left"
                         >
                           {p.user?.name ?? p.user_name ?? "-"}
                         </button>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700">
+                        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-black">
                           {SHIFT_LABEL[p.user?.shift ?? p.shift] ?? "-"}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-center font-semibold text-emerald-700">{hadir}</td>
-                      <td className="px-4 py-3 text-center text-blue-700">
+                      <td className="px-4 py-3 text-center text-black">
                         <span className="font-semibold">{libur}</span>
-                        <span className="text-gray-400">/6</span>
+                        <span className="text-[#a3a3a3]">/6</span>
                       </td>
                       <td className="px-4 py-3 text-center font-semibold text-red-600">{alpha}</td>
-                      <td className="px-4 py-3 font-bold text-gray-800 whitespace-nowrap">
+                      <td className="px-4 py-3 font-bold text-black whitespace-nowrap">
                         {formatRp(p.total_salary)}
                       </td>
                       <td className="px-4 py-3">
                         <button
                           onClick={() => handleDownloadSlip(p)}
                           disabled={isDownloading}
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap"
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-black bg-[#fafafa] hover:bg-[#fafafa] rounded-lg transition-colors disabled:opacity-50 whitespace-nowrap"
                         >
                           <Download size={12} />
                           {isDownloading ? "..." : "Slip"}
@@ -549,8 +549,8 @@ const PayrollPage = () => {
             {/* Total row */}
             {!isLoading && payrolls.length > 0 && (
               <tfoot>
-                <tr className="bg-gray-50 font-bold">
-                  <td colSpan={6} className="px-4 py-3 text-sm text-gray-700">
+                <tr className="bg-[#fafafa] font-bold">
+                  <td colSpan={6} className="px-4 py-3 text-sm text-[#525252]">
                     Total Gaji Semua Staff
                   </td>
                   <td className="px-4 py-3 text-base font-extrabold text-gray-900 whitespace-nowrap">

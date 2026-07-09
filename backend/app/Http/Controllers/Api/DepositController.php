@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Requests\Deposit\StoreDepositRequest;
 use App\Http\Requests\Deposit\ForfeitDepositRequest;
+use App\Http\Requests\Deposit\StoreDepositRequest;
 use App\Http\Resources\DepositResource;
 use App\Models\Deposit;
 use App\Models\KasTransaction;
 use App\Models\Shift;
 use App\Services\ActivityLogService;
+use Barryvdh\Snappy\Facades\SnappyPdf as PDF;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Barryvdh\Snappy\Facades\SnappyPdf as PDF;
 
 class DepositController extends BaseApiController
 {
@@ -23,6 +23,7 @@ class DepositController extends BaseApiController
     {
         $this->activityLog = $activityLog;
     }
+
     /**
      * GET /api/v1/deposits
      */
@@ -44,8 +45,8 @@ class DepositController extends BaseApiController
         }
 
         // Summary sebelum paginate
-        $totalActive    = (clone $query)->where('status', 'active')->sum('amount');
-        $totalRefunded  = (clone $query)->where('status', 'refunded')->sum('amount');
+        $totalActive = (clone $query)->where('status', 'active')->sum('amount');
+        $totalRefunded = (clone $query)->where('status', 'refunded')->sum('amount');
         $totalForfeited = (clone $query)->where('status', 'forfeited')->sum('amount');
 
         $deposits = $query->paginate(20);
@@ -56,19 +57,19 @@ class DepositController extends BaseApiController
             200,
             [
                 'summary' => [
-                    'total_active'              => (int) $totalActive,
-                    'total_active_formatted'    => 'Rp ' . number_format($totalActive, 0, ',', '.'),
-                    'total_refunded'            => (int) $totalRefunded,
-                    'total_refunded_formatted'  => 'Rp ' . number_format($totalRefunded, 0, ',', '.'),
-                    'total_forfeited'           => (int) $totalForfeited,
-                    'total_forfeited_formatted' => 'Rp ' . number_format($totalForfeited, 0, ',', '.'),
-                    'disclaimer'                => 'Deposit bukan merupakan pemasukan hotel.',
+                    'total_active' => (int) $totalActive,
+                    'total_active_formatted' => 'Rp '.number_format($totalActive, 0, ',', '.'),
+                    'total_refunded' => (int) $totalRefunded,
+                    'total_refunded_formatted' => 'Rp '.number_format($totalRefunded, 0, ',', '.'),
+                    'total_forfeited' => (int) $totalForfeited,
+                    'total_forfeited_formatted' => 'Rp '.number_format($totalForfeited, 0, ',', '.'),
+                    'disclaimer' => 'Deposit bukan merupakan pemasukan hotel.',
                 ],
                 'pagination' => [
                     'current_page' => $deposits->currentPage(),
-                    'last_page'    => $deposits->lastPage(),
-                    'per_page'     => $deposits->perPage(),
-                    'total'        => $deposits->total(),
+                    'last_page' => $deposits->lastPage(),
+                    'per_page' => $deposits->perPage(),
+                    'total' => $deposits->total(),
                 ],
             ]
         );
@@ -82,29 +83,29 @@ class DepositController extends BaseApiController
         $user = Auth::user();
 
         $activeShift = Shift::where('user_id', $user->id)
-                            ->where('status', 'active')
-                            ->first();
+            ->where('status', 'active')
+            ->first();
 
         if (! $activeShift) {
             return $this->forbiddenResponse('Tidak ada shift aktif. Mulai shift terlebih dahulu sebelum mencatat deposit.');
         }
 
         $deposit = Deposit::create([
-            'shift_id'       => $activeShift->id,
-            'user_id'        => $user->id,
-            'guest_name'     => $request->guest_name,
-            'room_number'    => $request->room_number,
-            'check_in_date'  => $request->check_in_date,
+            'shift_id' => $activeShift->id,
+            'user_id' => $user->id,
+            'guest_name' => $request->guest_name,
+            'room_number' => $request->room_number,
+            'check_in_date' => $request->check_in_date,
             'check_out_date' => $request->check_out_date,
-            'amount'         => $request->amount,
+            'amount' => $request->amount,
             'payment_method' => $request->payment_method,
-            'status'         => 'active',
-            'note'           => $request->note,
+            'status' => 'active',
+            'note' => $request->note,
         ]);
 
         $deposit->load('user');
 
-        $this->activityLog->log('deposit', 'create', 'Mencatat deposit Rp ' . number_format($request->amount, 0, ',', '.') . ' untuk tamu "' . $request->guest_name . '" kamar ' . $request->room_number, ['amount' => (float)$request->amount, 'guest' => $request->guest_name, 'room' => $request->room_number]);
+        $this->activityLog->log('deposit', 'create', 'Mencatat deposit Rp '.number_format($request->amount, 0, ',', '.').' untuk tamu "'.$request->guest_name.'" kamar '.$request->room_number, ['amount' => (float) $request->amount, 'guest' => $request->guest_name, 'room' => $request->room_number]);
 
         return $this->successResponse(
             new DepositResource($deposit),
@@ -135,6 +136,7 @@ class DepositController extends BaseApiController
      */
     public function update(StoreDepositRequest $request, string $id): JsonResponse
     {
+        $user = Auth::user();
         $deposit = Deposit::find($id);
 
         if (! $deposit) {
@@ -143,6 +145,17 @@ class DepositController extends BaseApiController
 
         if ($deposit->status !== 'active') {
             return $this->errorResponse('Hanya deposit berstatus Aktif yang dapat diubah.', null, 400);
+        }
+
+        // FO hanya bisa edit deposit dari shift sendiri
+        if ($user->role === 'fo') {
+            $activeShift = Shift::where('user_id', $user->id)
+                ->where('status', 'active')
+                ->first();
+
+            if (! $activeShift || $deposit->shift_id !== $activeShift->id) {
+                return $this->forbiddenResponse('Anda tidak dapat mengubah deposit ini.');
+            }
         }
 
         $deposit->update($request->validated());
@@ -159,13 +172,27 @@ class DepositController extends BaseApiController
      */
     public function destroy(string $id): JsonResponse
     {
+        $user = Auth::user();
         $deposit = Deposit::find($id);
 
         if (! $deposit) {
             return $this->notFoundResponse('Data deposit tidak ditemukan.');
         }
 
+        // FO hanya bisa hapus deposit dari shift sendiri
+        if ($user->role === 'fo') {
+            $activeShift = Shift::where('user_id', $user->id)
+                ->where('status', 'active')
+                ->first();
+
+            if (! $activeShift || $deposit->shift_id !== $activeShift->id) {
+                return $this->forbiddenResponse('Anda tidak dapat menghapus deposit ini.');
+            }
+        }
+
         $deposit->delete();
+
+        $this->activityLog->log('deposit', 'delete', 'Menghapus deposit Rp '.number_format($deposit->amount, 0, ',', '.').' tamu "'.$deposit->guest_name.'"', ['amount' => (float) $deposit->amount, 'guest' => $deposit->guest_name]);
 
         return $this->successResponse(null, 'Data deposit berhasil dihapus.');
     }
@@ -175,6 +202,7 @@ class DepositController extends BaseApiController
      */
     public function refund(string $id): JsonResponse
     {
+        $user = Auth::user();
         $deposit = Deposit::find($id);
 
         if (! $deposit) {
@@ -183,17 +211,28 @@ class DepositController extends BaseApiController
 
         if ($deposit->status !== 'active') {
             return $this->errorResponse(
-                'Deposit ini tidak dapat dikembalikan. Status saat ini: ' . $deposit->status . '.',
+                'Deposit ini tidak dapat dikembalikan. Status saat ini: '.$deposit->status.'.',
                 null,
                 400
             );
+        }
+
+        // FO hanya bisa refund deposit dari shift sendiri
+        if ($user->role === 'fo') {
+            $activeShift = Shift::where('user_id', $user->id)
+                ->where('status', 'active')
+                ->first();
+
+            if (! $activeShift || $deposit->shift_id !== $activeShift->id) {
+                return $this->forbiddenResponse('Anda tidak dapat melakukan refund deposit ini.');
+            }
         }
 
         // PENTING: Refund hanya mengubah status, tidak mempengaruhi kas
         $deposit->update(['status' => 'refunded', 'refund_date' => Carbon::today()->toDateString()]);
         $deposit->load('user');
 
-        $this->activityLog->log('deposit', 'refund', 'Refund deposit Rp ' . number_format($deposit->amount, 0, ',', '.') . ' untuk tamu "' . $deposit->guest_name . '" kamar ' . $deposit->room_number, ['amount' => (float)$deposit->amount, 'guest' => $deposit->guest_name, 'room' => $deposit->room_number]);
+        $this->activityLog->log('deposit', 'refund', 'Refund deposit Rp '.number_format($deposit->amount, 0, ',', '.').' untuk tamu "'.$deposit->guest_name.'" kamar '.$deposit->room_number, ['amount' => (float) $deposit->amount, 'guest' => $deposit->guest_name, 'room' => $deposit->room_number]);
 
         return $this->successResponse(
             new DepositResource($deposit),
@@ -206,6 +245,7 @@ class DepositController extends BaseApiController
      */
     public function forfeit(ForfeitDepositRequest $request, string $id): JsonResponse
     {
+        $user = Auth::user();
         $deposit = Deposit::find($id);
 
         if (! $deposit) {
@@ -214,16 +254,27 @@ class DepositController extends BaseApiController
 
         if ($deposit->status !== 'active') {
             return $this->errorResponse(
-                'Deposit ini tidak dapat dihanguskan. Status saat ini: ' . $deposit->status . '.',
+                'Deposit ini tidak dapat dihanguskan. Status saat ini: '.$deposit->status.'.',
                 null,
                 400
             );
         }
 
+        // FO hanya bisa hanguskan deposit dari shift sendiri
+        if ($user->role === 'fo') {
+            $activeShift = Shift::where('user_id', $user->id)
+                ->where('status', 'active')
+                ->first();
+
+            if (! $activeShift || $deposit->shift_id !== $activeShift->id) {
+                return $this->forbiddenResponse('Anda tidak dapat menghanguskan deposit ini.');
+            }
+        }
+
         // Update status deposit ke forfeited
         $deposit->update([
             'status' => 'forfeited',
-            'note'   => $request->note,
+            'note' => $request->note,
         ]);
 
         $deposit->load('user');
@@ -235,33 +286,33 @@ class DepositController extends BaseApiController
             ->first();
 
         // Otomatis buat record KAS — deposit hangus = pemasukan hotel
-        $kasNote = 'Deposit hangus - ' . $deposit->guest_name
-                 . ' kamar ' . $deposit->room_number
-                 . ($request->note ? ' - ' . $request->note : '');
+        $kasNote = 'Deposit hangus - '.$deposit->guest_name
+                 .' kamar '.$deposit->room_number
+                 .($request->note ? ' - '.$request->note : '');
 
         $kasRecord = KasTransaction::create([
-            'shift_id'         => $currentShift?->id ?? $deposit->shift_id,
-            'user_id'          => $currentUser->id,
-            'guest_name'       => $deposit->guest_name,
-            'room_number'      => $deposit->room_number,
+            'shift_id' => $currentShift?->id ?? $deposit->shift_id,
+            'user_id' => $currentUser->id,
+            'guest_name' => $deposit->guest_name,
+            'room_number' => $deposit->room_number,
             'transaction_type' => 'deposit_hangus',
-            'payment_method'   => $deposit->payment_method,
-            'amount'           => $deposit->amount,
-            'note'             => $kasNote,
-            'auto_generated'   => true,
-            'source_reference' => 'deposit:' . $deposit->id,
+            'payment_method' => $deposit->payment_method,
+            'amount' => $deposit->amount,
+            'note' => $kasNote,
+            'auto_generated' => true,
+            'source_reference' => 'deposit:'.$deposit->id,
         ]);
 
-        $this->activityLog->log('deposit', 'forfeit', 'Menghanguskan deposit Rp ' . number_format($deposit->amount, 0, ',', '.') . ' untuk tamu "' . $deposit->guest_name . '" kamar ' . $deposit->room_number, ['amount' => (float)$deposit->amount, 'guest' => $deposit->guest_name, 'room' => $deposit->room_number, 'note' => $request->note]);
+        $this->activityLog->log('deposit', 'forfeit', 'Menghanguskan deposit Rp '.number_format($deposit->amount, 0, ',', '.').' untuk tamu "'.$deposit->guest_name.'" kamar '.$deposit->room_number, ['amount' => (float) $deposit->amount, 'guest' => $deposit->guest_name, 'room' => $deposit->room_number, 'note' => $request->note]);
 
         return $this->successResponse(
             [
-                'deposit'     => new DepositResource($deposit),
+                'deposit' => new DepositResource($deposit),
                 'kas_created' => [
-                    'id'               => $kasRecord->id,
-                    'amount'           => (float) $kasRecord->amount,
+                    'id' => $kasRecord->id,
+                    'amount' => (float) $kasRecord->amount,
                     'transaction_type' => $kasRecord->transaction_type,
-                    'note'             => $kasRecord->note,
+                    'note' => $kasRecord->note,
                 ],
             ],
             'Deposit berhasil dihanguskan dan tercatat sebagai pemasukan.'
@@ -273,7 +324,7 @@ class DepositController extends BaseApiController
      */
     public function expiring(): JsonResponse
     {
-        $today    = Carbon::today()->toDateString();
+        $today = Carbon::today()->toDateString();
         $tomorrow = Carbon::tomorrow()->toDateString();
 
         $deposits = Deposit::with('user')
@@ -310,15 +361,15 @@ class DepositController extends BaseApiController
         $deposits = $query->orderBy('check_out_date', 'asc')->get();
 
         $data = [
-            'deposits'    => $deposits,
-            'total_active'    => $deposits->where('status', 'active')->sum('amount'),
-            'total_refunded'  => $deposits->where('status', 'refunded')->sum('amount'),
+            'deposits' => $deposits,
+            'total_active' => $deposits->where('status', 'active')->sum('amount'),
+            'total_refunded' => $deposits->where('status', 'refunded')->sum('amount'),
             'total_forfeited' => $deposits->where('status', 'forfeited')->sum('amount'),
-            'date_from'   => $request->date_from,
-            'date_to'     => $request->date_to,
+            'date_from' => $request->date_from,
+            'date_to' => $request->date_to,
         ];
 
         return PDF::loadView('pdf.laporan-deposit', $data)
-                  ->download('laporan-deposit-' . now()->format('Ymd-His') . '.pdf');
+            ->download('laporan-deposit-'.now()->format('Ymd-His').'.pdf');
     }
 }

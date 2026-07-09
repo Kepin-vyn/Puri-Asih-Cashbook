@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Payroll;
 use App\Models\PayrollSetting;
 use App\Models\User;
+use Illuminate\Support\Collection;
 
 class PayrollService
 {
@@ -14,11 +15,6 @@ class PayrollService
 
     /**
      * Hitung atau recalculate payroll satu staff untuk bulan tertentu.
-     *
-     * @param  int  $userId
-     * @param  int  $month
-     * @param  int  $year
-     * @return Payroll
      */
     public function calculateMonthlyPayroll(int $userId, int $month, int $year): Payroll
     {
@@ -26,30 +22,30 @@ class PayrollService
         $attendance = $this->attendanceService->getMonthlyAttendance($userId, $month, $year);
 
         // Ambil daily_rate terbaru
-        $setting   = PayrollSetting::orderBy('effective_date', 'desc')->first();
+        $setting = PayrollSetting::orderBy('effective_date', 'desc')->first();
         $dailyRate = $setting ? (float) $setting->daily_rate : 0;
 
         // Kalkulasi
         $totalPresent = $attendance['hari_bayar'];   // hadir + libur (maks 6)
-        $totalLeave   = $attendance['total_libur'];
-        $totalAbsent  = $attendance['total_sakit']
+        $totalLeave = $attendance['total_libur'];
+        $totalAbsent = $attendance['total_sakit']
                       + $attendance['total_izin']
                       + $attendance['total_alpha'];
-        $totalSalary  = $totalPresent * $dailyRate;
+        $totalSalary = $totalPresent * $dailyRate;
 
         // Simpan atau update
         $payroll = Payroll::updateOrCreate(
             [
                 'user_id' => $userId,
-                'month'   => $month,
-                'year'    => $year,
+                'month' => $month,
+                'year' => $year,
             ],
             [
                 'total_present' => $totalPresent,
-                'total_leave'   => $totalLeave,
-                'total_absent'  => $totalAbsent,
-                'daily_rate'    => $dailyRate,
-                'total_salary'  => $totalSalary,
+                'total_leave' => $totalLeave,
+                'total_absent' => $totalAbsent,
+                'daily_rate' => $dailyRate,
+                'total_salary' => $totalSalary,
             ]
         );
 
@@ -61,9 +57,7 @@ class PayrollService
     /**
      * Hitung payroll semua staff FO untuk bulan tertentu.
      *
-     * @param  int  $month
-     * @param  int  $year
-     * @return \Illuminate\Support\Collection
+     * @return Collection
      */
     public function calculateAllStaff(int $month, int $year)
     {
