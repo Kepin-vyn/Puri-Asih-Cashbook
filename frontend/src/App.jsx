@@ -9,6 +9,9 @@ import { ManagerLayout } from "./components/layout/ManagerLayout";
 // Protected Route
 import ProtectedRoute from "./components/common/ProtectedRoute";
 
+// Context
+import { ShiftProvider } from "./context/ShiftContext";
+
 // Auth
 import LoginPage from "./pages/auth/LoginPage";
 
@@ -29,12 +32,17 @@ import ApprovalPage from "./pages/manager/ApprovalPage";
 import LaporanManagerPage from "./pages/manager/ReportPage";
 import MonthlyReportPage from "./pages/manager/MonthlyReportPage";
 import PenggajianPage from "./pages/manager/PayrollPage";
+import ActivityLogPage from "./pages/manager/ActivityLogPage";
+import RoomRatePage from "./pages/manager/RoomRatePage";
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,
+      staleTime:            5 * 60 * 1000, // data dianggap fresh selama 5 menit
+      gcTime:              10 * 60 * 1000, // cache disimpan 10 menit setelah tidak dipakai
+      retry:                1,
       refetchOnWindowFocus: false,
+      refetchOnMount:       true,
     },
   },
 });
@@ -57,7 +65,9 @@ const App = () => {
             path="/fo"
             element={
               <ProtectedRoute role="fo">
-                <FoLayout />
+                <ShiftProvider>
+                  <FoLayout />
+                </ShiftProvider>
               </ProtectedRoute>
             }
           >
@@ -90,6 +100,8 @@ const App = () => {
             <Route path="laporan"        element={<LaporanManagerPage />} />
             <Route path="monthly-report" element={<MonthlyReportPage />} />
             <Route path="penggajian"     element={<PenggajianPage />} />
+            <Route path="activity-logs"  element={<ActivityLogPage />} />
+            <Route path="room-rates"    element={<RoomRatePage />} />
           </Route>
 
           {/* Fallback 404 */}

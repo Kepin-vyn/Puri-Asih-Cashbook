@@ -7,14 +7,23 @@ use App\Http\Requests\Kas\UpdateKasRequest;
 use App\Http\Resources\KasTransactionResource;
 use App\Models\KasTransaction;
 use App\Models\Shift;
+use App\Models\User;
+use App\Services\ActivityLogService;
+use Barryvdh\Snappy\Facades\SnappyPdf as PDF;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
-use Barryvdh\Snappy\Facades\SnappyPdf as PDF;
 
 class KasController extends BaseApiController
 {
+    private ActivityLogService $activityLog;
+
+    public function __construct(ActivityLogService $activityLog)
+    {
+        $this->activityLog = $activityLog;
+    }
+
     /**
      * GET /api/v1/kas
      * FO  : hanya transaksi dari shift aktif milik sendiri
@@ -22,14 +31,14 @@ class KasController extends BaseApiController
      */
     public function index(Request $request): JsonResponse
     {
-        $user  = Auth::user();
+        $user = Auth::user();
         $query = KasTransaction::with('user');
 
         if ($user->role === 'fo') {
             // FO hanya melihat transaksi dari shift aktifnya sendiri
             $activeShift = Shift::where('user_id', $user->id)
-                                ->where('status', 'active')
-                                ->first();
+                ->where('status', 'active')
+                ->first();
 
             if (! $activeShift) {
                 return $this->forbiddenResponse('Anda tidak memiliki shift aktif saat ini.');
@@ -64,13 +73,13 @@ class KasController extends BaseApiController
             'Data KAS berhasil diambil.',
             200,
             [
-                'total_amount'           => (int) $totalAmount,
-                'total_amount_formatted' => 'Rp ' . number_format($totalAmount, 0, ',', '.'),
-                'pagination'             => [
+                'total_amount' => (int) $totalAmount,
+                'total_amount_formatted' => 'Rp '.number_format($totalAmount, 0, ',', '.'),
+                'pagination' => [
                     'current_page' => $transactions->currentPage(),
-                    'last_page'    => $transactions->lastPage(),
-                    'per_page'     => $transactions->perPage(),
-                    'total'        => $transactions->total(),
+                    'last_page' => $transactions->lastPage(),
+                    'per_page' => $transactions->perPage(),
+                    'total' => $transactions->total(),
                 ],
             ]
         );
@@ -85,25 +94,32 @@ class KasController extends BaseApiController
 
         // Cek shift aktif
         $activeShift = Shift::where('user_id', $user->id)
-                            ->where('status', 'active')
-                            ->first();
+            ->where('status', 'active')
+            ->first();
 
         if (! $activeShift) {
             return $this->forbiddenResponse('Tidak ada shift aktif. Mulai shift terlebih dahulu sebelum mencatat transaksi KAS.');
         }
 
         $kasTransaction = KasTransaction::create([
-            'shift_id'         => $activeShift->id,
-            'user_id'          => $user->id,
-            'guest_name'       => $request->guest_name,
-            'room_number'      => $request->room_number,
+            'shift_id' => $activeShift->id,
+            'user_id' => $user->id,
+            'guest_name' => $request->guest_name,
+            'room_number' => $request->room_number,
             'transaction_type' => $request->transaction_type,
-            'payment_method'   => $request->payment_method,
-            'amount'           => $request->amount,
-            'note'             => $request->note,
+            'payment_method' => $request->payment_method,
+            'amount' => $request->amount,
+            'note' => $request->note,
         ]);
 
         $kasTransaction->load('user');
+
+        $this->activityLog->log(
+            'kas',
+            'create',
+            'Mencatat transaksi KAS '.$request->transaction_type.' sebesar Rp '.number_format($request->amount, 0, ',', '.').' untuk '.($request->guest_name ?? 'tanpa nama'),
+            ['amount' => (float) $request->amount, 'type' => $request->transaction_type, 'guest' => $request->guest_name, 'room' => $request->room_number]
+        );
 
         return $this->successResponse(
             new KasTransactionResource($kasTransaction),
@@ -117,7 +133,7 @@ class KasController extends BaseApiController
      */
     public function show(string $id): JsonResponse
     {
-        $user           = Auth::user();
+        $user = Auth::user();
         $kasTransaction = KasTransaction::with('user')->find($id);
 
         if (! $kasTransaction) {
@@ -127,8 +143,8 @@ class KasController extends BaseApiController
         // FO hanya bisa lihat transaksi dari shiftnya sendiri
         if ($user->role === 'fo') {
             $activeShift = Shift::where('user_id', $user->id)
-                                ->where('status', 'active')
-                                ->first();
+                ->where('status', 'active')
+                ->first();
 
             if (! $activeShift || $kasTransaction->shift_id !== $activeShift->id) {
                 return $this->forbiddenResponse('Anda tidak memiliki akses ke transaksi ini.');
@@ -146,7 +162,7 @@ class KasController extends BaseApiController
      */
     public function update(UpdateKasRequest $request, string $id): JsonResponse
     {
-        $user           = Auth::user();
+        $user = Auth::user();
         $kasTransaction = KasTransaction::find($id);
 
         if (! $kasTransaction) {
@@ -156,16 +172,28 @@ class KasController extends BaseApiController
         // FO hanya bisa edit transaksi dari shiftnya sendiri
         if ($user->role === 'fo') {
             $activeShift = Shift::where('user_id', $user->id)
-                                ->where('status', 'active')
-                                ->first();
+                ->where('status', 'active')
+                ->first();
 
             if (! $activeShift || $kasTransaction->shift_id !== $activeShift->id) {
                 return $this->forbiddenResponse('Anda tidak dapat mengubah transaksi ini.');
             }
         }
 
+        // Blokir edit transaksi otomatis
+        if ($kasTransaction->auto_generated) {
+            return $this->errorResponse('Transaksi otomatis tidak dapat diubah.', null, 403);
+        }
+
         $kasTransaction->update($request->validated());
         $kasTransaction->load('user');
+
+        $this->activityLog->log(
+            'kas',
+            'update',
+            'Memperbarui transaksi KAS '.$kasTransaction->transaction_type.' sebesar Rp '.number_format($kasTransaction->amount, 0, ',', '.'),
+            ['amount' => (float) $kasTransaction->amount, 'type' => $kasTransaction->transaction_type]
+        );
 
         return $this->successResponse(
             new KasTransactionResource($kasTransaction),
@@ -178,7 +206,7 @@ class KasController extends BaseApiController
      */
     public function destroy(string $id): JsonResponse
     {
-        $user           = Auth::user();
+        $user = Auth::user();
         $kasTransaction = KasTransaction::find($id);
 
         if (! $kasTransaction) {
@@ -188,15 +216,27 @@ class KasController extends BaseApiController
         // FO hanya bisa hapus dari shiftnya sendiri
         if ($user->role === 'fo') {
             $activeShift = Shift::where('user_id', $user->id)
-                                ->where('status', 'active')
-                                ->first();
+                ->where('status', 'active')
+                ->first();
 
             if (! $activeShift || $kasTransaction->shift_id !== $activeShift->id) {
                 return $this->forbiddenResponse('Anda tidak dapat menghapus transaksi ini.');
             }
         }
 
+        // Blokir hapus transaksi otomatis
+        if ($kasTransaction->auto_generated) {
+            return $this->errorResponse('Transaksi otomatis tidak dapat dihapus.', null, 403);
+        }
+
         $kasTransaction->delete(); // Soft delete
+
+        $this->activityLog->log(
+            'kas',
+            'delete',
+            'Menghapus transaksi KAS '.$kasTransaction->transaction_type.' sebesar Rp '.number_format($kasTransaction->amount, 0, ',', '.'),
+            ['amount' => (float) $kasTransaction->amount, 'type' => $kasTransaction->transaction_type]
+        );
 
         return $this->successResponse(null, 'Transaksi KAS berhasil dihapus.');
     }
@@ -210,9 +250,9 @@ class KasController extends BaseApiController
             'receipt' => ['required', 'file', 'mimes:jpg,jpeg,png,pdf', 'max:2048'],
         ], [
             'receipt.required' => 'File bukti struk wajib diupload.',
-            'receipt.file'     => 'Upload harus berupa file.',
-            'receipt.mimes'    => 'File harus berformat JPG, PNG, atau PDF.',
-            'receipt.max'      => 'Ukuran file maksimal 2MB.',
+            'receipt.file' => 'Upload harus berupa file.',
+            'receipt.mimes' => 'File harus berformat JPG, PNG, atau PDF.',
+            'receipt.max' => 'Ukuran file maksimal 2MB.',
         ]);
 
         $kasTransaction = KasTransaction::find($id);
@@ -235,7 +275,7 @@ class KasController extends BaseApiController
         return $this->successResponse(
             [
                 'receipt_photo_url' => Storage::disk('public')->url($path),
-                'receipt_photo'     => $path,
+                'receipt_photo' => $path,
             ],
             'Bukti struk berhasil diupload.'
         );
@@ -267,30 +307,30 @@ class KasController extends BaseApiController
         }
 
         $transactions = $query->orderBy('created_at', 'asc')->get();
-        $totalAmount  = $transactions->sum('amount');
+        $totalAmount = $transactions->sum('amount');
 
         // Ambil nama staff jika filter staff_id ada
-        $staffName  = null;
+        $staffName = null;
         $shiftLabel = null;
         if ($request->filled('staff_id')) {
-            $staff     = \App\Models\User::find($request->staff_id);
+            $staff = User::find($request->staff_id);
             $staffName = $staff?->name;
         }
         if ($request->filled('shift_id')) {
-            $shift      = \App\Models\Shift::find($request->shift_id);
+            $shift = Shift::find($request->shift_id);
             $shiftLabel = $shift ? ucfirst($shift->type) : null;
         }
 
         $data = [
             'transactions' => $transactions,
             'total_amount' => $totalAmount,
-            'date_from'    => $request->date_from,
-            'date_to'      => $request->date_to,
-            'staff_name'   => $staffName,
-            'shift_label'  => $shiftLabel,
+            'date_from' => $request->date_from,
+            'date_to' => $request->date_to,
+            'staff_name' => $staffName,
+            'shift_label' => $shiftLabel,
         ];
 
         return PDF::loadView('pdf.laporan-kas', $data)
-                  ->download('laporan-kas-' . now()->format('Ymd-His') . '.pdf');
+            ->download('laporan-kas-'.now()->format('Ymd-His').'.pdf');
     }
 }

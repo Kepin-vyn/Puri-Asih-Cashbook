@@ -1,4 +1,964 @@
-const FoManagementPage = () => (
-  <div><h1 className="text-2xl font-bold text-gray-800">Manager — FO Management</h1><p className="text-gray-500 mt-1">Issue #25 — UI FO Management</p></div>
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  Plus, Pencil, Eye, UserX, X, Users, UserCheck, UserMinus, ChevronLeft, ChevronRight, Save,
+} from "lucide-react";
+import toast from "react-hot-toast";
+import userService from "../../services/userService";
+import shiftScheduleService from "../../services/shiftScheduleService";
+import ConfirmModal from "../../components/ui/ConfirmModal";
+import InlineDropdown from "../../components/ui/InlineDropdown";
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+const SHIFT_OPTIONS = [
+  { value: "pagi",  label: "Pagi" },
+  { value: "siang", label: "Siang" },
+  { value: "malam", label: "Malam" },
+];
+
+const STATUS_OPTIONS = [
+  { value: "active",   label: "Active" },
+  { value: "inactive", label: "Inactive" },
+];
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+// ── Status badge ──────────────────────────────────────────────────────────────
+const StatusBadge = ({ status }) => (
+  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold  ${
+    status === "active"
+      ? "bg-emerald-100 text-emerald-700 ring-emerald-200"
+      : "bg-red-100 text-red-700 ring-red-200"
+  }`}>
+    {status === "active" ? "Active" : "Inactive"}
+  </span>
 );
+
+// ── Skeleton row ──────────────────────────────────────────────────────────────
+const SkeletonRow = () => (
+  <tr>
+    {Array.from({ length: 4 }).map((_, i) => (
+      <td key={i} className="px-4 py-3">
+        <div className="h-4 bg-[#e5e5e5] rounded animate-pulse" />
+      </td>
+    ))}
+  </tr>
+);
+
+// ── Empty form ────────────────────────────────────────────────────────────────
+const emptyForm = () => ({
+  name:                  "",
+  email:                 "",
+  password:              "",
+  password_confirmation: "",
+});
+
+// ── Week helpers ──────────────────────────────────────────────────────────────
+const DAYS_ID = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
+const DAY_KEYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"];
+
+const SCHEDULE_OPTIONS = [
+  { value: "pagi",  label: "🌅 Pagi" },
+  { value: "siang", label: "🌤 Siang" },
+  { value: "malam", label: "🌙 Malam" },
+  { value: "off",   label: "🔴 Off" },
+];
+
+/** Hitung Senin dari tanggal manapun */
+const getMondayOf = (date) => {
+  const d = new Date(date);
+  const day = d.getDay(); // 0=Sun, 1=Mon, ...
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+};
+
+const addDays = (date, n) => {
+  const d = new Date(date);
+  d.setDate(d.getDate() + n);
+  return d;
+};
+
+const toDateStr = (date) => {
+  const d = new Date(date);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+};
+
+const formatDayHeader = (date) => {
+  const d = new Date(date);
+  return `${d.getDate()}/${d.getMonth() + 1}`;
+};
+
+// ── WeeklyScheduleTab ─────────────────────────────────────────────────────────
+const WeeklyScheduleTab = () => {
+  const queryClient = useQueryClient();
+  const [weekStart,      setWeekStart]      = useState(() => getMondayOf(new Date()));
+  const [selectedStaff,  setSelectedStaff]  = useState(null); // row yang sedang diedit
+  const [editDays,       setEditDays]       = useState({});   // perubahan lokal untuk staff terpilih
+  const [saving,         setSaving]         = useState(false);
+
+  const weekStartStr = toDateStr(weekStart);
+  const weekEndStr   = toDateStr(addDays(weekStart, 6));
+
+  // Fetch jadwal minggu ini
+  const { data, isLoading } = useQuery({
+    queryKey: ["shift-schedule-week", weekStartStr],
+    queryFn:  () => shiftScheduleService.getWeek(weekStartStr),
+  });
+  const schedules = data?.data ?? [];
+
+  const prevWeek = () => setWeekStart((d) => addDays(d, -7));
+  const nextWeek = () => setWeekStart((d) => addDays(d, 7));
+  
+  const getVal = (row, dayKey) =>
+    editDays[dayKey] ?? row[dayKey] ?? "off";
+  
+  const openEdit = (row) => {
+    setSelectedStaff(row);
+    const days = {};
+    DAY_KEYS.forEach((k) => { days[k] = row[k] ?? "off"; });
+    setEditDays(days);
+  };
+  
+  const closeEdit = () => {
+    setSelectedStaff(null);
+    setEditDays({});
+  };
+  
+  const handleSave = async () => {
+    if (!selectedStaff) return;
+    setSaving(true);
+    const row = selectedStaff;
+    const payload = {
+      user_id:         Number(row.user_id),
+      week_start_date: weekStartStr,
+      monday:    editDays.monday    ?? row.monday    ?? "off",
+      tuesday:   editDays.tuesday   ?? row.tuesday   ?? "off",
+      wednesday: editDays.wednesday ?? row.wednesday ?? "off",
+      thursday:  editDays.thursday  ?? row.thursday  ?? "off",
+      friday:    editDays.friday    ?? row.friday    ?? "off",
+      saturday:  editDays.saturday  ?? row.saturday  ?? "off",
+      sunday:    editDays.sunday    ?? row.sunday    ?? "off",
+    };
+    try {
+      await shiftScheduleService.store(payload);
+      toast.success(`\u2705 Jadwal ${row.user_name} berhasil disimpan!`);
+      queryClient.invalidateQueries({ queryKey: ["shift-schedule-week"] });
+      closeEdit();
+    } catch {
+      toast.error("Gagal menyimpan jadwal.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const weekLabel = `${new Date(weekStart).toLocaleDateString("id-ID", { day: "numeric", month: "long", year: "numeric" })} (Sen) — ${new Date(weekEndStr).toLocaleDateString("id-ID", { day: "numeric", month: "long" })} (Min)`;
+
+  return (
+    <div className="space-y-4">
+      {/* Week picker */}
+      <div className="flex items-center justify-between bg-white rounded-xl border border-[#e5e5e5]  p-4">
+        <button
+          onClick={prevWeek}
+          className="flex items-center gap-1 px-3 py-2 text-sm text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-xl transition-colors"
+        >
+          <ChevronLeft size={16} /> Minggu Lalu
+        </button>
+        <div className="text-center">
+          <p className="text-sm font-bold text-black">{weekLabel}</p>
+          <p className="text-xs text-[#a3a3a3] mt-0.5">Klik dropdown untuk ubah jadwal</p>
+        </div>
+        <button
+          onClick={nextWeek}
+          className="flex items-center gap-1 px-3 py-2 text-sm text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-xl transition-colors"
+        >
+          Minggu Depan <ChevronRight size={16} />
+        </button>
+      </div>
+
+      {/* Tabel jadwal */}
+      <div className="bg-white rounded-xl border border-[#e5e5e5]  overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-[#fafafa] text-left">
+              <th className="px-4 py-3 text-xs font-semibold text-[#737373] uppercase tracking-wide whitespace-nowrap sticky left-0 bg-[#fafafa]">
+                Nama FO
+              </th>
+              {DAY_KEYS.map((_, i) => (
+                <th key={i} className="px-3 py-3 text-xs font-semibold text-[#737373] uppercase tracking-wide whitespace-nowrap text-center">
+                  {DAYS_ID[i]}<br />
+                  <span className="font-normal normal-case text-[#a3a3a3]">
+                    {formatDayHeader(addDays(weekStart, i))}
+                  </span>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-[#e5e5e5]">
+            {isLoading ? (
+              Array.from({ length: 4 }).map((_, i) => (
+                <tr key={i}>
+                  {Array.from({ length: 8 }).map((_, j) => (
+                    <td key={j} className="px-4 py-3">
+                      <div className="h-8 bg-[#e5e5e5] rounded animate-pulse" />
+                    </td>
+                  ))}
+                </tr>
+              ))
+            ) : schedules.length === 0 ? (
+              <tr>
+                <td colSpan={8} className="text-center py-12 text-[#a3a3a3] text-sm">
+                  Tidak ada staff FO aktif
+                </td>
+              </tr>
+            ) : (
+              schedules.map((row) => {
+                const isSelected = selectedStaff?.user_id === row.user_id;
+                return (
+                  <tr
+                    key={row.user_id}
+                    className={`transition-colors cursor-pointer ${isSelected ? "bg-indigo-50" : "hover:bg-gray-50"}`}
+                    onClick={() => !isSelected && openEdit(row)}
+                  >
+                    <td className="px-4 py-3 font-medium text-gray-800 whitespace-nowrap sticky left-0 bg-inherit">
+                      {row.user_name}
+                      {isSelected && (
+                        <span className="ml-2 text-xs text-indigo-500 font-normal">\u2022 diedit</span>
+                      )}
+                    </td>
+                    {DAY_KEYS.map((dayKey) => (
+                      <td key={dayKey} className="px-2 py-2 text-center">
+                        {isSelected ? (
+                          <select
+                            value={editDays[dayKey] ?? "off"}
+                            onChange={(e) => setEditDays((p) => ({ ...p, [dayKey]: e.target.value }))}
+                            className="w-full px-2 py-1.5 text-sm font-semibold border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400 text-center cursor-pointer"
+                          >
+                            {SCHEDULE_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <InlineDropdown
+                            value={row[dayKey] ?? "off"}
+                            options={SCHEDULE_OPTIONS}
+                            onChange={() => openEdit(row)}
+                          />
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Tombol Simpan / Edit Panel */}
+      {selectedStaff ? (
+        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="font-semibold text-indigo-800">
+              Edit Jadwal: {selectedStaff.user_name}
+            </p>
+            <span className="text-xs text-indigo-500">Klik dropdown di atas untuk ubah</span>
+          </div>
+
+          {/* Tombol aksi */}
+          <div className="flex items-center justify-between pt-1">
+            <button
+              onClick={() => {
+                const reset = {};
+                DAY_KEYS.forEach((k) => { reset[k] = "off"; });
+                setEditDays(reset);
+              }}
+              className="text-xs text-gray-500 hover:text-gray-700 underline"
+            >
+              Reset semua ke Off
+            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={closeEdit}
+                disabled={saving}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors disabled:opacity-50"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="flex items-center gap-2 px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-50 shadow-sm"
+              >
+                {saving ? (
+                  <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Menyimpan...</>
+                ) : (
+                  <><Save size={15} />Simpan Jadwal</>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-gray-400">Klik baris staff untuk mengedit jadwal</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
+const FoManagementPage = () => {
+  const queryClient = useQueryClient();
+  const [activeTab, setActiveTab] = useState("staff"); // "staff" | "schedule"
+
+  // ── UI state ─────────────────────────────────────────────────────────────
+  const [modalOpen,       setModalOpen]       = useState(false);
+  const [editItem,        setEditItem]        = useState(null);
+  const [viewItem,        setViewItem]        = useState(null);
+  const [deactivateTarget,setDeactivateTarget]= useState(null);
+  const [form,            setForm]            = useState(emptyForm());
+  const [errors,          setErrors]          = useState({});
+  const [filterStatus,    setFilterStatus]    = useState("");
+  const [search,          setSearch]          = useState("");
+  const [loadingShift,    setLoadingShift]    = useState({});
+  const [loadingStatus,   setLoadingStatus]   = useState({});
+  const [page,            setPage]            = useState(1);
+
+  // ── Fetch users ───────────────────────────────────────────────────────────
+  const { data, isLoading } = useQuery({
+    queryKey: ["fo-users", filterStatus, page],
+    queryFn:  () => userService.getAll({
+      role: "fo",
+      ...(filterStatus && { status: filterStatus }),
+      page,
+    }),
+    retry: false,
+  });
+
+  const users    = data?.data ?? [];
+  const meta     = data?.meta ?? {};
+  const summary  = meta?.summary ?? {};
+
+  // Filter search lokal
+  const filtered = search.trim()
+    ? users.filter((u) =>
+        u.name.toLowerCase().includes(search.toLowerCase()) ||
+        u.email.toLowerCase().includes(search.toLowerCase())
+      )
+    : users;
+
+  // ── Fetch detail untuk view modal ─────────────────────────────────────────
+  const { data: detailData, isLoading: detailLoading } = useQuery({
+    queryKey: ["fo-user-detail", viewItem?.id],
+    queryFn:  () => userService.getById(viewItem.id),
+    enabled:  !!viewItem,
+    retry: false,
+  });
+  const detail = detailData?.data;
+
+  // ── Mutations ─────────────────────────────────────────────────────────────
+  const createMutation = useMutation({
+    mutationFn: userService.create,
+    onSuccess: () => {
+      toast.success("Staff FO berhasil ditambahkan!");
+      queryClient.invalidateQueries({ queryKey: ["fo-users"] });
+      closeModal();
+    },
+    onError: (e) => toast.error(e.response?.data?.message ?? "Gagal menambahkan staff."),
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => userService.update(id, data),
+    onSuccess: () => {
+      toast.success("Data staff berhasil diperbarui!");
+      queryClient.invalidateQueries({ queryKey: ["fo-users"] });
+      closeModal();
+    },
+    onError: (e) => toast.error(e.response?.data?.message ?? "Gagal memperbarui data staff."),
+  });
+
+  const deactivateMutation = useMutation({
+    mutationFn: (id) => userService.deactivate(id),
+    onSuccess: () => {
+      toast.success("Staff berhasil dinonaktifkan.");
+      queryClient.invalidateQueries({ queryKey: ["fo-users"] });
+      setDeactivateTarget(null);
+    },
+    onError: (e) => toast.error(e.response?.data?.message ?? "Gagal menonaktifkan staff."),
+  });
+
+  // ── Inline shift update ───────────────────────────────────────────────────
+  const handleShiftChange = async (userId, newShift) => {
+    setLoadingShift((p) => ({ ...p, [userId]: true }));
+    try {
+      await userService.updateShift(userId, newShift);
+      toast.success("Shift berhasil diperbarui.");
+      queryClient.invalidateQueries({ queryKey: ["fo-users"] });
+    } catch {
+      toast.error("Gagal memperbarui shift.");
+    } finally {
+      setLoadingShift((p) => ({ ...p, [userId]: false }));
+    }
+  };
+
+  // ── Inline status update ──────────────────────────────────────────────────
+  const handleStatusChange = async (userId, newStatus) => {
+    if (newStatus === "inactive") {
+      // Untuk nonaktifkan, pakai modal konfirmasi
+      const user = users.find((u) => u.id === userId);
+      setDeactivateTarget(user);
+      return;
+    }
+    setLoadingStatus((p) => ({ ...p, [userId]: true }));
+    try {
+      await userService.update(userId, { status: newStatus });
+      toast.success("Status berhasil diperbarui.");
+      queryClient.invalidateQueries({ queryKey: ["fo-users"] });
+    } catch {
+      toast.error("Gagal memperbarui status.");
+    } finally {
+      setLoadingStatus((p) => ({ ...p, [userId]: false }));
+    }
+  };
+
+  // ── Form helpers ──────────────────────────────────────────────────────────
+  const openAdd = () => {
+    setEditItem(null);
+    setForm(emptyForm());
+    setErrors({});
+    setModalOpen(true);
+  };
+
+  const openEdit = (user) => {
+    setEditItem(user);
+    setForm({
+      name:                  user.name ?? "",
+      email:                 user.email ?? "",
+      password:              "",
+      password_confirmation: "",
+    });
+    setErrors({});
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setEditItem(null);
+    setForm(emptyForm());
+    setErrors({});
+  };
+
+  const setField = (key, val) => {
+    setForm((p) => ({ ...p, [key]: val }));
+    if (errors[key]) setErrors((p) => ({ ...p, [key]: "" }));
+  };
+
+  // ── Validation ────────────────────────────────────────────────────────────
+  const validate = () => {
+    const e = {};
+    if (!form.name.trim())  e.name  = "Nama wajib diisi.";
+    if (!form.email.trim()) e.email = "Email wajib diisi.";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Format email tidak valid.";
+
+    if (!editItem) {
+      if (!form.password) e.password = "Password wajib diisi.";
+      else if (form.password.length < 6) e.password = "Password minimal 6 karakter.";
+      if (form.password !== form.password_confirmation)
+        e.password_confirmation = "Konfirmasi password tidak cocok.";
+    } else {
+      if (form.password) {
+        if (form.password.length < 6) e.password = "Password minimal 6 karakter.";
+        if (form.password !== form.password_confirmation)
+          e.password_confirmation = "Konfirmasi password tidak cocok.";
+      }
+    }
+
+    setErrors(e);
+    return Object.keys(e).length === 0;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!validate()) return;
+
+    const payload = {
+      name:  form.name,
+      email: form.email,
+      role:  "fo",
+    };
+    if (form.password) {
+      payload.password              = form.password;
+      payload.password_confirmation = form.password_confirmation;
+    }
+
+    if (editItem) {
+      updateMutation.mutate({ id: editItem.id, data: payload });
+    } else {
+      createMutation.mutate(payload);
+    }
+  };
+
+  const isSaving = createMutation.isPending || updateMutation.isPending;
+
+
+  return (
+    <div className="space-y-6">
+
+      {/* ── Header ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-black">Front Office Management</h1>
+          <p className="text-sm text-[#737373] mt-0.5">Kelola data dan jadwal staff Front Office</p>
+        </div>
+        <button
+          onClick={openAdd}
+          className="flex items-center gap-2 bg-black hover:bg-[#090909] text-white px-4 py-2.5 rounded-xl text-sm font-medium transition-colors "
+          id="btn-tambah-fo"
+        >
+          <Plus size={16} />
+          Tambah Staff FO
+        </button>
+      </div>
+
+      {/* ── Summary bar ── */}
+      <div className="grid grid-cols-3 gap-4">
+        {[
+          { label: "FO Staff",  value: summary.total_fo       ?? 0, icon: Users,      color: "bg-[#fafafa] text-black" },
+          { label: "Active",    value: summary.total_active   ?? 0, icon: UserCheck,  color: "bg-emerald-50 text-emerald-700" },
+          { label: "Inactive",  value: summary.total_inactive ?? 0, icon: UserMinus,  color: "bg-red-50 text-red-700" },
+        ].map(({ label, value, icon: Icon, color }) => (
+          <div key={label} className="bg-white rounded-xl border border-[#e5e5e5]  p-4 flex items-center gap-3">
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>
+              <Icon size={18} />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-black">{value}</p>
+              <p className="text-xs text-[#737373]">{label}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Tab Navigation ── */}
+      <div className="flex gap-1 bg-[#fafafa] p-1 rounded-xl w-fit">
+        <button
+          onClick={() => setActiveTab("staff")}
+          className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
+            activeTab === "staff"
+              ? "bg-white text-black "
+              : "text-[#737373] hover:text-[#525252]"
+          }`}
+        >
+          👥 Daftar Staff
+        </button>
+        <button
+          onClick={() => setActiveTab("schedule")}
+          className={`px-4 py-2 text-sm font-semibold rounded-lg transition-colors ${
+            activeTab === "schedule"
+              ? "bg-white text-black "
+              : "text-[#737373] hover:text-[#525252]"
+          }`}
+        >
+          📅 Jadwal Mingguan
+        </button>
+      </div>
+
+      {/* ── Tab: Jadwal Mingguan ── */}
+      {activeTab === "schedule" && <WeeklyScheduleTab />}
+
+      {/* ── Tab: Daftar Staff ── */}
+      {activeTab === "staff" && (<>
+
+      {/* ── Filter & Search ── */}
+      <div className="flex flex-wrap items-center gap-3">
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Cari nama atau email..."
+          className="px-3 py-2 text-sm border border-[#e5e5e5] rounded-xl bg-white focus:outline-none  focus:ring-0 w-56"
+        />
+        <select
+          value={filterStatus}
+          onChange={(e) => { setFilterStatus(e.target.value); setPage(1); }}
+          className="px-3 py-2 text-sm border border-[#e5e5e5] rounded-xl bg-white focus:outline-none  focus:ring-0"
+        >
+          <option value="">Semua Status</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+        {(filterStatus || search) && (
+          <button
+            onClick={() => { setFilterStatus(""); setSearch(""); setPage(1); }}
+            className="text-xs text-[#737373] hover:text-[#525252] underline"
+          >
+            Reset filter
+          </button>
+        )}
+      </div>
+
+      {/* ── Tabel ── */}
+      <div className="bg-white rounded-xl  border border-[#e5e5e5]">
+        <div className="p-5 border-b border-[#e5e5e5]">
+          <h2 className="font-semibold text-black">Front Office List</h2>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-50 text-left">
+                {["No", "Nama", "Status", "Aksi"].map((h) => (
+                  <th key={h} className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-[#e5e5e5]">
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="text-center py-16 text-gray-400">
+                    <Users size={40} className="mx-auto mb-3 opacity-20" />
+                    <p className="text-sm">Tidak ada staff FO ditemukan</p>
+                    <button onClick={openAdd} className="mt-3 text-xs text-black underline">
+                      Tambah staff pertama
+                    </button>
+                  </td>
+                </tr>
+              ) : (
+                filtered.map((user, idx) => (
+                  <tr key={user.id} className={`transition-colors ${user.status === "inactive" ? "bg-[#fafafa]/60" : "hover:bg-[#fafafa]"}`}>
+                    <td className="px-4 py-3 text-[#737373]">
+                      {(page - 1) * (meta?.pagination?.per_page ?? 20) + idx + 1}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div>
+                        <p className={`font-medium ${user.status === "inactive" ? "text-[#a3a3a3]" : "text-black"}`}>
+                          {user.name}
+                        </p>
+                        <p className="text-xs text-[#a3a3a3]">{user.email}</p>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <InlineDropdown
+                        value={user.status}
+                        options={STATUS_OPTIONS}
+                        onChange={(val) => handleStatusChange(user.id, val)}
+                        isLoading={!!loadingStatus[user.id]}
+                      />
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1">
+                        {/* Edit */}
+                        <button
+                          onClick={() => openEdit(user)}
+                          className="p-1.5 text-[#737373] hover:text-amber-600 hover:bg-amber-50 rounded-lg transition-colors"
+                          title="Edit"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        {/* View */}
+                        <button
+                          onClick={() => setViewItem(user)}
+                          className="p-1.5 text-[#737373] hover:text-black hover:bg-[#fafafa] rounded-lg transition-colors"
+                          title="Lihat Detail"
+                        >
+                          <Eye size={14} />
+                        </button>
+                        {/* Nonaktifkan */}
+                        {user.status === "active" && (
+                          <button
+                            onClick={() => setDeactivateTarget(user)}
+                            className="p-1.5 text-[#737373] hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Nonaktifkan"
+                          >
+                            <UserX size={14} />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination */}
+        {meta?.pagination?.last_page > 1 && (
+          <div className="flex items-center justify-between px-5 py-4 border-t border-[#e5e5e5]">
+            <p className="text-xs text-[#737373]">
+              Menampilkan {filtered.length} dari {meta.pagination.total} data
+            </p>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="px-3 py-1.5 text-xs text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-lg disabled:opacity-40 transition-colors"
+              >
+                ← Prev
+              </button>
+              {Array.from({ length: meta.pagination.last_page }, (_, i) => i + 1)
+                .filter((p) => p === 1 || p === meta.pagination.last_page || Math.abs(p - page) <= 1)
+                .reduce((acc, p, i, arr) => {
+                  if (i > 0 && p - arr[i - 1] > 1) acc.push("...");
+                  acc.push(p);
+                  return acc;
+                }, [])
+                .map((p, i) =>
+                  p === "..." ? (
+                    <span key={`e-${i}`} className="px-2 text-[#a3a3a3] text-xs">…</span>
+                  ) : (
+                    <button
+                      key={p}
+                      onClick={() => setPage(p)}
+                      className={`px-3 py-1.5 text-xs rounded-lg transition-colors ${
+                        page === p ? "bg-black text-white" : "text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5]"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  )
+                )}
+              <button
+                onClick={() => setPage((p) => Math.min(meta.pagination.last_page, p + 1))}
+                disabled={page === meta.pagination.last_page}
+                className="px-3 py-1.5 text-xs text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-lg disabled:opacity-40 transition-colors"
+              >
+                Next →
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Modal Tambah / Edit ── */}
+      {modalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={!isSaving ? closeModal : undefined} />
+          <div className="relative bg-white rounded-xl  w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-[#e5e5e5] sticky top-0 bg-white z-10">
+              <h3 className="font-bold text-black">
+                {editItem ? "Edit Staff FO" : "Tambah Staff FO"}
+              </h3>
+              <button onClick={closeModal} disabled={isSaving} className="p-1 text-[#a3a3a3] hover:text-[#525252] rounded-lg">
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmit} className="p-5 space-y-4">
+
+              {/* Nama */}
+              <div>
+                <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
+                  Nama <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={form.name}
+                  onChange={(e) => setField("name", e.target.value)}
+                  placeholder="Nama lengkap staff"
+                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none  focus:ring-0 ${
+                    errors.name ? "border-red-400 bg-red-50" : "border-[#e5e5e5]"
+                  }`}
+                />
+                {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
+              </div>
+
+              {/* Email */}
+              <div>
+                <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
+                  Email <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  value={form.email}
+                  onChange={(e) => setField("email", e.target.value)}
+                  placeholder="email@puriasih.com"
+                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none  focus:ring-0 ${
+                    errors.email ? "border-red-400 bg-red-50" : "border-[#e5e5e5]"
+                  }`}
+                />
+                {errors.email && <p className="text-xs text-red-500 mt-1">{errors.email}</p>}
+              </div>
+
+              {/* Password */}
+              <div>
+                <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
+                  Password {!editItem && <span className="text-red-500">*</span>}
+                  {editItem && <span className="text-[#a3a3a3] font-normal normal-case">(kosongkan jika tidak ingin mengubah)</span>}
+                </label>
+                <input
+                  type="password"
+                  value={form.password}
+                  onChange={(e) => setField("password", e.target.value)}
+                  placeholder={editItem ? "Biarkan kosong jika tidak diubah" : "Min. 6 karakter"}
+                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none  focus:ring-0 ${
+                    errors.password ? "border-red-400 bg-red-50" : "border-[#e5e5e5]"
+                  }`}
+                />
+                {errors.password && <p className="text-xs text-red-500 mt-1">{errors.password}</p>}
+              </div>
+
+              {/* Konfirmasi Password */}
+              <div>
+                <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
+                  Konfirmasi Password {!editItem && <span className="text-red-500">*</span>}
+                </label>
+                <input
+                  type="password"
+                  value={form.password_confirmation}
+                  onChange={(e) => setField("password_confirmation", e.target.value)}
+                  placeholder="Ulangi password"
+                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none  focus:ring-0 ${
+                    errors.password_confirmation ? "border-red-400 bg-red-50" : "border-[#e5e5e5]"
+                  }`}
+                />
+                {errors.password_confirmation && (
+                  <p className="text-xs text-red-500 mt-1">{errors.password_confirmation}</p>
+                )}
+              </div>
+
+              {/* Role (readonly) */}
+              <div>
+                <label className="block text-xs font-semibold text-[#737373] mb-1 uppercase tracking-wide">Role</label>
+                <input
+                  type="text"
+                  value="Front Office"
+                  readOnly
+                  className="w-full px-3 py-2 bg-[#fafafa] border border-[#e5e5e5] rounded-xl text-sm text-[#737373] cursor-not-allowed"
+                />
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  disabled={isSaving}
+                  className="flex-1 py-2.5 text-sm font-medium text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-xl transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="flex-1 py-2.5 text-sm font-medium text-white bg-black hover:bg-[#090909] rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  id="btn-save-fo"
+                >
+                  {isSaving ? (
+                    <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Menyimpan...</>
+                  ) : (
+                    editItem ? "Update" : "Simpan"
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal View Detail ── */}
+      {viewItem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setViewItem(null)} />
+          <div className="relative bg-white rounded-xl  w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between p-5 border-b border-[#e5e5e5] sticky top-0 bg-white z-10">
+              <h3 className="font-bold text-black">Detail Staff FO</h3>
+              <button onClick={() => setViewItem(null)} className="p-1 text-[#a3a3a3] hover:text-[#525252] rounded-lg">
+                <X size={18} />
+              </button>
+            </div>
+
+            {detailLoading ? (
+              <div className="p-8 text-center text-[#a3a3a3]">
+                <span className="w-6 h-6 border-2 border-gray-300 border-t-indigo-500 rounded-full animate-spin inline-block" />
+              </div>
+            ) : detail ? (
+              <div className="p-5 space-y-4">
+                {/* Avatar + nama */}
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-xl bg-indigo-100 flex items-center justify-center text-black font-bold text-xl">
+                    {detail.user?.name?.charAt(0).toUpperCase() ?? "?"}
+                  </div>
+                  <div>
+                    <p className="font-bold text-black text-lg">{detail.user?.name}</p>
+                    <p className="text-sm text-[#737373]">{detail.user?.email}</p>
+                    <StatusBadge status={detail.user?.status} />
+                  </div>
+                </div>
+
+                {/* Info */}
+                <div className="space-y-2 text-sm">
+                  {[
+                    ["Jabatan",       "Front Office"],
+                    ["Shift",         detail.user?.shift_label ?? "-"],
+                    ["Bergabung",     detail.user?.created_at ?? "-"],
+                  ].map(([label, val]) => (
+                    <div key={label} className="flex justify-between py-1.5 border-b border-gray-50">
+                      <span className="text-[#737373]">{label}</span>
+                      <span className="font-medium text-black">{val}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Statistik */}
+                <div>
+                  <p className="text-xs font-semibold text-[#737373] uppercase tracking-wide mb-2">Statistik</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      ["Total Shift",       detail.stats?.total_shift ?? 0],
+                      ["Total KAS",         detail.stats?.total_kas ?? 0],
+                      ["Total Pengeluaran", detail.stats?.total_expenses ?? 0],
+                      ["Total Reservasi",   detail.stats?.total_reservations ?? 0],
+                    ].map(([label, val]) => (
+                      <div key={label} className="bg-[#fafafa] rounded-xl p-3 text-center">
+                        <p className="text-xl font-bold text-black">{val}</p>
+                        <p className="text-xs text-[#737373] mt-0.5">{label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="p-8 text-center text-[#a3a3a3] text-sm">Gagal memuat detail.</div>
+            )}
+
+            <div className="p-5 border-t border-[#e5e5e5]">
+              <button
+                onClick={() => setViewItem(null)}
+                className="w-full py-2.5 text-sm font-medium text-[#525252] bg-[#fafafa] hover:bg-[#e5e5e5] rounded-xl transition-colors"
+              >
+                Tutup
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Confirm Nonaktifkan ── */}
+      <ConfirmModal
+        isOpen={!!deactivateTarget}
+        title="Nonaktifkan Staff"
+        message={`Nonaktifkan ${deactivateTarget?.name}? Staff tidak akan bisa login dan semua sesi aktif akan dihapus.`}
+        confirmText="Nonaktifkan"
+        confirmVariant="danger"
+        isLoading={deactivateMutation.isPending}
+        onConfirm={() => deactivateMutation.mutate(deactivateTarget.id)}
+        onCancel={() => setDeactivateTarget(null)}
+      />
+
+      </>)}
+
+    </div>
+  );
+};
+
 export default FoManagementPage;

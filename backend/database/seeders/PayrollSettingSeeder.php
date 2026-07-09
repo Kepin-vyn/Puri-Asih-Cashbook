@@ -15,9 +15,9 @@ class PayrollSettingSeeder extends Seeder
         $manager = User::where('email', 'manager@puriasih.com')->first();
 
         PayrollSetting::create([
-            'daily_rate'     => 150000.00,
+            'daily_rate' => 150000.00,
             'effective_date' => Carbon::today(),
-            'set_by'         => $manager->id,
+            'set_by' => $manager->id,
         ]);
     }
 }

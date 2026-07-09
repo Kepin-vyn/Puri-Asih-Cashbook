@@ -12,6 +12,9 @@ dist/
 build/
 public/build/
 
+# Qoder
+.qoder/
+
 # IDE and OS specific files
 .DS_Store
 .idea/
@@ -27,3 +30,8 @@ storage/logs/
 npm-debug.log
 yarn-error.log
 yarn-debug.log
+
+# Documentation / planning files
+DESIGN.md
+guideline.md
+planning.md
