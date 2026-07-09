@@ -1,6 +1,6 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, Users, CheckSquare, Layers, FileDown, LogOut, ScrollText,
+  LayoutDashboard, Users, CheckSquare, Layers, FileDown, LogOut, ScrollText, BedDouble,
 } from "lucide-react";
 import authStore from "../../store/authStore";
 import { useQuery } from "@tanstack/react-query";
@@ -12,6 +12,7 @@ const navItems = [
   { to: "/manager/approval",       label: "Approval",       icon: CheckSquare, showBadge: true },
   { to: "/manager/monthly-report", label: "Monthly Report", icon: Layers },
   { to: "/manager/penggajian",     label: "Payroll",        icon: FileDown },
+  { to: "/manager/room-rates",     label: "Room Rates",     icon: BedDouble },
   { to: "/manager/activity-logs",  label: "Activity Log",   icon: ScrollText },
 ];
 
