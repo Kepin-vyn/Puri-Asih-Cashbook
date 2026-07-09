@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Requests\Reservation\StoreReservationRequest;
+use App\Http\Requests\Reservation\UpdateReservationRequest;
 use App\Http\Requests\Reservation\UpdateStatusRequest;
 use App\Http\Resources\ReservationResource;
+use App\Models\KasTransaction;
 use App\Models\Reservation;
 use App\Models\Shift;
 use App\Services\ReservationService;
@@ -162,7 +164,7 @@ class ReservationController extends BaseApiController
     /**
      * PUT /api/v1/reservations/{id}
      */
-    public function update(StoreReservationRequest $request, string $id): JsonResponse
+    public function update(UpdateReservationRequest $request, string $id): JsonResponse
     {
         $reservation = Reservation::find($id);
 
@@ -170,18 +172,57 @@ class ReservationController extends BaseApiController
             return $this->notFoundResponse('Reservasi tidak ditemukan.');
         }
 
-        // Hitung ulang remaining balance jika harga/dp berubah
-        $remainingBalance = $this->reservationService->calculateRemainingBalance(
-            $request->room_price,
-            $request->down_payment
-        );
+        // Prevent editing after check-in/checkout/cancel/noshow
+        if (in_array($reservation->status, ['checkin', 'checkout', 'cancel', 'noshow'])) {
+            return $this->forbiddenResponse('Reservasi tidak bisa diubah karena status sudah ' . $reservation->status . '.');
+        }
 
+        // Determine new values (merge with existing data for fields not sent)
+        $oldDownPayment   = (float) $reservation->down_payment;
+        $newRoomPrice   = $request->input('room_price', $reservation->room_price);
+        $newDownPayment = $request->input('down_payment', $reservation->down_payment);
+
+        // Recalculate remaining balance
+        $remainingBalance = $this->reservationService->calculateRemainingBalance($newRoomPrice, $newDownPayment);
+
+        // Update reservation fields
         $reservation->update([
             ...$request->validated(),
             'remaining_balance' => $remainingBalance,
         ]);
 
+        // ── Adjust auto-generated KAS transaction for down_payment ──
+        if ($newDownPayment != $oldDownPayment) {
+            $kasDp = KasTransaction::where('source_reference', 'reservation:' . $reservation->invoice_number)
+                ->where('transaction_type', 'reservasi')
+                ->where('auto_generated', true)
+                ->first();
+
+            if ($kasDp) {
+                if ($newDownPayment > 0) {
+                    $kasDp->update(['amount' => $newDownPayment]);
+                } else {
+                    // DP set to 0 → delete the KAS transaction
+                    $kasDp->delete();
+                }
+            } elseif ($newDownPayment > 0) {
+                // No existing KAS but DP is now > 0 → create one
+                app(KasAutomationService::class)->createFromReservation(
+                    $reservation,
+                    'reservasi',
+                    $newDownPayment
+                );
+            }
+        }
+
         $reservation->load('user');
+
+        $this->activityLog->log(
+            'reservation',
+            'update',
+            'Memperbarui reservasi ' . $reservation->invoice_number . ' tamu "' . $reservation->guest_name . '"',
+            ['invoice' => $reservation->invoice_number, 'room_price' => (float) $newRoomPrice, 'down_payment' => (float) $newDownPayment, 'remaining' => (float) $remainingBalance]
+        );
 
         return $this->successResponse(
             new ReservationResource($reservation),
