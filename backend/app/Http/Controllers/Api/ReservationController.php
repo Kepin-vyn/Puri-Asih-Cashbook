@@ -230,10 +230,18 @@ class ReservationController extends BaseApiController
             $updateData['payment_status'] = 'lunas';
 
             if ($reservation->remaining_balance > 0) {
+                // KAS checkin masuk ke shift staff yang melakukan check-in, BUKAN shift pembuat reservasi
+                $currentUser   = Auth::user();
+                $activeShiftId = Shift::where('user_id', $currentUser->id)
+                    ->where('status', 'active')
+                    ->value('id');
+
                 app(KasAutomationService::class)->createFromReservation(
                     $reservation,
                     'checkin',
-                    $reservation->remaining_balance
+                    $reservation->remaining_balance,
+                    $activeShiftId,     // shift staff yang check-in
+                    $currentUser->id     // staff yang check-in
                 );
             }
 

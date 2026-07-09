@@ -123,7 +123,7 @@
     <div class="section-title">Detail Transaksi KAS</div>
     @if(count($kas) > 0)
         @php
-            $typeLabels = ['reservasi' => 'Reservasi', 'checkin' => 'Check-In', 'pelunasan' => 'Pelunasan'];
+            $typeLabels = ['reservasi' => 'Reservasi', 'checkin' => 'Check-In', 'pelunasan' => 'Pelunasan', 'deposit_hangus' => 'Deposit Hangus', 'parkir' => 'Parkir', 'late_checkout' => 'Late Checkout', 'early_checkin' => 'Early Check-In'];
             $methodLabels = ['tunai' => 'Tunai', 'transfer' => 'Transfer', 'qris' => 'QRIS', 'kartu_kredit' => 'Kartu Kredit'];
         @endphp
         <table>

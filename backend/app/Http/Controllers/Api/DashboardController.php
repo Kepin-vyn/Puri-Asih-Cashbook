@@ -162,16 +162,19 @@ class DashboardController extends BaseApiController
 
         // Ambil semua user FO
         $foUsers = User::where('role', 'fo')->get(['id', 'name', 'shift']);
+        $foIds = $foUsers->pluck('id')->toArray();
 
-        $stats = $foUsers->map(function ($user) use ($today) {
-            // Hitung aktivitas per modul hari ini
-            $activities = ActivityLog::where('user_id', $user->id)
-                ->whereDate('created_at', $today)
-                ->select('module', DB::raw('COUNT(*) as count'))
-                ->groupBy('module')
-                ->pluck('count', 'module')
-                ->toArray();
+        // Batch: 1 query untuk semua FO sekaligus (bukan N+1)
+        $allActivities = ActivityLog::whereIn('user_id', $foIds)
+            ->whereDate('created_at', $today)
+            ->select('user_id', 'module', DB::raw('COUNT(*) as count'))
+            ->groupBy('user_id', 'module')
+            ->get()
+            ->groupBy('user_id');
 
+        $stats = $foUsers->map(function ($user) use ($allActivities) {
+            $userActivities = $allActivities->get($user->id, collect());
+            $activities = $userActivities->pluck('count', 'module')->toArray();
             $totalActions = array_sum($activities);
 
             return [

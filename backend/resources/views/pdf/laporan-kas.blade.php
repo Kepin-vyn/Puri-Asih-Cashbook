@@ -123,7 +123,7 @@
                     <td class="text-center">{{ $trx->room_number ?? '-' }}</td>
                     <td>
                         @php
-                            $typeLabels = ['reservasi' => 'Reservasi', 'checkin' => 'Check-In', 'pelunasan' => 'Pelunasan'];
+                            $typeLabels = ['reservasi' => 'Reservasi', 'checkin' => 'Check-In', 'pelunasan' => 'Pelunasan', 'deposit_hangus' => 'Deposit Hangus', 'parkir' => 'Parkir', 'late_checkout' => 'Late Checkout', 'early_checkin' => 'Early Check-In'];
                         @endphp
                         {{ $typeLabels[$trx->transaction_type] ?? $trx->transaction_type }}
                     </td>
