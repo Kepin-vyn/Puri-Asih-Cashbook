@@ -5,6 +5,7 @@ import { Download, Users, X, Settings, Calculator } from "lucide-react";
 import toast from "react-hot-toast";
 import payrollService from "../../services/payrollService";
 import attendanceService from "../../services/attendanceService";
+import userService from "../../services/userService";
 import MonthYearPicker from "../../components/ui/MonthYearPicker";
 import ConfirmModal from "../../components/ui/ConfirmModal";
 import RupiahInput from "../../components/ui/RupiahInput";
@@ -212,6 +213,33 @@ const PayrollPage = () => {
   const payrolls  = payrollData?.data?.payrolls ?? payrollData?.data ?? [];
   const totalGaji = payrolls.reduce((s, p) => s + Number(p.total_salary ?? 0), 0);
 
+  // ── Fetch ringkasan absensi semua FO bulan ini ────────────────────────
+  const { data: foUsersData } = useQuery({
+    queryKey: ["fo-users-active"],
+    queryFn:  () => userService.getAll({ role: "fo", status: "active" }),
+    retry: false,
+  });
+  const foUsers = foUsersData?.data ?? [];
+
+  // Fetch absensi per staff untuk periode yang dipilih
+  const attendanceSummaries = useQuery({
+    queryKey: ["attendance-summary-all", period],
+    queryFn:  async () => {
+      if (foUsers.length === 0) return [];
+      const results = await Promise.all(
+        foUsers.map((u) =>
+          attendanceService.getMonthly(u.id, { month: monthStr, year: yearStr })
+            .then((r) => ({ user_id: u.id, user_name: u.name, ...r?.data }))
+            .catch(() => ({ user_id: u.id, user_name: u.name }))
+        )
+      );
+      return results;
+    },
+    enabled: foUsers.length > 0,
+    retry: false,
+  });
+  const attSummaries = attendanceSummaries.data ?? [];
+
   // ── Calculate mutation ────────────────────────────────────────────────────
   const calculateMutation = useMutation({
     mutationFn: () => payrollService.calculate(period),
@@ -366,10 +394,82 @@ const PayrollPage = () => {
         </div>
       </div>
 
-      {/* ── Section 3: Tabel Rekap Gaji ── */}
-      <div className="bg-white rounded-xl border border-[#e5e5e5] ">
-        <div className="p-5 border-b border-[#e5e5e5] flex items-center justify-between">
-          <h2 className="font-bold text-black">
+      {/* ── Section 3: Ringkasan Absensi Bulan Ini ── */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+        <div className="p-5 border-b border-gray-100">
+          <h2 className="font-bold text-gray-800">Ringkasan Absensi \u2014 {periodLabel}</h2>
+          <p className="text-xs text-gray-400 mt-0.5">
+            Data absensi FO bulan ini. Klik "Hitung Gaji" untuk menghitung gaji berdasarkan data ini.
+          </p>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-50 text-left">
+                {["Nama FO", "Hadir", "Libur", "Sakit", "Izin", "Alpha", "Hari Dibayar", "Status"].map((h) => (
+                  <th key={h} className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50">
+              {attendanceSummaries.isLoading ? (
+                Array.from({ length: 2 }).map((_, i) => <SkeletonRow key={i} cols={8} />)
+              ) : attSummaries.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className="text-center py-8 text-gray-400 text-sm">
+                    Belum ada data absensi untuk {periodLabel}
+                  </td>
+                </tr>
+              ) : (
+                attSummaries.map((att) => {
+                  const hadir     = att.total_hadir   ?? 0;
+                  const libur     = att.total_libur   ?? 0;
+                  const sakit     = att.total_sakit   ?? 0;
+                  const izin      = att.total_izin    ?? 0;
+                  const alpha     = att.total_alpha   ?? 0;
+                  const hariBayar = att.hari_bayar    ?? 0;
+                  const hasData   = hadir + libur + sakit + izin + alpha > 0;
+
+                  return (
+                    <tr key={att.user_id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-4 py-3 font-semibold text-gray-800">{att.user_name}</td>
+                      <td className="px-4 py-3 text-center font-semibold text-emerald-700">{hadir}</td>
+                      <td className="px-4 py-3 text-center text-blue-700">
+                        <span className="font-semibold">{libur}</span>
+                        <span className="text-gray-400">/6</span>
+                      </td>
+                      <td className="px-4 py-3 text-center text-amber-600">{sakit}</td>
+                      <td className="px-4 py-3 text-center text-gray-600">{izin}</td>
+                      <td className="px-4 py-3 text-center font-semibold text-red-600">{alpha}</td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-indigo-100 text-indigo-700">
+                          {hariBayar} hari
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        {hasData ? (
+                          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
+                            \u2713 Ada absensi
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-gray-100 text-gray-400">
+                            Belum absen
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* ── Section 4: Tabel Rekap Gaji ── */}
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
+        <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+          <h2 className="font-bold text-gray-800">
             Rekap Gaji — {periodLabel}
           </h2>
           <div className="flex items-center gap-1.5 text-xs text-[#737373]">

@@ -37,7 +37,7 @@ const StatusBadge = ({ status }) => (
 // ── Skeleton row ──────────────────────────────────────────────────────────────
 const SkeletonRow = () => (
   <tr>
-    {Array.from({ length: 5 }).map((_, i) => (
+    {Array.from({ length: 4 }).map((_, i) => (
       <td key={i} className="px-4 py-3">
         <div className="h-4 bg-[#e5e5e5] rounded animate-pulse" />
       </td>
@@ -51,7 +51,6 @@ const emptyForm = () => ({
   email:                 "",
   password:              "",
   password_confirmation: "",
-  shift:                 "pagi",
 });
 
 // ── Week helpers ──────────────────────────────────────────────────────────────
@@ -82,10 +81,11 @@ const addDays = (date, n) => {
 };
 
 const toDateStr = (date) => {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, "0");
-  const d = String(date.getDate()).padStart(2, "0");
-  return `${y}-${m}-${d}`;
+  const d = new Date(date);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 };
 
 const formatDayHeader = (date) => {
@@ -96,9 +96,10 @@ const formatDayHeader = (date) => {
 // ── WeeklyScheduleTab ─────────────────────────────────────────────────────────
 const WeeklyScheduleTab = () => {
   const queryClient = useQueryClient();
-  const [weekStart, setWeekStart] = useState(() => getMondayOf(new Date()));
-  const [localSchedule, setLocalSchedule] = useState({});
-  const [saving, setSaving] = useState(false);
+  const [weekStart,      setWeekStart]      = useState(() => getMondayOf(new Date()));
+  const [selectedStaff,  setSelectedStaff]  = useState(null); // row yang sedang diedit
+  const [editDays,       setEditDays]       = useState({});   // perubahan lokal untuk staff terpilih
+  const [saving,         setSaving]         = useState(false);
 
   const weekStartStr = toDateStr(weekStart);
   const weekEndStr   = toDateStr(addDays(weekStart, 6));
@@ -112,57 +113,46 @@ const WeeklyScheduleTab = () => {
 
   const prevWeek = () => setWeekStart((d) => addDays(d, -7));
   const nextWeek = () => setWeekStart((d) => addDays(d, 7));
-
-  const handleChange = (userId, dayKey, value) => {
-    setLocalSchedule((prev) => ({
-      ...prev,
-      [userId]: { ...(prev[userId] ?? {}), [dayKey]: value },
-    }));
-  };
-
+  
   const getVal = (row, dayKey) =>
-    localSchedule[row.user_id]?.[dayKey] ?? row[dayKey] ?? "off";
-
-  const hasChanges = Object.keys(localSchedule).length > 0;
-
+    editDays[dayKey] ?? row[dayKey] ?? "off";
+  
+  const openEdit = (row) => {
+    setSelectedStaff(row);
+    const days = {};
+    DAY_KEYS.forEach((k) => { days[k] = row[k] ?? "off"; });
+    setEditDays(days);
+  };
+  
+  const closeEdit = () => {
+    setSelectedStaff(null);
+    setEditDays({});
+  };
+  
   const handleSave = async () => {
-    if (!hasChanges) return;
+    if (!selectedStaff) return;
     setSaving(true);
-    let successCount = 0;
-    let errorCount   = 0;
-
-    for (const [userId, _changes] of Object.entries(localSchedule)) {
-      const row = schedules.find((s) => String(s.user_id) === String(userId));
-      if (!row) continue;
-
-      const payload = {
-        user_id:         Number(userId),
-        week_start_date: weekStartStr,
-        monday:    localSchedule[userId]?.monday    ?? row.monday    ?? "off",
-        tuesday:   localSchedule[userId]?.tuesday   ?? row.tuesday   ?? "off",
-        wednesday: localSchedule[userId]?.wednesday ?? row.wednesday ?? "off",
-        thursday:  localSchedule[userId]?.thursday  ?? row.thursday  ?? "off",
-        friday:    localSchedule[userId]?.friday    ?? row.friday    ?? "off",
-        saturday:  localSchedule[userId]?.saturday  ?? row.saturday  ?? "off",
-        sunday:    localSchedule[userId]?.sunday    ?? row.sunday    ?? "off",
-      };
-
-      try {
-        await shiftScheduleService.store(payload);
-        successCount++;
-      } catch {
-        errorCount++;
-      }
-    }
-
-    setSaving(false);
-    setLocalSchedule({});
-    queryClient.invalidateQueries({ queryKey: ["shift-schedule-week"] });
-
-    if (errorCount === 0) {
-      toast.success(`✅ Jadwal ${successCount} staff berhasil disimpan!`);
-    } else {
-      toast.error(`${errorCount} jadwal gagal disimpan. ${successCount} berhasil.`);
+    const row = selectedStaff;
+    const payload = {
+      user_id:         Number(row.user_id),
+      week_start_date: weekStartStr,
+      monday:    editDays.monday    ?? row.monday    ?? "off",
+      tuesday:   editDays.tuesday   ?? row.tuesday   ?? "off",
+      wednesday: editDays.wednesday ?? row.wednesday ?? "off",
+      thursday:  editDays.thursday  ?? row.thursday  ?? "off",
+      friday:    editDays.friday    ?? row.friday    ?? "off",
+      saturday:  editDays.saturday  ?? row.saturday  ?? "off",
+      sunday:    editDays.sunday    ?? row.sunday    ?? "off",
+    };
+    try {
+      await shiftScheduleService.store(payload);
+      toast.success(`\u2705 Jadwal ${row.user_name} berhasil disimpan!`);
+      queryClient.invalidateQueries({ queryKey: ["shift-schedule-week"] });
+      closeEdit();
+    } catch {
+      toast.error("Gagal menyimpan jadwal.");
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -227,22 +217,38 @@ const WeeklyScheduleTab = () => {
               </tr>
             ) : (
               schedules.map((row) => {
-                const hasLocalChange = !!localSchedule[row.user_id];
+                const isSelected = selectedStaff?.user_id === row.user_id;
                 return (
-                  <tr key={row.user_id} className={`transition-colors ${hasLocalChange ? "bg-[#fafafa]/40" : "hover:bg-[#fafafa]"}`}>
-                    <td className="px-4 py-3 font-medium text-black whitespace-nowrap sticky left-0 bg-inherit">
+                  <tr
+                    key={row.user_id}
+                    className={`transition-colors cursor-pointer ${isSelected ? "bg-indigo-50" : "hover:bg-gray-50"}`}
+                    onClick={() => !isSelected && openEdit(row)}
+                  >
+                    <td className="px-4 py-3 font-medium text-gray-800 whitespace-nowrap sticky left-0 bg-inherit">
                       {row.user_name}
-                      {hasLocalChange && (
-                        <span className="ml-2 text-xs text-blue-500 font-normal">• diubah</span>
+                      {isSelected && (
+                        <span className="ml-2 text-xs text-indigo-500 font-normal">\u2022 diedit</span>
                       )}
                     </td>
                     {DAY_KEYS.map((dayKey) => (
                       <td key={dayKey} className="px-2 py-2 text-center">
-                        <InlineDropdown
-                          value={getVal(row, dayKey)}
-                          options={SCHEDULE_OPTIONS}
-                          onChange={(val) => handleChange(row.user_id, dayKey, val)}
-                        />
+                        {isSelected ? (
+                          <select
+                            value={editDays[dayKey] ?? "off"}
+                            onChange={(e) => setEditDays((p) => ({ ...p, [dayKey]: e.target.value }))}
+                            className="w-full px-2 py-1.5 text-sm font-semibold border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-indigo-400 text-center cursor-pointer"
+                          >
+                            {SCHEDULE_OPTIONS.map((opt) => (
+                              <option key={opt.value} value={opt.value}>{opt.label}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <InlineDropdown
+                            value={row[dayKey] ?? "off"}
+                            options={SCHEDULE_OPTIONS}
+                            onChange={() => openEdit(row)}
+                          />
+                        )}
                       </td>
                     ))}
                   </tr>
@@ -253,27 +259,55 @@ const WeeklyScheduleTab = () => {
         </table>
       </div>
 
-      {/* Tombol Simpan */}
-      <div className="flex items-center justify-between">
-        {hasChanges ? (
-          <p className="text-sm text-black font-medium">
-            {Object.keys(localSchedule).length} staff memiliki perubahan yang belum disimpan
-          </p>
-        ) : (
-          <p className="text-sm text-[#a3a3a3]">Belum ada perubahan</p>
-        )}
-        <button
-          onClick={handleSave}
-          disabled={!hasChanges || saving}
-          className="flex items-center gap-2 px-5 py-2.5 bg-black hover:bg-[#090909] text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-40 disabled:cursor-not-allowed "
-        >
-          {saving ? (
-            <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Menyimpan...</>
-          ) : (
-            <><Save size={15} />Simpan Jadwal</>
-          )}
-        </button>
-      </div>
+      {/* Tombol Simpan / Edit Panel */}
+      {selectedStaff ? (
+        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <p className="font-semibold text-indigo-800">
+              Edit Jadwal: {selectedStaff.user_name}
+            </p>
+            <span className="text-xs text-indigo-500">Klik dropdown di atas untuk ubah</span>
+          </div>
+
+          {/* Tombol aksi */}
+          <div className="flex items-center justify-between pt-1">
+            <button
+              onClick={() => {
+                const reset = {};
+                DAY_KEYS.forEach((k) => { reset[k] = "off"; });
+                setEditDays(reset);
+              }}
+              className="text-xs text-gray-500 hover:text-gray-700 underline"
+            >
+              Reset semua ke Off
+            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={closeEdit}
+                disabled={saving}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors disabled:opacity-50"
+              >
+                Batal
+              </button>
+              <button
+                onClick={handleSave}
+                disabled={saving}
+                className="flex items-center gap-2 px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors disabled:opacity-50 shadow-sm"
+              >
+                {saving ? (
+                  <><span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Menyimpan...</>
+                ) : (
+                  <><Save size={15} />Simpan Jadwal</>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-gray-400">Klik baris staff untuk mengedit jadwal</p>
+        </div>
+      )}
     </div>
   );
 };
@@ -408,7 +442,6 @@ const FoManagementPage = () => {
       email:                 user.email ?? "",
       password:              "",
       password_confirmation: "",
-      shift:                 user.shift ?? "pagi",
     });
     setErrors({});
     setModalOpen(true);
@@ -434,13 +467,11 @@ const FoManagementPage = () => {
     else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) e.email = "Format email tidak valid.";
 
     if (!editItem) {
-      // Tambah: password wajib
       if (!form.password) e.password = "Password wajib diisi.";
       else if (form.password.length < 6) e.password = "Password minimal 6 karakter.";
       if (form.password !== form.password_confirmation)
         e.password_confirmation = "Konfirmasi password tidak cocok.";
     } else {
-      // Edit: password opsional, tapi jika diisi harus valid
       if (form.password) {
         if (form.password.length < 6) e.password = "Password minimal 6 karakter.";
         if (form.password !== form.password_confirmation)
@@ -448,7 +479,6 @@ const FoManagementPage = () => {
       }
     }
 
-    if (!form.shift) e.shift = "Shift wajib dipilih.";
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -460,7 +490,6 @@ const FoManagementPage = () => {
     const payload = {
       name:  form.name,
       email: form.email,
-      shift: form.shift,
       role:  "fo",
     };
     if (form.password) {
@@ -582,9 +611,9 @@ const FoManagementPage = () => {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-[#fafafa] text-left">
-                {["No", "Nama", "Shift", "Status", "Aksi"].map((h) => (
-                  <th key={h} className="px-4 py-3 text-xs font-semibold text-[#737373] uppercase tracking-wide whitespace-nowrap">
+              <tr className="bg-gray-50 text-left">
+                {["No", "Nama", "Status", "Aksi"].map((h) => (
+                  <th key={h} className="px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide whitespace-nowrap">
                     {h}
                   </th>
                 ))}
@@ -595,7 +624,7 @@ const FoManagementPage = () => {
                 Array.from({ length: 5 }).map((_, i) => <SkeletonRow key={i} />)
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-16 text-[#a3a3a3]">
+                  <td colSpan={4} className="text-center py-16 text-gray-400">
                     <Users size={40} className="mx-auto mb-3 opacity-20" />
                     <p className="text-sm">Tidak ada staff FO ditemukan</p>
                     <button onClick={openAdd} className="mt-3 text-xs text-black underline">
@@ -616,15 +645,6 @@ const FoManagementPage = () => {
                         </p>
                         <p className="text-xs text-[#a3a3a3]">{user.email}</p>
                       </div>
-                    </td>
-                    <td className="px-4 py-3">
-                      <InlineDropdown
-                        value={user.shift ?? "pagi"}
-                        options={SHIFT_OPTIONS}
-                        onChange={(val) => handleShiftChange(user.id, val)}
-                        isLoading={!!loadingShift[user.id]}
-                        disabled={user.status === "inactive"}
-                      />
                     </td>
                     <td className="px-4 py-3">
                       <InlineDropdown
@@ -804,25 +824,6 @@ const FoManagementPage = () => {
                 {errors.password_confirmation && (
                   <p className="text-xs text-red-500 mt-1">{errors.password_confirmation}</p>
                 )}
-              </div>
-
-              {/* Shift */}
-              <div>
-                <label className="block text-xs font-semibold text-[#525252] mb-1 uppercase tracking-wide">
-                  Shift <span className="text-red-500">*</span>
-                </label>
-                <select
-                  value={form.shift}
-                  onChange={(e) => setField("shift", e.target.value)}
-                  className={`w-full px-3 py-2 border rounded-xl text-sm focus:outline-none  focus:ring-0 ${
-                    errors.shift ? "border-red-400 bg-red-50" : "border-[#e5e5e5]"
-                  }`}
-                >
-                  {SHIFT_OPTIONS.map((s) => (
-                    <option key={s.value} value={s.value}>{s.label}</option>
-                  ))}
-                </select>
-                {errors.shift && <p className="text-xs text-red-500 mt-1">{errors.shift}</p>}
               </div>
 
               {/* Role (readonly) */}

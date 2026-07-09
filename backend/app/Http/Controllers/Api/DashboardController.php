@@ -28,80 +28,58 @@ class DashboardController extends BaseApiController
     {
         $user = Auth::user();
 
-        $data = Cache::remember("dashboard:fo:{$user->id}", 30, function () use ($user, $shiftService) {
-            // 1. Shift Aktif
-            $active_shift = $shiftService->getActiveShift($user->id);
-            $has_active_shift = $active_shift !== null;
+        // 1. Shift Aktif
+        $active_shift = $shiftService->getActiveShift($user->id);
+        $has_active_shift = $active_shift !== null;
 
-            // 2. Shift Summary
-            $shift_summary = null;
-            if ($has_active_shift) {
-                $shift_summary = $shiftService->getShiftSummary($active_shift->id);
-            }
+        // 2. Shift Summary
+        $shift_summary = null;
+        if ($has_active_shift) {
+            $shift_summary = $shiftService->getShiftSummary($active_shift->id);
+        }
 
-            // 3. Notifikasi 5 terbaru
-            $notifications = Notification::where('user_id', $user->id)
-                ->orderByRaw('CASE WHEN read_at IS NULL THEN 0 ELSE 1 END ASC')
-                ->orderBy('created_at', 'desc')
-                ->limit(5)
-                ->get();
+        // 3. Notifikasi 5 terbaru
+        $notifications = Notification::where('user_id', $user->id)
+            ->orderByRaw('CASE WHEN read_at IS NULL THEN 0 ELSE 1 END ASC')
+            ->orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get();
 
-            // 4. Unread count
-            $unread_count = Notification::where('user_id', $user->id)
-                ->unread()
-                ->count();
+        // 4. Unread count
+        $unread_count = Notification::where('user_id', $user->id)
+            ->unread()
+            ->count();
 
-            // 5. Deposits
-            $today = Carbon::today()->toDateString();
-            $tomorrow = Carbon::tomorrow()->toDateString();
-            $expiring_deposits = Deposit::where('status', 'active')
-                ->whereIn('check_out_date', [$today, $tomorrow])
-                ->count();
+        // 5. Expiring deposits (jatuh tempo hari ini & besok)
+        $today = Carbon::today()->toDateString();
+        $tomorrow = Carbon::tomorrow()->toDateString();
+        $expiring_deposits = Deposit::where('status', 'active')
+            ->whereIn('check_out_date', [$today, $tomorrow])
+            ->count();
 
-            // 5b. Deposit yang perlu refund hari ini (checkout hari ini, masih active)
-            $deposits_due_refund = Deposit::where('status', 'active')
-                ->whereDate('check_out_date', $today)
-                ->orderBy('room_number')
-                ->get(['id', 'guest_name', 'room_number', 'amount', 'check_out_date', 'payment_method']);
+        // 6. Reservation counts hari ini
+        $check_in_count = Reservation::whereDate('check_in_date', $today)
+            ->whereNotIn('status', ['cancel', 'noshow'])
+            ->count();
 
-            // 6. Reservation counts hari ini
-            $check_in_count = Reservation::whereDate('check_in_date', $today)
-                ->whereNotIn('status', ['cancel', 'noshow'])
-                ->count();
+        $check_out_count = Reservation::whereDate('check_out_date', $today)
+            ->whereNotIn('status', ['cancel', 'noshow'])
+            ->count();
 
-            $check_out_count = Reservation::whereDate('check_out_date', $today)
-                ->whereNotIn('status', ['cancel', 'noshow'])
-                ->count();
+        $reservation_count = Reservation::whereDate('created_at', $today)
+            ->count();
 
-            $reservation_count = Reservation::whereDate('created_at', $today)
-                ->count();
-
-            // 7. Tamu expected hari ini (reserved + check_in_date = hari ini)
-            $expected_arrivals = Reservation::where('status', 'reserved')
-                ->whereDate('check_in_date', $today)
-                ->orderBy('room_number')
-                ->get(['id', 'invoice_number', 'guest_name', 'room_number', 'check_in_date', 'check_out_date', 'room_price', 'down_payment', 'remaining_balance', 'payment_status']);
-
-            // 8. Tamu in-house (checkin, belum checkout)
-            $in_house_count = Reservation::where('status', 'checkin')->count();
-
-            return [
-                'has_active_shift' => $has_active_shift,
-                'active_shift' => $active_shift,
-                'shift_summary' => $shift_summary,
-                'check_in_count' => $check_in_count,
-                'check_out_count' => $check_out_count,
-                'reservation_count' => $reservation_count,
-                'in_house_count' => $in_house_count,
-                'expected_arrivals' => $expected_arrivals,
-                'deposits_due_refund' => $deposits_due_refund,
-                'notifications' => NotificationResource::collection($notifications),
-                'unread_count' => $unread_count,
-                'expiring_deposits' => $expiring_deposits,
-            ];
-        });
-
-        return $this->successResponse($data, 'Dashboard FO berhasil diambil.');
+        return $this->successResponse([
+            'has_active_shift' => $has_active_shift,
+            'active_shift' => $active_shift,
+            'shift_summary' => $shift_summary,
+            'check_in_count' => $check_in_count,
+            'check_out_count' => $check_out_count,
+            'reservation_count' => $reservation_count,
+            'notifications' => NotificationResource::collection($notifications),
+            'unread_count' => $unread_count,
+            'expiring_deposits' => $expiring_deposits,
+        ], 'Dashboard FO berhasil diambil.');
     }
 
     /**

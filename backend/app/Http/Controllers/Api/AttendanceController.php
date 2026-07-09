@@ -163,7 +163,7 @@ class AttendanceController extends BaseApiController
         }
 
         // Cek keterlambatan
-        $isLate = $this->attendanceService->checkIsLate($user->id, $resolvedShift, $now);
+        $isLate = $this->attendanceService->checkIsLate((int) $user->id, $request->shift_type, $now);
 
         // Ambil shift aktif jika ada, atau buat shift baru otomatis
         $activeShift = Shift::where('user_id', $user->id)

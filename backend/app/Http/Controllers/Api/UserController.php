@@ -37,9 +37,9 @@ class UserController extends BaseApiController
         $users = $query->orderBy('name', 'asc')->paginate(20);
 
         // Summary counts
-        $totalFo = User::where('role', 'fo')->count();
-        $totalActive = User::where('status', 'active')->count();
-        $totalInactive = User::where('status', 'inactive')->count();
+        $totalFo       = User::where('role', 'fo')->count();
+        $totalActive   = User::where('role', 'fo')->where('status', 'active')->count();
+        $totalInactive = User::where('role', 'fo')->where('status', 'inactive')->count();
 
         return $this->successResponse(
             UserResource::collection($users->items()),

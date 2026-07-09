@@ -1,13 +1,30 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
-import { RefreshCw, Bell, Wallet, FileText, CalendarCheck, CalendarX, BookOpen } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  CalendarCheck,
+  CalendarX,
+  BookOpen,
+  Bell,
+  Wallet,
+  TrendingUp,
+  TrendingDown,
+  RefreshCw,
+  Plus,
+  FileText,
+  Info,
+  AlertTriangle,
+  Clock,
+  Users,
+  ArrowRight,
+  ShieldCheck,
+} from "lucide-react";
 import toast from "react-hot-toast";
 import dashboardService from "../../services/dashboardService";
 import authStore from "../../store/authStore";
-import api from "../../utils/axios";
+import { formatTime } from "../../utils/dateFormatter";
 import { QUERY_KEYS } from "../../utils/queryKeys";
-import { useActiveShift } from "../../hooks/useActiveShift";
+import { useShiftContext } from "../../context/ShiftContext";
 
 const formatRp = (val) =>
   new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 })
@@ -33,50 +50,54 @@ const Skeleton = ({ className = "" }) => (
 const DashboardPage = () => {
   const user        = authStore.getUser();
   const queryClient = useQueryClient();
-  const { hasActiveShift, activeShift } = useActiveShift();
+  const { markShiftStarted } = useShiftContext();
 
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
-  const { data: summaryData, isLoading: summaryLoading, isError: summaryError, refetch: refetchSummary } = useQuery({
+  // Mutation: mulai shift langsung dari dashboard
+  const startShiftMutation = useMutation({
+    mutationFn: shiftService.startShift,
+    onSuccess: () => {
+      markShiftStarted();
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard });
+      toast.success("✅ Shift berhasil dimulai!");
+      setShowConfirmModal(false);
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Gagal memulai shift");
+      setShowConfirmModal(false);
+    },
+  });
+
+  // ── DATA: 1 request ke /dashboard/fo ────────────────────────────────────
+
+  const {
+    data: summaryData,
+    isLoading: summaryLoading,
+    isError: summaryError,
+    refetch: refetchSummary,
+  } = useQuery({
     queryKey: QUERY_KEYS.foDashboard,
-    queryFn:  dashboardService.getFoSummary,
-    staleTime: 1 * 60 * 1000,
-    refetchInterval: 2 * 60 * 1000,
+    queryFn:  dashboardService.getFoDashboard,
+    staleTime:       1 * 60 * 1000, // fresh 1 menit
+    refetchInterval: 2 * 60 * 1000, // polling setiap 2 menit
     retry: 1,
   });
 
-  const { data: notifData, isLoading: notifLoading, refetch: refetchNotif } = useQuery({
-    queryKey: ["notifications"],
-    queryFn:  dashboardService.getNotifications,
-    staleTime: 1 * 60 * 1000,
-    refetchInterval: 2 * 60 * 1000,
-  });
-
-  const today = new Date().toISOString().split("T")[0];
-  const { data: kasData, isLoading: kasLoading } = useQuery({
-    queryKey: ["kas-today", today],
-    queryFn:  () => api.get(`/kas?date=${today}`).then(r => r.data),
-    staleTime: 5 * 60 * 1000,
-    refetchInterval: 10 * 60 * 1000,
-    enabled: hasActiveShift,
-  });
-  const { data: expenseData, isLoading: expenseLoading } = useQuery({
-    queryKey: ["expense-today", today],
-    queryFn:  () => api.get(`/expenses?date=${today}`).then(r => r.data),
-    staleTime: 5 * 60 * 1000,
-    refetchInterval: 10 * 60 * 1000,
-    enabled: hasActiveShift,
-  });
-
+  // Mark notification as read
   const markReadMutation = useMutation({
     mutationFn: dashboardService.markNotificationRead,
-    onSuccess:  () => queryClient.invalidateQueries({ queryKey: ["notifications"] }),
+    onSuccess:  () => queryClient.invalidateQueries({ queryKey: QUERY_KEYS.foDashboard }),
   });
 
-  const summary  = summaryData?.data ?? {};
-  const notifs   = (notifData?.data ?? []).slice(0, 5);
-  const totalRev = kasData?.meta?.total_amount ?? 0;
-  const totalExp = expenseData?.meta?.totals?.total_valid ?? 0;
-  const balance  = totalRev - totalExp;
+  const dashboard      = summaryData?.data ?? {};
+  const hasActiveShift = !!dashboard.has_active_shift;
+  const activeShift    = dashboard.active_shift ?? null;
+  const summary        = dashboard.shift_summary ?? {};
+  const notifs         = (dashboard.notifications ?? []).slice(0, 5);
+  const totalRev       = summary.kas?.total ?? 0;
+  const totalExp       = summary.expenses?.total ?? 0;
+  const balance        = totalRev - totalExp;
 
   return (
     <div className="space-y-8 max-w-4xl">
@@ -92,8 +113,8 @@ const DashboardPage = () => {
           </p>
         </div>
         <button
-          onClick={() => { refetchSummary(); refetchNotif(); }}
-          className="flex items-center gap-2 h-9 px-4 rounded-full border border-[#e5e5e5] text-[13px] font-[500] text-[#525252] hover:border-[#a3a3a3] hover:text-black transition-colors"
+          onClick={() => refetchSummary()}
+          className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 px-3 py-2 rounded-lg transition-colors"
         >
           <RefreshCw size={13} />
           Refresh
@@ -102,22 +123,20 @@ const DashboardPage = () => {
 
       {/* Banner: belum ada shift */}
       {!summaryLoading && !hasActiveShift && (
-        <>
-          <div className="border border-[#e5e5e5] rounded-xl p-5 flex items-start justify-between gap-4">
-            <div>
-              <p className="text-[16px] font-[500] text-black mb-1">Belum Ada Shift Aktif</p>
-              <p className="text-[14px] text-[#737373]">
-                Lakukan absen terlebih dahulu untuk memulai shift kamu.
-              </p>
-            </div>
-            <Link
-              to="/fo/absensi?action=start_shift"
-              className="flex-shrink-0 h-9 px-4 rounded-full bg-black text-white text-[14px] font-[500] hover:bg-[#090909] transition-colors flex items-center gap-2 whitespace-nowrap"
-            >
-              ▶ Absen & Mulai Shift
-            </Link>
-          </div>
-        </>
+        <div className="bg-yellow-50 border border-yellow-300 rounded-xl p-5">
+          <p className="font-semibold text-yellow-800 mb-1">
+            Belum Ada Shift Aktif
+          </p>
+          <p className="text-sm text-yellow-700 mb-4">
+            Lakukan absen terlebih dahulu untuk memulai shift kamu.
+          </p>
+          <Link
+            to="/fo/absensi?action=start_shift"
+            className="flex items-center justify-center w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all"
+          >
+            ▶ Absen & Mulai Shift Sekarang
+          </Link>
+        </div>
       )}
 
       {/* Banner: shift aktif */}
@@ -133,23 +152,56 @@ const DashboardPage = () => {
         </div>
       )}
 
-      {/* Summary cards */}
+      {/* Modal Konfirmasi dihapus — alur sekarang via halaman Attendance */}
+
+      {/* ── Summary Cards ── */}
       {summaryLoading ? (
         <div className="grid grid-cols-3 gap-4">
           {[1,2,3].map(i => <Skeleton key={i} className="h-24" />)}
         </div>
       ) : !summaryError ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {[
-            { icon: CalendarCheck, label: "Check-In Hari Ini", value: summary.check_in_count ?? 0 },
-            { icon: CalendarX,     label: "Check-Out Hari Ini", value: summary.check_out_count ?? 0 },
-            { icon: BookOpen,      label: "Reservasi Baru", value: summary.reservation_count ?? 0 },
-          ].map(({ icon: _Icon, label, value }) => (
-            <div key={label} className="border border-[#e5e5e5] rounded-xl p-5">
-              <p className="text-[12px] font-[500] text-[#737373] uppercase tracking-wide mb-2">{label}</p>
-              <p className="text-[30px] font-[500] text-black" style={{ fontFamily: "var(--font-display)" }}>{value}</p>
-            </div>
-          ))}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <SummaryCard
+            icon={CalendarCheck}
+            label="Check-In Hari Ini"
+            value={dashboard.check_in_count ?? 0}
+            sublabel={`${dashboard.check_in_count ?? 0} tamu masuk`}
+            iconBg="bg-blue-50"
+            iconColor="text-blue-600"
+          />
+          <SummaryCard
+            icon={CalendarX}
+            label="Check-Out Hari Ini"
+            value={dashboard.check_out_count ?? 0}
+            sublabel={`${dashboard.check_out_count ?? 0} tamu selesai`}
+            iconBg="bg-purple-50"
+            iconColor="text-purple-600"
+          />
+          <SummaryCard
+            icon={Users}
+            label="In-House"
+            value={summary.in_house_count ?? 0}
+            sublabel="Tamu sedang menginap"
+            iconBg="bg-orange-50"
+            iconColor="text-orange-600"
+          />
+          <SummaryCard
+            icon={BookOpen}
+            label="Reservasi Baru"
+            value={dashboard.reservation_count ?? 0}
+            sublabel="Hari ini"
+            iconBg="bg-emerald-50"
+            iconColor="text-emerald-600"
+            action={
+              <Link
+                to="/fo/reservasi"
+                className="p-1.5 bg-emerald-100 hover:bg-emerald-200 rounded-lg transition-colors"
+                title="Tambah Reservasi"
+              >
+                <Plus size={14} className="text-emerald-600" />
+              </Link>
+            }
+          />
         </div>
       ) : null}
 
@@ -201,23 +253,77 @@ const DashboardPage = () => {
             <Wallet size={15} className="text-[#737373]" />
             <h2 className="text-[16px] font-[500] text-black">Shift Cash</h2>
           </div>
-          <div className="p-5">
-            {!summaryLoading && !hasActiveShift ? (
-              <div className="text-center py-8 text-[#a3a3a3] text-[14px]">
-                Data kas tersedia setelah shift dimulai
-              </div>
-            ) : kasLoading || expenseLoading ? (
-              <div className="space-y-2">{[1,2,3].map(i => <Skeleton key={i} className="h-10" />)}</div>
-            ) : (
-              <>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between py-2.5 border-b border-[#e5e5e5]">
-                    <span className="text-[14px] text-[#525252]">Total Revenue</span>
-                    <span className="text-[14px] font-[500] text-black">{formatRp(totalRev)}</span>
+
+          {summaryLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-14" />
+              ))}
+            </div>
+          ) : notifs.length === 0 ? (
+            <div className="text-center py-8 text-gray-400">
+              <Bell size={32} className="mx-auto mb-2 opacity-30" />
+              <p className="text-sm">Tidak ada notifikasi</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {notifs.map((notif) => (
+                <button
+                  key={notif.id}
+                  onClick={() => !notif.read_at && markReadMutation.mutate(notif.id)}
+                  className={`w-full flex items-start gap-3 p-3 rounded-xl text-left transition-colors ${
+                    notif.read_at
+                      ? "bg-gray-50 hover:bg-gray-100"
+                      : "bg-blue-50 hover:bg-blue-100 border border-blue-100"
+                  }`}
+                >
+                  <NotifIcon type={notif.type} />
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className={`text-sm font-medium truncate ${
+                        notif.read_at ? "text-gray-600" : "text-gray-800"
+                      }`}
+                    >
+                      {notif.title}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate mt-0.5">{notif.message}</p>
                   </div>
-                  <div className="flex items-center justify-between py-2.5 border-b border-[#e5e5e5]">
-                    <span className="text-[14px] text-[#525252]">Total Expenses</span>
-                    <span className="text-[14px] font-[500] text-black">{formatRp(totalExp)}</span>
+                  <span className="text-xs text-gray-400 flex-shrink-0 mt-0.5">
+                    {timeAgo(notif.created_at)}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* ── Shift Cash ── */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+          <div className="flex items-center gap-2 mb-4">
+            <Wallet size={18} className="text-blue-600" />
+            <h2 className="font-semibold text-gray-800">Shift Cash</h2>
+          </div>
+
+          {/* Tidak ada shift aktif */}
+          {!summaryLoading && !hasActiveShift ? (
+            <div className="text-center py-8 text-gray-400">
+              <Wallet size={32} className="mx-auto mb-2 opacity-30" />
+              <p className="text-sm">Data kas tersedia setelah shift dimulai</p>
+            </div>
+          ) : summaryLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <Skeleton key={i} className="h-10" />
+              ))}
+            </div>
+          ) : (
+            <>
+              <div className="space-y-3">
+                {/* Revenue */}
+                <div className="flex items-center justify-between p-3 bg-emerald-50 rounded-xl">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp size={16} className="text-emerald-600" />
+                    <span className="text-sm font-medium text-gray-700">Total Revenue</span>
                   </div>
                   <div className="flex items-center justify-between py-2.5">
                     <span className="text-[14px] font-[500] text-black">Final Balance</span>
